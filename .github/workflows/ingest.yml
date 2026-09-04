@@ -1,0 +1,71 @@
+name: Import danych
+
+# DLACZEGO TU, A NIE NA VERCELU
+# Backfill glosowan to ~4 200 zapytan do Sejm API i ~1,9 mln wierszy w bazie
+# (zmierzone sondami). Limit czasu funkcji na darmowym planie Vercela liczy sie
+# w sekundach, wiec cron musi mieszkac tutaj.
+#
+# Efekt uboczny, ktory jest nam na reke: codzienne zapytanie do Supabase
+# utrzymuje darmowa baze w stanie aktywnym.
+
+on:
+  schedule:
+    # 03:15 UTC. Celowo nie o rownej godzinie — o pelnych godzinach kolejka
+    # GitHuba jest najbardziej obciazona i start potrafi sie opoznic.
+    - cron: '15 3 * * *'
+  workflow_dispatch:
+    inputs:
+      job:
+        description: 'Ktore zadanie uruchomic'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all                # poslowie + glosowania przyrostowo
+          - sync-mps           # sami poslowie i kluby
+          - sync-votings       # glosowania przyrostowo
+          - backfill-votings   # PELNY import kadencji (dlugi!)
+
+concurrency:
+  group: ingest
+  cancel-in-progress: false # nigdy nie przerywamy trwajacego importu w polowie
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    # Backfill potrafi trwac kilkanascie minut; reszta to sekundy.
+    timeout-minutes: 45
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      # Kontakt w User-Agent to elementarna uprzejmosc wobec serwera Kancelarii Sejmu.
+      INGEST_USER_AGENT: ${{ vars.INGEST_USER_AGENT }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Kontrola sekretow
+        run: |
+          test -n "$NEXT_PUBLIC_SUPABASE_URL"  || { echo "::error::Brak sekretu NEXT_PUBLIC_SUPABASE_URL"; exit 1; }
+          test -n "$SUPABASE_SERVICE_ROLE_KEY" || { echo "::error::Brak sekretu SUPABASE_SERVICE_ROLE_KEY"; exit 1; }
+
+      - name: Poslowie i kluby
+        if: ${{ inputs.job == 'sync-mps' || inputs.job == 'all' || github.event_name == 'schedule' }}
+        run: npx tsx ingest/jobs/sync-mps.ts
+
+      - name: Glosowania (przyrostowo)
+        if: ${{ inputs.job == 'sync-votings' || inputs.job == 'all' || github.event_name == 'schedule' }}
+        run: npx tsx ingest/jobs/sync-votings.ts
+
+      # Uruchamiane WYLACZNIE recznie. Kursor w sync_state sprawia, ze przerwany
+      # backfill wznawia sie od nastepnego posiedzenia, a nie od poczatku.
+      - name: Backfill calej kadencji
+        if: ${{ inputs.job == 'backfill-votings' }}
+        run: npx tsx ingest/jobs/backfill-votings.ts

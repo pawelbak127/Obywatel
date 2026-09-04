@@ -1,0 +1,42 @@
+{
+  "name": "obywatel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20.9" },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "db:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public > src/types/db.ts",
+    "smoke": "node scripts/smoke-test.mjs",
+    "test": "tsx --test ingest/**/*.test.ts",
+    "ingest:mps": "tsx ingest/jobs/sync-mps.ts",
+    "ingest:votings": "tsx ingest/jobs/sync-votings.ts",
+    "ingest:backfill": "tsx ingest/jobs/backfill-votings.ts",
+    "probe:docx": "node scripts/probes/25-docx-uzasadnienie.mjs",
+    "probe:osw": "node scripts/probes/26-oswiadczenia-parser.mjs",
+    "probe:sudop": "node scripts/probes/27-sudop-v2.mjs",
+    "ingest:sudop-gminy": "tsx ingest/jobs/sync-sudop-gminy.ts",
+    "ingest:sudop-csv": "tsx ingest/jobs/import-sudop-csv.ts"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.45.0",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^4.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

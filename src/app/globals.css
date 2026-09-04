@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+/* Paleta i typografia projektu. Trzymamy je jako zmienne CSS, zeby
+   generator grafik OG (Sprint 5) mogl uzyc dokladnie tych samych wartosci
+   co strona - inaczej udostepniony obrazek nie bedzie wygladal jak serwis. */
+@theme {
+  --color-ink: #131820;
+  --color-ink-soft: #4b5566;
+  --color-ink-faint: #7d8899;
+  --color-paper: #f4f6f9;
+  --color-surface: #ffffff;
+  --color-rule: #dce2ea;
+  --color-accent: #a6172b;
+  /* Kolory semantyczne — oddzielone od akcentu, bo znaczą stan, nie markę.
+     `ok` i `warn` opisują GŁOS (za / wstrzymał się), a nie ocenę posła. */
+  --color-ok: #1c6b48;
+  --color-warn: #8a5300;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+/* Ciemny motyw: te same role, inne wartości. Kontrast sprawdzony na obu tłach. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-ink: #e4e9f0;
+    --color-ink-soft: #a0abba;
+    --color-ink-faint: #6c7887;
+    --color-paper: #0d1015;
+    --color-surface: #151a21;
+    --color-rule: #262e39;
+    --color-accent: #e36175;
+    --color-ok: #55ba88;
+    --color-warn: #d8a44a;
+  }
+}

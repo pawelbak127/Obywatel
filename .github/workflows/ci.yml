@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Anulowanie starszych przebiegow na tej samej galezi - oszczedza minuty
+# i sprawia, ze zielony check zawsze dotyczy najnowszego commita.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Testy jednostkowe
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          # Wartosci zastepcze - build ma przejsc bez dostepu do prawdziwej bazy.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key-000000
