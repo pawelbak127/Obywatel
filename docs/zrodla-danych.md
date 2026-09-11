@@ -11,9 +11,36 @@ jest wynik pomiaru.
 | Sejm API — procesy legislacyjne | działa | etapy z numerami głosowań | Sprint 4 |
 | ELI — akty prawne | działa | pełny tekst ustaw w PDF | Sprint 5 |
 | Oświadczenia majątkowe | **zablokowane** | skany PDF, brak API | poza MVP |
-| SUDOP — API przypadków pomocy | **nie działa** | anonimowe zapytania nie wychodzą z kolejki | wniosek złożony |
+| SUDOP — API przypadków pomocy | **działa, ale wolno** | kolejka od minut do kilkudziesięciu minut; wynik żyje 60 min | nie automatyzujemy (D13) |
 | SUDOP — słownik gmin (API) | działa | 4 170 kodów TERYT z nazwami | `ingest:sudop-gminy` |
 | SUDOP — eksport CSV | działa, ręcznie | 14 kolumn z TERYT, kwotami i formą pomocy | `ingest:sudop-csv` |
+
+---
+
+> ### SPROSTOWANIE z 12.09.2026 — SUDOP
+>
+> Wiersz o API przypadków pomocy mówił wcześniej **„nie działa — anonimowe
+> zapytania nie wychodzą z kolejki"**. To było nieprawdziwe i zostało obalone
+> przez samego UOKiK w odpowiedzi na nasze pismo.
+>
+> API działa anonimowo i zgodnie z projektem. Konkretny wynik, który uznaliśmy
+> za nieistniejący (`4976bbc9-…`), **został policzony i zapisany**. Nasza sonda
+> odpytywała go przez **sześć minut co dziesięć sekund**, podczas gdy urząd
+> podaje, że kolejka potrafi trwać **kilkadziesiąt minut**, i zaleca odstęp
+> **60 sekund**. Zmierzyliśmy zbyt krótko i wyciągnęliśmy wniosek o mechanizmie
+> z obserwacji, która go nie obejmowała.
+>
+> Dwie twarde liczby stamtąd: zadanie w kolejce czekało **62 min 18 s**,
+> a wynik **wygasa po 60 minutach** — więc zadanie czekające dłużej niż godzinę
+> nigdy nie zostanie wykonane.
+>
+> **Wszystkie ustalenia sond 27–29 dotyczące czasów i dostępności SUDOP
+> są niezweryfikowane.** Pełny zapis korespondencji i lista rzeczy do
+> ponownego sprawdzenia: [`uokik-korespondencja.md`](uokik-korespondencja.md).
+>
+> D13 (nie automatyzujemy) **zostaje** — urząd napisał wprost, że ruch
+> przekracza jego możliwości infrastrukturalne, więc zobowiązanie jest teraz
+> lepiej uzasadnione niż wtedy, gdy opieraliśmy je na „to i tak nie działa".
 
 ---
 
