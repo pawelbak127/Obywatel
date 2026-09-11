@@ -39,8 +39,8 @@ export class BrakObiektuWBazie extends Error {
 const MIGRACJE: Record<string, string> = {
   mp_obecnosc_kontekst: '0018_zdjecia_okregi_niezgodnosc.sql',
   okregi_wyborcze: '0018_zdjecia_okregi_niezgodnosc.sql',
-  glosowanie_z_procesem: '0021_los_bez_etapu_prezydenckiego.sql',
-  proces_los: '0021_los_bez_etapu_prezydenckiego.sql',
+  glosowanie_z_procesem: '0022_los_fakt_przed_progiem.sql',
+  proces_los: '0022_los_fakt_przed_progiem.sql',
   mp_absence_monthly: '0010_kontekst_nieobecnosci.sql',
   mp_stats_ranking: '0009_przedzialy_ufnosci.sql',
   mp_stats: '0002_rls_hardening.sql',
@@ -380,19 +380,33 @@ export const LOS_OPIS: Record<LosProcesu, { etykieta: string; wyjasnienie: strin
   },
 
   /**
-   * Sprawa, która nigdy nie szła do Prezydenta.
+   * Sejm uchwalił, a rejestr nie ma ani przekazania Prezydentowi, ani adresu aktu.
    *
-   * 184 z 185 procesów, którym dawniej przypisywaliśmy „brak potwierdzenia",
-   * to wnioski, informacje rządowe i zawiadomienia. Pisanie przy nich
-   * „nie wiemy, na czym proces stanął" sugerowało lukę w naszej wiedzy tam,
-   * gdzie nie było czego wiedzieć — wniosek o wotum nieufności nie czeka
-   * na publikację w Dzienniku Ustaw.
+   * PIERWSZA WERSJA TEGO ZDANIA BYŁA ZA MOCNA. Brzmiała: „Przy wnioskach,
+   * informacjach i zawiadomieniach to jest normalny koniec drogi" — czyli
+   * uspokajała czytelnika, powołując się na typ dokumentu. Dwa problemy,
+   * oba wyszły w recenzji:
+   *
+   * 1. To jest nasza wiedza o procedurze, a nie fakt z rejestru — i była
+   *    pokazywana KAŻDEMU wierszowi kubełka, także tym, których nie opisuje.
+   *    Z 184 procesów szesnaście to uchwały, listy kandydatów i sprawozdania,
+   *    czyli nie „wnioski, informacje i zawiadomienia".
+   * 2. Przy uchwałach było wprost nietrafione. Zmierzone: wszystkie 149
+   *    opublikowanych uchwał Sejmu MA u nas adres w Monitorze Polskim.
+   *    Publikacja jest więc normalną drogą uchwały, a nie jej brakiem —
+   *    czyli przy tych jedenastu bez adresu mamy najpewniej lukę w imporcie.
+   *    To jest dokładnie przypadek „nie wiemy", który migracja 0021 uznała
+   *    za wymarły.
+   *
+   * Nowa wersja nie powołuje się na typ dokumentu i nie uspokaja. Mówi, czego
+   * w rejestrze nie ma, i nazywa niewiedzę po imieniu — tak jak przy kształcie
+   * nieobecności i przy wecie.
    */
   bez_etapu_prezydenckiego: {
-    etykieta: 'rozstrzygnięte przez Sejm',
+    etykieta: 'uchwalono przez Sejm',
     wyjasnienie:
-      'Rejestr nie odnotowuje przekazania Prezydentowi ani publikacji aktu. ' +
-      'Przy wnioskach, informacjach i zawiadomieniach to jest normalny koniec drogi.',
+      'Rejestr nie odnotowuje ani przekazania Prezydentowi, ani adresu aktu w publikatorze. ' +
+      'Nie wiemy, czy proces nie przewidywał dalszych etapów, czy po prostu nie mamy ich w danych.',
   },
 
   /** Wycofany w 0021 — zostaje na czas, w którym baza może być jeszcze na 0020. */
