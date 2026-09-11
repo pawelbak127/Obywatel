@@ -13,6 +13,7 @@
     "db:types": "node scripts/gen-types.mjs",
     "smoke": "node scripts/smoke-test.mjs",
     "env:check": "node scripts/env-check.mjs",
+    "db:sql": "node scripts/sql.mjs",
     "test": "tsx --test ingest/**/*.test.ts src/lib/*.test.ts",
     "ingest:mps": "tsx ingest/jobs/sync-mps.ts",
     "ingest:votings": "tsx ingest/jobs/sync-votings.ts",
