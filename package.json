@@ -29,7 +29,8 @@
     "ingest:sudop-gminy": "tsx ingest/jobs/sync-sudop-gminy.ts",
     "ingest:sudop-csv": "tsx ingest/jobs/import-sudop-csv.ts",
     "ingest:role": "tsx ingest/jobs/import-mp-roles.ts",
-    "ingest:procesy": "tsx ingest/jobs/sync-processes.ts"
+    "ingest:procesy": "tsx ingest/jobs/sync-processes.ts",
+    "ingest:zdjecia": "tsx ingest/jobs/sync-mp-photos.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

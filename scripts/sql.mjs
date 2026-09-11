@@ -125,7 +125,14 @@ const NIEBEZPIECZNE = [
   [/\balter\s+table\b[\s\S]{0,200}?\bdrop\s+(column|constraint)\b/i, 'alter table … drop column — usuwa dane z kolumny'],
   [/\btruncate\b/i, 'truncate — czysci cala tabele'],
   [/\bdelete\s+from\b(?![\s\S]{0,400}?\bwhere\b)/i, 'delete from bez where — kasuje wszystkie wiersze'],
-  [/\bupdate\b[\s\S]{0,200}?\bset\b(?![\s\S]{0,400}?\bwhere\b)/i, 'update … set bez where — nadpisuje wszystkie wiersze'],
+  /*
+    `update ... set` bez `where`. Negatywny lookbehind na `do` wycina
+    `insert ... on conflict (id) do update set ...`, czyli upsert — ta konstrukcja
+    z definicji dotyczy wiersza, ktory wlasnie wszedl w konflikt, i nigdy nie
+    tknie calej tabeli. Bez tego wyjatku bezpiecznik blokowal migracje 0023,
+    ktora zaklada kubelek w storage.buckets przez zwykly upsert.
+  */
+  [/(?<!\bdo\s{0,5})\bupdate\b[\s\S]{0,200}?\bset\b(?![\s\S]{0,400}?\bwhere\b)/i, 'update … set bez where — nadpisuje wszystkie wiersze'],
 ];
 
 if (!pozwolNaDestrukcje) {
