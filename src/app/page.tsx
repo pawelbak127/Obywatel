@@ -1,126 +1,137 @@
-import { createClient } from '@/lib/supabase/server';
-import { hasPublicConfig, urlConfigError } from '@/lib/env';
+import Link from 'next/link';
 
-// Strona statusu ma pokazywac stan bazy TERAZ, nie z czasu builda.
+import { createClient } from '@/lib/supabase/server';
+import { hasPublicConfig } from '@/lib/env';
+
+/**
+ * Strona glowna.
+ *
+ * POWOD PRZEPISANIA. Do tej pory pod adresem `/` stala strona diagnostyczna
+ * z naglowkiem "Sprint 0 · szkielet" i zdaniem "puste tabele na tym etapie sa
+ * poprawnym wynikiem — dane wjezdzaja w Sprincie 1". W bazie bylo wtedy
+ * 2,1 mln glosow imiennych i 1 662 procesy legislacyjne.
+ *
+ * Strona glowna klamala o stanie wlasnego projektu, i to w miejscu, w ktorym
+ * przypadkowy czytelnik wyrabia sobie pierwsze zdanie o tym, czy mozna nam
+ * ufac. Diagnostyka jest potrzebna i zostaje — ale pod adresem `/status`,
+ * gdzie jest dla nas, a nie dla niego.
+ */
+
 export const dynamic = 'force-dynamic';
 
-type Row = { label: string; table: string; count: number | null; note: string };
+type Liczby = { poslowie: number | null; glosowania: number | null; glosy: number | null; procesy: number | null };
 
-const TABLES: Array<{ label: string; table: string; note: string }> = [
-  { label: 'Posłowie', table: 'mps', note: 'oczekiwane 499 po Sprincie 1' },
-  { label: 'Kluby', table: 'clubs', note: 'oczekiwane 12' },
-  { label: 'Głosowania', table: 'votings', note: 'oczekiwane ~4 150 po Sprincie 2' },
-  { label: 'Głosy imienne', table: 'votes', note: 'oczekiwane ~1,9 mln' },
-  { label: 'Procesy legislacyjne', table: 'legislative_processes', note: 'Sprint 4' },
-  { label: 'Obietnice', table: 'promises', note: 'Sprint 4' },
-  { label: 'Treści AI', table: 'ai_contents', note: 'Sprint 5' },
-  { label: 'Źródła', table: 'sources', note: 'jeden wpis na każdy pobrany zasób' },
-];
-
-async function readCounts(): Promise<{ rows: Row[]; error: string | null }> {
-  if (!hasPublicConfig) {
-    return { rows: [], error: 'Brak konfiguracji Supabase — uzupełnij .env.local' };
-  }
-  // Adres ze ścieżką /rest/v1 daje 404 na każdym zapytaniu. Mówimy o tym wprost,
-  // zamiast pokazywać tabelę samych zer, która wygląda jak pusta baza.
-  const urlError = urlConfigError();
-  if (urlError) return { rows: [], error: urlError };
+async function policz(): Promise<Liczby> {
+  const puste: Liczby = { poslowie: null, glosowania: null, glosy: null, procesy: null };
+  if (!hasPublicConfig) return puste;
 
   try {
     const supabase = await createClient();
-    const rows = await Promise.all(
-      TABLES.map(async (t) => {
-        // `estimated` zamiast `exact`. COUNT(*) na tabeli `votes` to pełny skan
-        // 2,1 mln wierszy — przekracza statement_timeout roli `anon` i wraca błędem.
-        // PostgREST przy `estimated` czyta oszacowanie z planera dla dużych tabel,
-        // a dla małych i tak liczy dokładnie. Strona statusu nie potrzebuje
-        // dokładności co do wiersza; potrzebuje odpowiedzi.
-        const { count, error } = await supabase
-          .from(t.table)
-          .select('*', { count: 'estimated', head: true });
-        // count === null przy braku błędu oznacza HEAD, które nie doszło do bazy.
-        return { ...t, count: error || count === null ? null : count };
-      }),
-    );
-    return { rows, error: null };
-  } catch (e) {
-    return { rows: [], error: e instanceof Error ? e.message : 'Nieznany błąd połączenia' };
+    const jeden = async (tabela: string) => {
+      // `estimated`, nie `exact`: COUNT(*) na 2,1 mln wierszy przekracza
+      // statement_timeout roli anon. Na stronie glownej i tak zaokraglamy.
+      const { count, error } = await supabase.from(tabela).select('*', { count: 'estimated', head: true });
+      return error ? null : count;
+    };
+    const [poslowie, glosowania, glosy, procesy] = await Promise.all([
+      jeden('mps'),
+      jeden('votings'),
+      jeden('votes'),
+      jeden('legislative_processes'),
+    ]);
+    return { poslowie, glosowania, glosy, procesy };
+  } catch {
+    return puste;
   }
 }
 
-export default async function StatusPage() {
-  const { rows, error } = await readCounts();
+/** Liczby na stronie glownej sa ZAOKRAGLONE i tak sie je opisuje. */
+function okolo(n: number | null): string {
+  if (n === null) return '—';
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace('.', ',')} mln`;
+  if (n >= 10_000) return `${Math.round(n / 1000)} tys.`;
+  return n.toLocaleString('pl-PL');
+}
+
+export default async function StronaGlowna() {
+  const l = await policz();
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
-      <p className="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
-        Sprint 0 · szkielet
-      </p>
-      <h1 className="mt-3 text-4xl font-semibold tracking-tight">Obywatel 2.0</h1>
-      <p className="mt-4 max-w-prose text-[color:var(--color-ink-soft)]">
-        Ta strona istnieje po to, żeby jednym spojrzeniem potwierdzić, że deploy działa, a aplikacja
-        widzi bazę. Puste tabele na tym etapie są poprawnym wynikiem — dane wjeżdżają w Sprincie 1.
+      <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+        Co robią posłowie, których wybraliśmy
+      </h1>
+
+      <p className="mt-5 max-w-prose text-lg leading-relaxed text-[color:var(--color-ink-soft)]">
+        Głosowania w Sejmie, droga każdej ustawy i pieniądze publiczne — złożone
+        z oficjalnych rejestrów państwowych. Przy każdej liczbie stoi odnośnik do dokumentu,
+        z którego pochodzi.
       </p>
 
-      <nav className="mt-6 flex gap-2 font-mono text-xs">
-        <a
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Link
           href="/poslowie"
-          className="rounded border border-[color:var(--color-accent)] px-3 py-1.5 text-[color:var(--color-accent)]"
+          className="rounded border border-[color:var(--color-accent)] px-4 py-2 font-mono text-sm text-[color:var(--color-accent)] transition-colors hover:bg-[color:var(--color-accent)] hover:text-white"
         >
           obecność posłów →
-        </a>
-      </nav>
+        </Link>
+      </div>
 
-      {error ? (
-        <div className="mt-10 rounded border border-[color:var(--color-accent)] bg-white/60 p-5 dark:bg-black/20">
-          <p className="font-mono text-xs uppercase tracking-widest text-[color:var(--color-accent)]">
-            Brak połączenia
+      {/* ---------------------------------------------------------------
+          Liczby jako dowod, ze to nie jest makieta. Zaokraglone i opisane
+          jako zaokraglone — dokladny COUNT(*) na tabeli glosow przekracza
+          limit czasu, a strona glowna go nie potrzebuje.
+      --------------------------------------------------------------- */}
+      <dl className="mt-12 grid grid-cols-2 gap-x-6 gap-y-6 border-t border-[color:var(--color-rule)] pt-8 sm:grid-cols-4">
+        {[
+          { l: 'posłów', v: okolo(l.poslowie) },
+          { l: 'głosowań', v: okolo(l.glosowania) },
+          { l: 'głosów imiennych', v: okolo(l.glosy) },
+          { l: 'procesów legislacyjnych', v: okolo(l.procesy) },
+        ].map((x) => (
+          <div key={x.l}>
+            <dt className="font-mono text-2xl tabular-nums">{x.v}</dt>
+            <dd className="mt-0.5 text-xs text-[color:var(--color-ink-soft)]">{x.l}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {/* ---------------------------------------------------------------
+          Zasady. Nie "o nas", tylko konkretne zobowiazania, ktore czytelnik
+          moze sprawdzic na dowolnej podstronie w piec sekund.
+      --------------------------------------------------------------- */}
+      <section className="mt-14 space-y-6 border-t border-[color:var(--color-rule)] pt-8">
+        <h2 className="text-sm font-semibold">Na czym to stoi</h2>
+
+        <div className="space-y-5 text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
+          <p>
+            <strong className="text-[color:var(--color-ink)]">Każda liczba ma źródło.</strong>{' '}
+            Nie prosimy, żeby nam wierzyć. Przy każdym głosowaniu jest odnośnik do protokołu
+            na serwerze Kancelarii Sejmu, przy każdej uchwalonej ustawie — do jej tekstu
+            w rejestrze. Gdy źródła nie mamy, nie ma też odnośnika i mówimy o tym wprost.
           </p>
-          <p className="mt-2 text-sm">{error}</p>
+          <p>
+            <strong className="text-[color:var(--color-ink)]">Nie zgadujemy powodów.</strong>{' '}
+            Sejm nie podaje, dlaczego posła nie było na głosowaniu. Sprawowanie urzędu,
+            choroba i nieprzychodzenie do pracy wyglądają w danych identycznie — więc
+            pokazujemy to, co z danych wynika, i nazywamy po imieniu to, czego nie wiemy.
+          </p>
+          <p>
+            <strong className="text-[color:var(--color-ink)]">Liczba bez mianownika kłamie.</strong>{' '}
+            Sześćdziesiąt procent ze stu głosowań i sześćdziesiąt procent z czterech tysięcy
+            to nie jest ta sama informacja. Przy każdym odsetku stoi, z ilu głosowań go
+            policzono i jak bardzo jest pewny.
+          </p>
         </div>
-      ) : (
-        <div className="mt-10 overflow-x-auto rounded border border-[color:var(--color-rule)]">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[color:var(--color-rule)] bg-black/[0.03] dark:bg-white/[0.04]">
-                <th className="px-4 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
-                  Tabela
-                </th>
-                <th className="px-4 py-3 text-right font-mono text-[11px] font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
-                  Wierszy
-                </th>
-                <th className="px-4 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
-                  Docelowo
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.table} className="border-b border-[color:var(--color-rule)] last:border-0">
-                  <td className="px-4 py-2.5">
-                    {r.label} <span className="font-mono text-xs opacity-50">{r.table}</span>
-                  </td>
-                  <td className="px-4 py-2.5 text-right font-mono tabular-nums">
-                    {r.count === null ? (
-                      <span className="text-[color:var(--color-accent)]">błąd</span>
-                    ) : (
-                      r.count.toLocaleString('pl-PL')
-                    )}
-                  </td>
-                  <td className="px-4 py-2.5 text-xs text-[color:var(--color-ink-soft)]">{r.note}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      </section>
 
-      <p className="mt-8 font-mono text-xs leading-relaxed text-[color:var(--color-ink-soft)]">
-        Odczyt kluczem anon przez RLS. Jeśli liczby się wyświetliły, polityka „publiczny odczyt”
-        działa; jeśli <code>npm run smoke</code> przechodzi, zapis jest zamknięty.
-        <br />
-        Liczby dużych tabel są szacowane przez planer — dokładny <code>COUNT(*)</code> na 2 mln
-        wierszy przekracza limit czasu zapytania i nie jest tu do niczego potrzebny.
+      <p className="mt-12 border-t border-[color:var(--color-rule)] pt-6 text-xs text-[color:var(--color-ink-soft)]">
+        Projekt w budowie. Dane o głosowaniach i procesach legislacyjnych są kompletne
+        dla obecnej kadencji; obietnice i dotacje dopiero powstają.{' '}
+        <Link href="/status" className="underline decoration-dotted underline-offset-2">
+          Stan bazy
+        </Link>{' '}
+        pokazuje dokładnie, co już jest.
       </p>
     </main>
   );

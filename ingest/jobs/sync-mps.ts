@@ -20,6 +20,7 @@ import { assignSlugs } from '../lib/slug.js';
 import { mapClub, mapInferredClub, mapMP, assertPlausible } from '../mappers/mp.js';
 import { db } from '../lib/db.js';
 import { assertSchema } from '../lib/preflight.js';
+import { headExists, mapLimit } from '../lib/http.js';
 
 const FORCE = process.argv.includes('--force');
 const t0 = Date.now();
@@ -157,6 +158,98 @@ async function syncMPs(clubSeq: Map<string, number>): Promise<void> {
   log(`poslowie: zapisano ${rows.length}`);
 }
 
+/**
+ * SPRAWDZENIE ZDJEC (migracja 0018).
+ *
+ * `photo_url` jest SKLADANY z id posla (`/MP/{id}/photo`), a nie pobierany
+ * z API — nikt wiec nie zagwarantowal, ze pod tym adresem cokolwiek jest.
+ * Dopoki zdjec nie pokazywalismy, nie mialo to znaczenia. Od chwili, gdy
+ * miniatura wchodzi na liste rankingowa, kazdy nieistniejacy plik to zepsuty
+ * obrazek w serwisie, ktorego cala teza brzmi "kazda informacja ma pokrycie".
+ *
+ * HEAD, wiec bez sciagania obrazow: ~460 zapytan, kilkanascie sekund.
+ * Powtarzamy nie czesciej niz raz na 30 dni — zdjecia poslow sie nie zmieniaja,
+ * a Kancelaria Sejmu nie ma powodu ogladac tego co noc.
+ *
+ * Trzy stany, nie dwa. `null` z `headExists` znaczy "serwer nie odpowiedzial
+ * jednoznacznie" (429, 500, timeout) i wtedy NIE zapisujemy nic — inaczej
+ * jedna chwila slabej sieci skasowalaby zdjecia polowie Sejmu.
+ */
+const DNI_WAZNOSCI = 30;
+
+async function checkPhotos(): Promise<void> {
+  const prog = new Date(Date.now() - DNI_WAZNOSCI * 86_400_000).toISOString();
+
+  const q = db().from('mps').select('id, photo_url, photo_checked_at').not('photo_url', 'is', null);
+  const { data, error } = FORCE ? await q : await q.or(`photo_checked_at.is.null,photo_checked_at.lt.${prog}`);
+  if (error) {
+    // Baza bez migracji 0018 nie ma tych kolumn. To nie powod, zeby wywalic
+    // caly import poslow — mowimy glosno i idziemy dalej.
+    log(`zdjecia: pomijam sprawdzenie (${error.message})`);
+    return;
+  }
+
+  const doSprawdzenia = (data ?? []) as Array<{ id: number; photo_url: string }>;
+  if (!doSprawdzenia.length) {
+    log(`zdjecia: wszystkie sprawdzone w ciagu ostatnich ${DNI_WAZNOSCI} dni — pomijam`);
+    return;
+  }
+
+  log(`zdjecia: sprawdzam ${doSprawdzenia.length} adresow (HEAD)…`);
+  const teraz = new Date().toISOString();
+  const wyniki = await mapLimit(doSprawdzenia, async (m) => ({
+    id: m.id,
+    istnieje: await headExists(m.photo_url),
+  }));
+
+  const jest = wyniki.filter((w) => w.istnieje === true);
+  const niema = wyniki.filter((w) => w.istnieje === false);
+  const nieWiadomo = wyniki.filter((w) => w.istnieje === null);
+
+  // ------------------------------------------------------------------
+  // ZAPIS: UPDATE, nie UPSERT. To nie jest kosmetyka.
+  //
+  // Pierwsza wersja robila `upsert({ id, photo_exists, photo_checked_at })`
+  // i wywalala sie na zywej bazie:
+  //
+  //     null value in column "first_name" of relation "mps"
+  //     violates not-null constraint
+  //
+  // PostgREST tlumaczy upsert na INSERT ... ON CONFLICT DO UPDATE, a Postgres
+  // sprawdza poprawnosc krotki WSTAWIANEJ, zanim w ogole dojdzie do konfliktu.
+  // Trzy kolumny to za malo na wiersz posla — i nie ma znaczenia, ze ten wiersz
+  // od dawna istnieje. Upsert sluzy do wstawiania-albo-nadpisywania CALYCH
+  // rekordow; do zmiany dwoch pol w istniejacych wierszach sluzy UPDATE.
+  //
+  // Zamiast 460 osobnych zapytan grupujemy po wyniku: wszystkie "ma zdjecie"
+  // jednym UPDATE ... WHERE id IN (...), wszystkie "nie ma" drugim. Porcje po
+  // 200 id, zeby nie budowac kilometrowego adresu.
+  //
+  // Zapisujemy WYLACZNIE rozstrzygniete. Przypadki "nie wiem" zostaja
+  // nietkniete i wroca przy nastepnym uruchomieniu.
+  // ------------------------------------------------------------------
+  const zapisz = async (grupa: typeof jest, wartosc: boolean) => {
+    for (let i = 0; i < grupa.length; i += 200) {
+      const ids = grupa.slice(i, i + 200).map((w) => w.id);
+      const res = await db()
+        .from('mps')
+        .update({ photo_exists: wartosc, photo_checked_at: teraz })
+        .in('id', ids);
+      if (res.error) {
+        throw new Error(`mps.update (zdjecia, ${wartosc ? 'jest' : 'brak'}) [${i}]: ${res.error.message}`);
+      }
+    }
+  };
+  await zapisz(jest, true);
+  await zapisz(niema, false);
+
+  log(`zdjecia: jest ${jest.length}, brak ${niema.length}, nierozstrzygnietych ${nieWiadomo.length}`);
+  if (niema.length) {
+    log(`   poslowie bez zdjecia (id): ${niema.map((w) => w.id).join(', ')}`);
+    log('   -> interfejs pokaze dla nich inicjaly, nie zepsuty obrazek');
+  }
+}
+
 async function main() {
   log(`start — kadencja ${TERM}${FORCE ? ' (--force)' : ''}`);
   try {
@@ -167,6 +260,8 @@ async function main() {
 
     const clubSeq = await syncClubs();
     await syncMPs(clubSeq);
+    // PO zapisie poslow: `photo_url` musi juz byc w bazie, zanim go sprawdzimy.
+    await checkPhotos();
     await writeCursor('mps', { cursorAt: new Date().toISOString(), error: null });
 
     const counts = await Promise.all(

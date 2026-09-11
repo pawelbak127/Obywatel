@@ -65,11 +65,18 @@ export function StatBar({
         </span>
       </div>
 
+      {/*
+        SKALA. Bez niej znacznik stoi "gdzies" i nie znaczy nic: przy 99,7%
+        doklejal sie do prawej krawedzi i wygladal jak blad renderowania,
+        a przy 50,5% jak w polowie pustego paska. Kreska w 50% i dwie liczby
+        na koncach wystarcza, zeby pasek dalo sie przeczytac bez zgadywania.
+      */}
       <div
         className="relative mt-2 h-2 w-full overflow-hidden rounded-sm bg-black/[0.07] dark:bg-white/[0.09]"
         role="img"
-        aria-label={`${label}: ${value.toFixed(1)} procent, przedział ufności od ${dol.toFixed(1)} do ${gora.toFixed(1)} procent`}
+        aria-label={`${label}: ${value.toFixed(1)} procent w skali od 0 do 100, przedział ufności od ${dol.toFixed(1)} do ${gora.toFixed(1)} procent`}
       >
+        <span className="absolute inset-y-0 left-1/2 w-px bg-black/[0.16] dark:bg-white/[0.18]" aria-hidden />
         <div
           className="absolute inset-y-0 bg-[color:var(--color-accent)]/25"
           style={{ left: `${dol}%`, width: `${szerokosc}%` }}
@@ -80,7 +87,16 @@ export function StatBar({
         />
       </div>
 
-      <p className="mt-1.5 font-mono text-[11px] text-[color:var(--color-ink-soft)] tabular-nums">
+      <div
+        aria-hidden
+        className="mt-1 flex items-baseline justify-between font-mono text-[10px] tabular-nums text-[color:var(--color-ink-faint,#7d8899)]"
+      >
+        <span>0%</span>
+        <span>50%</span>
+        <span>100%</span>
+      </div>
+
+      <p className="mt-1 font-mono text-[11px] text-[color:var(--color-ink-soft)] tabular-nums">
         {denominator !== null ? `${denominator.toLocaleString('pl-PL')} ${denominatorLabel}` : denominatorLabel}
       </p>
     </div>
@@ -116,22 +132,44 @@ export function StatystykiPosla({ mp }: { mp: MpKontekst }) {
         denominator={mp.present_count}
         denominatorLabel="razy obecny bez oddania głosu"
       />
-      <StatBar
-        label="Zgodność z klubem"
-        value={mp.loyalty_pct}
-        lo={mp.loyalty_lo}
-        hi={mp.loyalty_hi}
-        denominator={mp.loyalty_votings}
-        denominatorLabel="głosowań wliczonych"
-        explainNull="Nie da się policzyć: klub liczył mniej niż trzech głosujących albo poseł nie zajmował stanowiska. To nie to samo co 0%."
-      />
-
       {roznica !== null && roznica >= 1 && (
         <p className="pt-3 text-xs leading-relaxed text-[color:var(--color-ink-soft)]">
           Różnica {roznica.toFixed(1).replace('.', ',')} punktu między obecnością a udziałem oznacza
           głosowania, w których poseł był na sali, ale nie oddał głosu. Sejm nie podaje powodu.
         </p>
       )}
+    </section>
+  );
+}
+
+/**
+ * ZGODNOSC Z KLUBEM STOI OSOBNO — i to jest decyzja, nie estetyka.
+ *
+ * Postawiona w jednym rzedzie z obecnoscia i udzialem czytala sie jako trzecia
+ * ocena tego samego rodzaju: im wyzej, tym lepiej. A wysoka zgodnosc da sie
+ * czytac dwojako. My tego nie rozstrzygamy — a uklad graficzny rozstrzygal
+ * za nas. Kreska i odstep to zdejmuja.
+ *
+ * BEZ AKAPITU WYJASNIAJACEGO (decyzja Pawla). Pierwsza wersja miala trzy zdania
+ * o tym, ze to liczba opisowa, a nie ocena. Kazdy wie, co znaczy "zgodnosc
+ * z klubem"; tlumaczenie tego brzmialo protekcjonalnie i rozwadnialo strone.
+ * Interpretacje i tak zostawiamy czytelnikowi — samo oddzielenie to wystarcza.
+ *
+ * Zostaje jedna informacja rzeczowa, przy mianowniku: dlaczego wliczonych
+ * glosowan jest mniej niz wszystkich. Bez niej 2 296 przy 4 569 wyglada na blad.
+ */
+export function ZgodnoscZKlubem({ mp }: { mp: MpKontekst }) {
+  return (
+    <section className="mt-8 border-t border-[color:var(--color-rule)] pt-6">
+      <StatBar
+        label="Zgodność z klubem"
+        value={mp.loyalty_pct}
+        lo={mp.loyalty_lo}
+        hi={mp.loyalty_hi}
+        denominator={mp.loyalty_votings}
+        denominatorLabel="głosowań, w których poseł zajął stanowisko"
+        explainNull="Nie da się policzyć: klub liczył mniej niż trzech głosujących albo poseł nie zajmował stanowiska. To nie to samo co 0%."
+      />
     </section>
   );
 }

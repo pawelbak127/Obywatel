@@ -265,6 +265,63 @@ wymaga rejestru TERYT prowadzonego przez GUS i będzie zrobione tak samo jak
 
 ---
 
+## D17 · Zmarli posłowie nie stoją w rankingu
+
+Zapytanie o trzydziestu posłów o najniższej obecności zwróciło między innymi to:
+
+```
+izabela-mrzyglocka   inactive_cause='Zgon'   68,6%   704 głosowania
+rajmund-miller       inactive_cause='Zgon'   71,2%   288 głosowań
+```
+
+Dwoje posłów zmarło w trakcie kadencji i stało w naszym rankingu obecności.
+Liczby były poprawne. Zestawienie było nie do obrony.
+
+**To nie jest powrót do D9.** Tam wykluczaliśmy kogoś progiem, który sami
+wymyśliliśmy — i dlatego to wycofaliśmy. Tu wykluczamy na podstawie faktu
+z rejestru państwowego: mandat wygasł z powodu śmierci. Ranking jest narzędziem
+rozliczalności osób sprawujących mandat; nie ma czego rozliczać i nie ma kogo.
+
+Wykluczenie dotyczy **wyłącznie zestawień porównawczych**. Profil posła zostaje,
+z pełnymi liczbami i z powodem z rejestru. Nie usuwamy nikogo z serwisu.
+
+Filtr siedzi w `pobierzRanking()` w `src/lib/queries.ts`, a nie w komponencie —
+żeby nowa strona z zestawieniem nie mogła go pominąć przez przeoczenie.
+`pobierzPosla()` tego filtra nie ma i mieć nie powinno.
+
+---
+
+## D18 · Powód wygaśnięcia mandatu bierzemy z rejestru, nie z domysłu
+
+Chciałem wypełnić `mp_roles` ręcznie, szukając dokumentów powołania. Zanim
+zacząłem, sprawdziłem schemat — i okazało się, że **Sejm API podaje powód
+i importujemy go od pierwszego dnia**:
+
+| kolumna | co zawiera | pokrycie |
+|---|---|---|
+| `mps.inactive_cause` | kategoria: `Zgon`, `Zrzeczenie` | 37 z 39 nieaktywnych |
+| `mps.waiver_desc` | zdanie rejestru | 39 z 39 |
+
+```
+artur-sobon      Zrzeczenie  „Powołany na członka Zarządu NBP"                100 głosowań
+michal-dworczyk  Zrzeczenie  „Wybrany na posła do Parlamentu Europejskiego"   447
+```
+
+Przy Soboniu widniało „54% obecności" bez słowa wyjaśnienia. Powód był w bazie
+przez cały czas — po prostu go nie pokazywaliśmy.
+
+Wniosek na przyszłość, ważniejszy niż sama poprawka: **zanim dopiszemy fakt
+od siebie, sprawdzamy, czy rejestr już go nie podaje.** Ręczne wpisywanie
+danych, które mamy z oficjalnego źródła, to dokładanie sobie ryzyka pomyłki
+bez żadnego zysku.
+
+`mp_roles` zostaje dla przypadku, którego rejestr NIE opisuje: poseł aktywny,
+z pełnym mandatem, nieobecny z powodu sprawowania urzędu. Ziobro i Romanowski
+mają `active = true` i puste `inactive_cause` — rejestr nie mówi o nich nic
+i my też nie powiemy niczego ponad kształt nieobecności.
+
+---
+
 ## Wzorzec, który wynikł z pięciu pomyłek
 
 Pięć razy wyciągnąłem wniosek z własnego wyobrażenia o danych zamiast je odczytać:

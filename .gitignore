@@ -10,3 +10,15 @@ next-env.d.ts
 .vercel
 .DS_Store
 /scripts/probes/out/
+
+# --- Dodane przy przejsciu na Claude Code (11.09.2026) -----------------
+# Paczki ZIP z kolejnymi partiami zmian. Sa juz rozpakowane w repozytorium,
+# wiec w historii gita bylyby wylacznie duplikatem tego, co obok.
+obywatel-paczka-*.zip
+
+# Stan lokalnego powiazania z projektem Supabase (CLI). To konfiguracja
+# srodowiska konkretnej maszyny, nie kod projektu.
+supabase/.temp/
+
+# Dane wprowadzane recznie (mp_roles). Decyzja Pawla: trzymamy lokalnie.
+/data/

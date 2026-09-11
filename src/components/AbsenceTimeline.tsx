@@ -1,4 +1,5 @@
 import type { MiesiacNieobecnosci, KsztaltNieobecnosci } from '@/lib/queries';
+import { polskieDaty } from '@/lib/format';
 
 /**
  * Os czasu nieobecnosci — najwazniejszy element profilu.
@@ -96,10 +97,15 @@ export function AbsenceTimeline({
             const h = Math.max(pct > 0 ? 1.5 : 0, (pct / 100) * H);
             return (
               <g key={m.month}>
-                <title>
-                  {etykieta(m.month)}: nieobecny w {m.absent} z {m.votings} głosowań (
-                  {pct.toFixed(1).replace('.', ',')}%)
-                </title>
+                {/*
+                  Tekst skladamy w JS i wstawiamy jako JEDNO wyrazenie.
+                  Rozbity na kilka wyrazen i zlaman linii dawal inny podzial
+                  wezlow tekstowych na serwerze niz w przegladarce — React
+                  zglaszal "Hydration failed" dokladnie na tym <title>.
+                */}
+                <title>{`${etykieta(m.month)}: nieobecny w ${m.absent} z ${m.votings} głosowań (${pct
+                  .toFixed(1)
+                  .replace('.', ',')}%)`}</title>
                 <rect
                   x={i * szer + szer * 0.15}
                   y={H - h}
@@ -135,7 +141,8 @@ export function AbsenceTimeline({
 
       {funkcje && (
         <p className="mt-2 rounded border-l-2 border-[color:var(--color-accent)] bg-black/[0.02] py-2 pl-3 text-xs leading-relaxed dark:bg-white/[0.03]">
-          <strong className="font-semibold">Funkcje państwowe w tym okresie:</strong> {funkcje}
+          <strong className="font-semibold">Funkcje państwowe w tym okresie:</strong>{' '}
+          {polskieDaty(funkcje)}
         </p>
       )}
     </section>

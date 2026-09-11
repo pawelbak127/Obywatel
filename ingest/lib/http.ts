@@ -105,15 +105,56 @@ async function request(url: string, opts: FetchOptions = {}): Promise<Response> 
  * kluczy po parsowaniu mogloby zmienic hash bez zmiany danych - i cala baza
  * przepisywalaby sie co noc bez powodu.
  */
-export async function getJson<T>(url: string, opts?: FetchOptions): Promise<{ data: T; raw: string; status: number }> {
+export async function getJson<T>(
+  url: string,
+  opts?: FetchOptions,
+): Promise<{ data: T; raw: string; status: number; headers: Headers }> {
   const res = await request(url, opts);
   const raw = await res.text();
-  return { data: JSON.parse(raw) as T, raw, status: res.status };
+  // NAGLOWKI SA CZESCIA ODPOWIEDZI, nie dodatkiem. Endpoint /processes podaje
+  // rozmiar calego zbioru wylacznie w `x-total-count` i `content-range` —
+  // w ciele odpowiedzi nie ma o tym ani slowa. Import, ktory ich nie czyta,
+  // konczy sie sukcesem, majac 3% kadencji.
+  return { data: JSON.parse(raw) as T, raw, status: res.status, headers: res.headers };
 }
 
 export async function getBuffer(url: string, opts?: FetchOptions): Promise<{ buffer: Buffer; status: number }> {
   const res = await request(url, { accept: '*/*', ...opts });
   return { buffer: Buffer.from(await res.arrayBuffer()), status: res.status };
+}
+
+/**
+ * Czy pod adresem cokolwiek jest. HEAD, wiec bez sciagania tresci.
+ *
+ * Uzywane do zdjec poslow: adres skladamy z id (`/MP/{id}/photo`), a nie
+ * dostajemy go z API — wiec nikt nie zagwarantowal, ze zdjecie istnieje.
+ * Bez tej kontroli wstawilibysmy na strone zepsuty obrazek.
+ *
+ * NIE korzysta z `request()`, bo tamta funkcja rzuca wyjatkiem na kazdym
+ * statusie != 2xx, a tutaj 404 jest ODPOWIEDZIA, nie awaria. Semafor
+ * i User-Agent obowiazuja tak samo — Kancelaria Sejmu ma widziec, kto puka.
+ */
+export async function headExists(url: string, timeoutMs = 15_000): Promise<boolean | null> {
+  await gate.acquire();
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      method: 'HEAD',
+      signal: ac.signal,
+      headers: { 'User-Agent': USER_AGENT, Accept: '*/*' },
+    });
+    if (res.status === 200) return true;
+    if (res.status === 404 || res.status === 410) return false;
+    // 403, 429, 500 — serwer nie powiedzial "nie ma", tylko "nie teraz".
+    // `null` znaczy NIE WIEM i wolajacy ma zostawic adres bez zmian.
+    return null;
+  } catch {
+    return null; // timeout, blad sieci — tez "nie wiem"
+  } finally {
+    clearTimeout(timer);
+    gate.release();
+  }
 }
 
 /** Mapowanie z ograniczona rownoleglosc - Gate i tak pilnuje, ale czytelniej. */

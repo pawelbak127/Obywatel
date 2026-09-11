@@ -1,11 +1,13 @@
 # SUDOP — rekonesans i import
 
-**Status:** rozpoznanie zamknięte, **importer gotowy i przetestowany**,
-czeka na pierwszy prawdziwy eksport wielowierszowy.
+**Status:** rozpoznanie **zamknięte i rozstrzygnięte**. Importer CSV działa
+i ma w bazie pierwszy kompletny program (127 wierszy). API rejestruje zgłoszenia,
+ale ich nie kończy — pomiar w sekcji 1d.
 **Moduł:** „Radar Sąsiedzki" i „Paragon Podatkowy" — nadal poza MVP, ale **wykonalne**
 (patrz korekta w 3a).
-**Co odblokuje pełną skalę:** odpowiedź UOKiK na wniosek (`wniosek-uokik-sudop.md`).
-Bez niej moduł działa, tylko rośnie ręcznie, program po programie.
+**Co odblokuje pełną skalę:** odpowiedź UOKiK — najpierw e-mail techniczny
+do administratorów, potem ewentualnie wniosek formalny (`wniosek-uokik-sudop.md`,
+wersja 2). Bez tego moduł działa, tylko rośnie ręcznie, program po programie.
 
 Ten dokument istnieje po to, żeby powrót do tematu nie wymagał powtarzania
 całego rekonesansu. Wszystko poniżej jest **zmierzone**, nie założone —
@@ -17,12 +19,13 @@ razem z powodem.
 ## Stan wiedzy w jednym akapicie
 
 SUDOP ma dwa niezależne systemy. **REST API** (`api-sudop.uokik.gov.pl`) działa
-dla słowników, ale zapytania o przypadki pomocy nigdy nie zwracają danych w dostępie
-anonimowym — utykają w kolejce. **Aplikacja webowa** (`sudop.uokik.gov.pl`) to JSF/PrimeFaces,
-nie korzysta z tego API, zwraca dane natychmiast i eksportuje je do **CSV**.
-Wyszukiwanie po lokalizacji siedziby beneficjenta i zakresie dat jest w niej możliwe,
-żadne pole nie jest wymagane. Brakuje ostatniego potwierdzenia: czy kontrolka eksportu
-CSV jest dostępna również na stronie wyszukiwania po lokalizacji.
+dla słowników i **poprawnie rejestruje** wyszukiwania przypadków pomocy — wydaje
+identyfikator zgłoszenia — ale w dostępie anonimowym nie wytwarza wyników.
+Zmierzone na jednym identyfikatorze przez sześć minut, sekcja **1d**.
+**Aplikacja webowa** (`sudop.uokik.gov.pl`) to JSF/PrimeFaces, nie korzysta z tego API,
+zwraca dane natychmiast i eksportuje je do **CSV** — i to jest dziś nasza droga:
+człowiek pobiera plik, importer go wczytuje. Pierwszy kompletny program
+(C 43/2005, 127 wierszy) jest w bazie.
 
 ---
 
@@ -52,7 +55,14 @@ historyczne (zmiany nazw, połączenia gmin). Import wybiera wpis z najpóźniej
 datą końca obowiązywania, a każdy przypadek **różnych nazw pod jednym kodem**
 wypisuje na ekran — żeby wybór był widoczny, a nie cichy.
 
-### Przypadki pomocy — nie zwracają danych
+### Przypadki pomocy — WNIOSEK WYCOFANY, patrz niżej
+
+> **KOREKTA z 4 września 2026.** Wszystko w tej sekcji opisuje, co zobaczyliśmy —
+> ale wniosek, który z tego wyciągnąłem, był błędny. Urząd publikuje specyfikację
+> OpenAPI pod `https://api-sudop.uokik.gov.pl/sudop-api/v3/api-docs` i wynika z niej,
+> że protokół jest inny, niż zakładałem, a jedna ze ścieżek nigdy nie została
+> przez nas wywołana. Szczegóły w sekcji **1a**. Poniższe zapisy zostawiam jako
+> zapis tego, co zmierzyliśmy, nie jako opis możliwości API.
 
 `/api/przypadki-pomocy?nip-beneficjenta=…&strona=1` → **HTTP 200** z ciałem:
 
@@ -96,6 +106,133 @@ prawdopodobnie minutowy lub godzinowy, nie sekundowy.
 
 ---
 
+## 1a. Specyfikacja OpenAPI — czego nie przeczytałem
+
+Urząd publikuje maszynową specyfikację swojego API:
+
+```
+https://api-sudop.uokik.gov.pl/sudop-api/v3/api-docs
+```
+
+Adres dokumentacji podany na stronie UOKiK (`…:9443/devportal/apis`) przekierowuje
+dziś na `/swagger/`, czyli na interfejs Swaggera, który ładuje właśnie tę
+specyfikację. Nie otworzyłem jej ani razu przez cały rekonesans.
+
+### Co jest w specyfikacji
+
+**Ścieżki, których nie próbowaliśmy:**
+
+| Ścieżka | Znaczenie |
+|---|---|
+| `/api/przypadki-pomocy-bez-kolejki` | te same parametry co wyżej, **z pominięciem kolejki** |
+| `/api/kolejka/{queueId}` | stan zgłoszenia |
+| `/api/wynik/{requestId}?csv=true` | wynik, opcjonalnie **od razu jako CSV** |
+| `/wersja` | wersja usługi |
+
+**Protokół jest inny, niż zakładałem.** Specyfikacja opisuje odpowiedź
+`303 „Zarejestrowano wyszukanie"` z nagłówkiem `Location`, a nie `200`
+z komunikatem o czekaniu.
+
+**Brak `securitySchemes`.** W całej specyfikacji nie ma żadnego schematu
+uwierzytelniania — API nie deklaruje wymogu klucza.
+
+**Schemat wyniku** (`AidEventEntity`) zawiera 29 pól, w tym `gmina-siedziby-kod`
+i `gmina-siedziby-nazwa`, `wielkosc-beneficjenta-kod`, `sektor-dzialalnosci-wersja`
+oraz wszystkie trzy wartości pomocy. To **więcej**, niż daje eksport CSV.
+
+### Dlaczego tego nie zobaczyliśmy
+
+`fetch()` domyślnie sam podąża za przekierowaniem. Odpowiedź `303` z nagłówkiem
+`Location` została skonsumowana przez klienta, sonda pokazała `HTTP 200` z treścią
+„Przygotowywanie odpowiedzi, przewidywany czas to 60 sekund" — czyli **stan kolejki
+spod adresu, na który nas przekierowano**. Na tej podstawie zapisałem w dokumentacji
+i w projekcie pisma do Urzędu, że „odpowiedzi nie zawierają nagłówka `Location`,
+nie ma więc możliwości powiązania ponownego zapytania ze zgłoszeniem".
+
+Nagłówek był. Nie zobaczyłem go, bo klient go za mnie odczytał i wyrzucił.
+
+To jest **szósty** przypadek tego samego błędu w tym projekcie i najpoważniejszy:
+o krok od wysłania do organu administracji pisma z nieprawdziwym twierdzeniem
+o jego własnym systemie. Sonda 28 (`npm run probe:sudop-api`) używa
+`redirect: 'manual'` i wypisuje każdy skok osobno.
+
+### 1b. Co zmierzyła sonda 28 — protokół działa
+
+Uruchomiona 4 września 2026, 19:40 UTC:
+
+```
+GET /sudop-api/wersja
+    200  {"major":"1","minor":"0","patch":"0","dateMod":"01.12.2025"}
+
+GET /sudop-api/api/przypadki-pomocy-bez-kolejki?nip-beneficjenta=…
+    303  Location: /sudop-api/api/wynik/3f19ceef-c30a-4e9e-a676-48c017abfa07
+
+GET /sudop-api/api/wynik/3f19ceef-…   (1,5 s później)
+    404  {"error-result":"Brak zasobu","error-reason":"Nie znaleziono rekordu…"}
+
+GET /sudop-api/api/przypadki-pomocy?nip-beneficjenta=…
+    303  Location: /sudop-api/api/kolejka/71b7281b-5222-454e-bad5-8379cf036e79
+
+GET /sudop-api/api/kolejka/71b7281b-…   (8 razy przez ~40 s)
+    200  "Przygotowywanie odpowiedzi, przewidywany czas to 60 sekund"
+```
+
+Ustalone: **ścieżka bazowa to `/sudop-api`** (bez niej nginx zwraca 404),
+API odpowiada, wersja z 1 grudnia 2025, identyfikatory zgłoszeń istnieją
+i mają postać UUID.
+
+### 1c. Dwa błędy po naszej stronie, oba wykryte tym pomiarem
+
+**Starsze sondy tworzyły nowe zgłoszenie zamiast odpytywać stare.** Zapisałem
+wcześniej, że „ponawiałem odpytywanie tego samego adresu w odstępach 30–60 sekund
+przez łącznie ponad cztery minuty". Ponawiany był adres `/api/przypadki-pomocy`,
+a **każde jego wywołanie rejestruje nowe wyszukanie z nowym identyfikatorem**.
+Odpytywaliśmy więc za każdym razem świeżo utworzone zadanie. Ani razu nie
+sprawdziliśmy tego samego identyfikatora dwa razy z rzędu.
+
+**Sonda 28 poddała się przed czasem, o który prosi serwer.** Osiem prób co pięć
+sekund to około 40 sekund. Serwer deklaruje 60.
+
+Stąd sonda 29 (`npm run probe:sudop-czekaj`): rejestruje każde z dwóch wyszukań
+**dokładnie raz** i odpytuje te same dwa identyfikatory na przemian przez sześć
+minut. Obciążenie serwera: dwa wyszukania na całe uruchomienie.
+
+### 1d. Sonda 29 — pomiar rozstrzygający
+
+**4 września 2026, 21:15:57–21:22:04 UTC.** Dwie rejestracje, 36 odpytań tych
+samych dwóch identyfikatorów, 365 sekund.
+
+```
+21:15:57  GET /api/przypadki-pomocy-bez-kolejki?nip-beneficjenta=6150022153&strona=1
+          303  Location: /sudop-api/api/wynik/4976bbc9-1128-4fb0-8d39-37e46bb85aab
+
+21:15:59  GET /api/przypadki-pomocy?nip-beneficjenta=6150022153&strona=1
+          303  Location: /sudop-api/api/kolejka/3451e176-5e49-4c66-af69-c1adf9d3c26d
+
+21:16:09 → 21:22:04   (36 odpytań, co 10 s, TE SAME identyfikatory)
+
+  /api/wynik/4976bbc9-…    404  {"error-result":"Brak zasobu",
+                                 "error-reason":"Nie znaleziono rekordu
+                                  o podanym identyfikatorze"}          ← 36 razy
+  /api/kolejka/3451e176-…  200  "Przygotowywanie odpowiedzi,
+                                 przewidywany czas to 60 sekund"       ← 36 razy
+```
+
+**Wynik: żadna z dwóch ścieżek nie zwróciła danych.** Kolejka podawała ten sam
+komunikat o 60 sekundach jeszcze po 365 sekundach — sześciokrotnie dłużej,
+niż deklaruje. Ścieżka `bez-kolejki` rejestruje wyszukanie i wydaje identyfikator
+wyniku, ale zasób pod tym identyfikatorem nie powstaje.
+
+To jest pomiar, którego brakowało przez cały rekonesans: **jedno zgłoszenie,
+jeden identyfikator, cierpliwe odpytywanie**. Wcześniejsze próby mierzyły
+wyłącznie to, że świeżo utworzone zadanie nie jest gotowe od razu.
+
+Wniosek — tym razem oparty na poprawnie wykonanym pomiarze: **anonimowy dostęp
+do API rejestruje wyszukania, ale ich nie kończy.** Ograniczenie jest po stronie
+przetwarzania zgłoszeń, nie po stronie konstrukcji zapytań ani nagłówków.
+
+---
+
 ## 2. Aplikacja webowa — inny system, te same dane
 
 `https://sudop.uokik.gov.pl` — **JSF / PrimeFaces**, stan serwerowy w `javax.faces.ViewState`,
@@ -110,11 +247,79 @@ identyfikatory komponentów generowane automatycznie (`j_idt11`, `j_idt37`…).
 | `/search/aidEvent` | **Wyszukiwanie beneficjentów wybranych środków pomocowych** |
 | `/search/aidBeneficiary` | Wyszukiwanie pomocy otrzymanej przez beneficjenta |
 
-### `/search/aidBeneficiary` — potwierdzony eksport CSV
+### `/search/aidBeneficiary` — inny format pliku, nie inna tabela
 
 Kryteria: NIP beneficjenta, data od, data do, „Zakres pomocy".
 Format zapisu: **`PDF` albo `CSV`**, wybierany przed wysłaniem formularza.
 Żądanie: `POST /search/aidBeneficiary` z polami JSF i `ViewState`.
+
+**Eksport z tej strony to RAPORT, nie tabela danych.** Zmierzone na pliku
+`przypadki_pomocy_beneficjenta.csv` (12,5 KB, CP1250): parser zobaczył 5 kolumn
+zamiast 14, a nagłówek wygląda tak:
+
+```
+Nazwa beneficjenta pomocy
+Numer Identyfikacji Personalnej (NIP) beneficjenta pomocy
+Zakres raportu od
+do
+Data wygenerowania raportu
+```
+
+To nie są nazwy kolumn danych — to **metryczka raportu**: kto, za jaki okres,
+kiedy wygenerowano. Dane szczegółowe muszą siedzieć niżej, w innym układzie.
+Kontrakt nagłówka przerwał import i nic nie zapisał, czyli zachował się dokładnie
+tak, jak miał: plik o innym znaczeniu nie wjechał do tabeli `subsidies` po cichu.
+
+### Układ pliku — zmierzony
+
+Plik ma **trzy warstwy**, nie jedną tabelę:
+
+```
+wiersz 1   naglowek metryczki   (5 kolumn)
+wiersz 2   metryczka            beneficjent, NIP, zakres od, do, data wygenerowania
+wiersz 3   naglowek danych      (19 kolumn)
+wiersz 4+  dane                 po jednym przypadku pomocy
+```
+
+Kolumny danych (19):
+
+```
+ 0  Podstawa prawna - informacje podstawowe 2a      6  Numer środka pomocowego
+ 1  2b                                              7  Dzień udzielenia pomocy
+ 2  2c                                              8  Nazwa podmiotu udzielającego pomocy
+ 3  Podstawa prawna - informacje szczegółowe 3a     9  NIP podmiotu udzielającego pomocy
+ 4  3b                                             10  Wartość nominalna pomocy [PLN]
+ 5  3c                                             11  Wartość pomocy brutto [PLN]
+                                                   12  Wartość pomocy brutto [EURO]
+13  Forma pomocy            15  Klasa PKD          17  Wielkość beneficjenta kod
+14  Przeznaczenie pomocy    16  Wersja PKD         18  Wielkość beneficjenta
+```
+
+Różnice wobec eksportu z `aidEvent`, wszystkie istotne:
+
+- **Nazwa i NIP beneficjenta są w metryczce, nie w wierszu.** Jeden plik = jeden podmiot.
+- **Jest NIP podmiotu udzielającego pomocy** — `aidEvent` daje tylko nazwę.
+- **Nie ma kodu TERYT.** Ten eksport nie wspiera modułu lokalnego.
+- **Słowniki są kodowane:** `A1.1 dotacja`, `E inne`, `C1.4 pożyczki warunkowo umorzone`,
+  `a14 pomoc na szkolenia` — kod i nazwa w jednym polu. W `aidEvent` jest sam tekst
+  („zwolnienie z podatku").
+- **`Wielkość beneficjenta kod` = 3 przy „duży przedsiębiorca"** — potwierdza odczytanie
+  słownika: 0 = mikro, 1 = małe, 2 = średnie, 3 = powyżej.
+- **W nagłówku jest „nominalna", bez literówki** — ta sama wartość, inna pisownia
+  niż w `aidEvent`. Dwa eksporty, dwa kontrakty.
+- Numer środka pomocowego **bywa pusty** (starsze wpisy sprzed systemu numeracji).
+
+### Dlaczego mapper czeka
+
+Ten sam przypadek pomocy występuje w obu eksportach: PGE Elektrownia Turów,
+`C 43/2005`, 01.04.2008, 438 463 177,00 zł jest i w naszej bazie z `aidEvent`,
+i w tym pliku. Import bez klucza naturalnego **podwoiłby kwoty** — a to jest
+najgorszy możliwy błąd w tekście o pieniądzach publicznych.
+
+Do tego specyfikacja OpenAPI (sekcja 1a) opisuje odpowiedź z **29 polami**,
+w tym `gmina-siedziby-kod`, czyli bogatszą niż oba eksporty CSV razem wzięte.
+Pisanie drugiego parsera CSV, zanim wiadomo, czy API działa, byłoby pracą
+prawdopodobnie do wyrzucenia. **Najpierw sonda 28.**
 
 ### `/search/aidEvent` — ma lokalizację, to jest ta strona
 
@@ -273,7 +478,9 @@ Sprawdzone przy okazji:
 | Co | Wynik |
 |---|---|
 | Deduplikacja między importami | ten sam plik dwa razy → `Nowych w bazie: 0`, `Bylo juz wczesniej: 30` |
-| Kontrola sum | `OK` w obu przebiegach |
+| Kontrola sum | `OK` w każdym z sześciu przebiegów |
+| Komplet programu | 5 stron wyników → **127 wierszy** w `subsidies`, bez duplikatów |
+| Strażnik nagłówka | eksport z `/search/aidBeneficiary` (5 kolumn zamiast 14) **przerwany, nic nie zapisano** |
 | Sumy kontrolne NIP-ów | 30/30 poprawnych |
 | Kody TERYT | 30/30 obecnych, 5 różnych gmin |
 | Kurs walutowy jako sanity check | 438 463 177 PLN / 124 882 704,93 EUR = 3,51 — zgodne z kursem z kwietnia 2008 |
