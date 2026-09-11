@@ -39,8 +39,8 @@ export class BrakObiektuWBazie extends Error {
 const MIGRACJE: Record<string, string> = {
   mp_obecnosc_kontekst: '0018_zdjecia_okregi_niezgodnosc.sql',
   okregi_wyborcze: '0018_zdjecia_okregi_niezgodnosc.sql',
-  glosowanie_z_procesem: '0020_los_procesu_podpis.sql',
-  proces_los: '0020_los_procesu_podpis.sql',
+  glosowanie_z_procesem: '0021_los_bez_etapu_prezydenckiego.sql',
+  proces_los: '0021_los_bez_etapu_prezydenckiego.sql',
   mp_absence_monthly: '0010_kontekst_nieobecnosci.sql',
   mp_stats_ranking: '0009_przedzialy_ufnosci.sql',
   mp_stats: '0002_rls_hardening.sql',
@@ -326,6 +326,13 @@ export type LosProcesu =
   | 'weto'
   | 'trybunal'
   | 'oczekuje'
+  | 'u_prezydenta'
+  | 'bez_etapu_prezydenckiego'
+  /**
+   * Wycofany w migracji 0021 — widok nie ma go już jak wyprodukować.
+   * Zostaje w typie i w LOS_OPIS wyłącznie na czas, w którym baza mogłaby
+   * być jeszcze na 0020. Gdy 0021 jest wszędzie wykonana, można usunąć.
+   */
   | 'brak_potwierdzenia';
 
 /**
@@ -355,6 +362,40 @@ export const LOS_OPIS: Record<LosProcesu, { etykieta: string; wyjasnienie: strin
     etykieta: 'uchwalono — oczekuje na publikację',
     wyjasnienie: 'Sejm uchwalił niedawno; rejestr nie odnotował jeszcze żadnego etapu prezydenckiego.',
   },
+
+  /**
+   * Ustawa jest u Prezydenta i rejestr milczy o tym, co dalej.
+   *
+   * Wyjaśnienie wymienia trzy rzeczy, których NIE MA, zamiast sugerować
+   * którąkolwiek z nich. Przy druku 219 (ustawa o KRS) rejestr kończy się
+   * na „przekazano do podpisu" z 15.07.2024 — i tyle wiemy. Napisanie
+   * „Prezydent zwleka" albo „zawetował" byłoby naszym wnioskiem z ciszy
+   * rejestru, a nie faktem z rejestru.
+   */
+  u_prezydenta: {
+    etykieta: 'uchwalono — przekazano Prezydentowi',
+    wyjasnienie:
+      'Rejestr odnotowuje przekazanie ustawy do podpisu i nie odnotowuje, co było dalej: ' +
+      'ani podpisu, ani weta, ani skierowania do Trybunału.',
+  },
+
+  /**
+   * Sprawa, która nigdy nie szła do Prezydenta.
+   *
+   * 184 z 185 procesów, którym dawniej przypisywaliśmy „brak potwierdzenia",
+   * to wnioski, informacje rządowe i zawiadomienia. Pisanie przy nich
+   * „nie wiemy, na czym proces stanął" sugerowało lukę w naszej wiedzy tam,
+   * gdzie nie było czego wiedzieć — wniosek o wotum nieufności nie czeka
+   * na publikację w Dzienniku Ustaw.
+   */
+  bez_etapu_prezydenckiego: {
+    etykieta: 'rozstrzygnięte przez Sejm',
+    wyjasnienie:
+      'Rejestr nie odnotowuje przekazania Prezydentowi ani publikacji aktu. ' +
+      'Przy wnioskach, informacjach i zawiadomieniach to jest normalny koniec drogi.',
+  },
+
+  /** Wycofany w 0021 — zostaje na czas, w którym baza może być jeszcze na 0020. */
   brak_potwierdzenia: {
     etykieta: 'uchwalono przez Sejm',
     wyjasnienie: 'Nie mamy potwierdzenia publikacji w rejestrze i nie wiemy, na czym proces stanął.',
