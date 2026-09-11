@@ -37,6 +37,35 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+/*
+  Caly skrypt jest modulem ES z top-level await, wiec wyjatek rzucony przez
+  `zakoncz()` wyleci na wierzch. Ten handler wypisuje sam komunikat zamiast
+  stosu wywolan — komunikaty w tym pliku sa pisane dla czlowieka, a stos
+  z node_modules niczego do nich nie dodaje.
+*/
+function obsluzBlad(e) {
+  if (e && e.name === 'BladSkryptu') {
+    console.error(`\n${e.message}\n`);
+    process.exitCode = 1;
+    return;
+  }
+  console.error(e);
+  process.exitCode = 1;
+}
+
+/*
+  DWA zdarzenia, nie jedno — i to nie jest ostroznosc na wyrost.
+
+  Wyjatek rzucony PRZED pierwszym `await` (np. brak tokenu) jest zwyklym
+  `uncaughtException`. Ale po `await fetch(...)` reszta modulu wykonuje sie
+  juz wewnatrz obietnicy, wiec ten sam wyjatek wychodzi jako
+  `unhandledRejection`. Pierwsza wersja lapala tylko to pierwsze — i przy
+  odmowie autoryzacji, czyli dokladnie tam, gdzie czytelny komunikat jest
+  najbardziej potrzebny, wypisywala stos wywolan.
+*/
+process.on('uncaughtException', obsluzBlad);
+process.on('unhandledRejection', obsluzBlad);
+
 // --- konfiguracja, bez wypisywania wartosci -------------------------------
 for (const nazwa of ['.env.local', '.env']) {
   if (existsSync(resolve(nazwa))) {
@@ -63,9 +92,27 @@ function idProjektu() {
 const TOKEN = process.env.SUPABASE_ACCESS_TOKEN?.trim();
 const REF = idProjektu();
 
+/**
+ * Konczy z kodem bledu, ale NIE przez `process.exit()`.
+ *
+ * `process.exit()` tuz po zapytaniu HTTP trafia na Windowsie w gniazdo, ktore
+ * jeszcze sie zamyka, i Node dokleja do komunikatu:
+ *
+ *     Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), src\win\async.c
+ *
+ * Przy bledzie autoryzacji wyglada to tak, jakby skrypt sie wysypal, i odciaga
+ * uwage od prawdziwej przyczyny. `exitCode` + wyjatek daje ten sam kod wyjscia,
+ * a proces konczy sie dopiero, gdy petla zdarzen opustoszeje.
+ */
+class BladSkryptu extends Error {
+  // `extends Error` samo w sobie zostawia name = 'Error', wiec handler
+  // nie rozpoznalby wlasnego wyjatku i wypisywal stos zamiast komunikatu.
+  name = 'BladSkryptu';
+}
+
 function zakoncz(komunikat) {
-  console.error(`\n${komunikat}\n`);
-  process.exit(1);
+  process.exitCode = 1;
+  throw new BladSkryptu(komunikat);
 }
 
 if (!TOKEN) {
