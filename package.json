@@ -24,6 +24,7 @@
     "probe:sudop-czekaj": "node scripts/probes/29-sudop-cierpliwie.mjs",
     "probe:procesy": "node scripts/probes/30-procesy.mjs",
     "probe:procesy2": "node scripts/probes/31-procesy-glebiej.mjs",
+    "probe:sejm": "node scripts/probes/32-sejm-kontrakt.mjs",
     "ingest:sudop-gminy": "tsx ingest/jobs/sync-sudop-gminy.ts",
     "ingest:sudop-csv": "tsx ingest/jobs/import-sudop-csv.ts",
     "ingest:role": "tsx ingest/jobs/import-mp-roles.ts",
