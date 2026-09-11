@@ -37,7 +37,9 @@ export class BrakObiektuWBazie extends Error {
 }
 
 const MIGRACJE: Record<string, string> = {
-  mp_obecnosc_kontekst: '0018_zdjecia_okregi_niezgodnosc.sql',
+  // 0023 przedefiniowala ten widok (coalesce na adres zdjecia). Wskazanie
+  // 0018 cofneloby te zmiane po cichu, wygladajac na skuteczna naprawe.
+  mp_obecnosc_kontekst: '0023_zdjecia_u_siebie.sql',
   okregi_wyborcze: '0018_zdjecia_okregi_niezgodnosc.sql',
   glosowanie_z_procesem: '0024_weto_utrzymane.sql',
   proces_los: '0024_weto_utrzymane.sql',
@@ -367,10 +369,22 @@ export const LOS_OPIS: Record<LosProcesu, { etykieta: string; wyjasnienie: strin
    * Jedyna etykieta w tym słowniku przepisana ze SŁÓW rejestru, a nie złożona
    * przez nas z kodów etapu.
    *
-   * `process_stages.decision` = „nie uchwalona ponownie" i `stage_name`
-   * = „nie uchwalona ponownie po wecie Prezydenta". Oba pola importujemy
-   * od migracji 0016 i do 0024 nie używaliśmy ich nigdzie — a to one, a nie
-   * kody, mówią, czym skończyło się ponowne głosowanie.
+   * `process_stages.decision` = „nie uchwalona ponownie" przy etapie
+   * `PresidentMotionConsideration`. Importujemy to pole od migracji 0016
+   * i do 0024 nie używaliśmy go nigdzie — a to ono, a nie kod etapu, mówi,
+   * czym skończyło się ponowne głosowanie.
+   *
+   * UWAGA NA POKUSĘ, W KTÓRĄ WPADŁA PIERWSZA WERSJA TEGO ZDANIA. Siedem z tych
+   * procesów ma dodatkowo etap końcowy o nazwie „nie uchwalona ponownie po
+   * wecie Prezydenta" — brzmi to lepiej i chciało się to zacytować. Ale
+   * pozostałych osiem (druki 410, 643, 865, 935, 1109, 1110, 1131, 1600) ma
+   * etap końcowy nazwany po prostu „Uchwalono", bo są to druki rozpatrywane
+   * ŁĄCZNIE i rejestr zamyka je en bloc. Cytowanie tamtej frazy przy nich
+   * byłoby przypisaniem rejestrowi słów, których dla nich nie ma —
+   * dokładnie tym, przed czym ostrzega D20.
+   *
+   * Zmierzone: fraza o wecie występuje 7 razy na 629 etapów `End` w całej
+   * bazie. `decision = 'nie uchwalona ponownie'` — 15 na 15.
    *
    * Do 0024 te piętnaście procesów czytało się na dwa przeciwne sposoby,
    * zależnie od niekonsekwentnej flagi `passed`: sześć jako „nie uchwalono"
@@ -381,7 +395,7 @@ export const LOS_OPIS: Record<LosProcesu, { etykieta: string; wyjasnienie: strin
     etykieta: 'uchwalona przez Sejm — weto Prezydenta utrzymane',
     wyjasnienie:
       'Sejm uchwalił ustawę, Prezydent ją zawetował, a w ponownym głosowaniu Sejm nie uchwalił ' +
-      'jej ponownie. Rejestr zapisuje ten etap słowami „nie uchwalona ponownie po wecie Prezydenta".',
+      'jej ponownie. Rejestr zapisuje decyzję tego etapu słowami „nie uchwalona ponownie".',
   },
   trybunal: {
     etykieta: 'uchwalono — skierowano do Trybunału Konstytucyjnego',

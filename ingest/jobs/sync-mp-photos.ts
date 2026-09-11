@@ -41,6 +41,7 @@
 
 import { db } from '../lib/db.js';
 import { getBuffer } from '../lib/http.js';
+import { assertSchema, WYMOGI_ZDJECIA } from '../lib/preflight.js';
 
 const KUBELEK = 'portrety';
 
@@ -70,6 +71,11 @@ async function main() {
   const sucho = process.argv.includes('--sucho') || process.argv.includes('--dry');
   const limit = Number(flaga('ile') ?? 0) || 0;
   const rownolegle = Math.max(1, Number(flaga('rownolegle') ?? 4) || 4);
+
+  // Wzorzec z CLAUDE.md §7.5. Bez tego brak migracji 0023 daje surowe
+  // "column mps.photo_stored_url does not exist" zamiast instrukcji, ktora
+  // migracje uruchomic — a po to preflight w ogole powstal.
+  await assertSchema(WYMOGI_ZDJECIA);
 
   // Bierzemy TYLKO tych, u których HEAD potwierdził, że zdjęcie istnieje
   // (migracja 0018). Adresu bez potwierdzenia nie ma po co pobierać.
@@ -184,6 +190,24 @@ async function main() {
     console.log(`${bledy.length} zdjęć nie udało się pobrać:`);
     console.log(bledy.slice(0, 10).join('\n'));
     console.log('Uruchom ponownie — skrypt bierze tylko te, których jeszcze nie ma.');
+  }
+
+  /*
+    KOD WYJSCIA PRZY CALKOWITEJ AWARII.
+
+    Bledy pojedynczych zdjec sa łapane w petli i tylko raportowane — to jest
+    sluszne, bo jedno niedostepne zdjecie nie ma prawa przerwac importu
+    pozostalych 498. Ale od 12.09.2026 ten skrypt siedzi w nocnym cronie
+    i nikt jego wyniku nie czyta. Gdyby Sejm API bylo niedostepne przez cala
+    noc, krok w Actions swiecilby na zielono przy 499 niepowodzeniach.
+
+    Wzorzec "raportuj, nie przerywaj" (§7.2) dotyczy nieznanych wartosci
+    slownika, a nie awarii pobierania — to sa dwie rozne rzeczy.
+  */
+  if (bledy.length && bledy.length === doZrobienia.length) {
+    console.log('');
+    console.log(`::error::Nie udalo sie skopiowac ANI JEDNEGO zdjecia (${bledy.length}/${doZrobienia.length}).`);
+    process.exitCode = 1;
   }
 
   if (!sucho) {

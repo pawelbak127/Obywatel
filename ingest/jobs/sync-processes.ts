@@ -23,7 +23,7 @@
  */
 
 import { db } from '../lib/db.js';
-import { assertSchema } from '../lib/preflight.js';
+import { assertSchema, WYMOGI_PROCESY } from '../lib/preflight.js';
 import { recordSource } from '../lib/source-recorder.js';
 import { mapLimit } from '../lib/http.js';
 import { fetchProcessPage, fetchProcess, PROCESY_NA_STRONE, TERM } from '../lib/sejm-client.js';
@@ -68,7 +68,7 @@ async function main() {
   const sucho = process.argv.includes('--sucho') || process.argv.includes('--dry');
   const limitProcesow = Number(flaga('ile') ?? 0) || 0;
 
-  await assertSchema();
+  await assertSchema(WYMOGI_PROCESY);
 
   // --- 1. Lista procesow, ze stronicowaniem ------------------------------
   console.log(`Kadencja ${TERM}. Pobieram liste procesow…`);

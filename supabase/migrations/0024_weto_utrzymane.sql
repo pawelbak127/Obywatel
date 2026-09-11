@@ -7,10 +7,31 @@
 --
 -- Piętnaście procesów jest w identycznej sytuacji faktycznej: Sejm uchwalił
 -- ustawę, Prezydent ją zawetował, a przy ponownym głosowaniu Sejm nie zebrał
--- większości 3/5. Rejestr zapisuje to dwoma polami, po polsku:
+-- większości 3/5. Rejestr zapisuje to polem:
 --
---     process_stages.decision    = 'nie uchwalona ponownie'
---     process_stages.stage_name  = 'nie uchwalona ponownie po wecie Prezydenta'
+--     process_stages.decision = 'nie uchwalona ponownie'
+--     (przy stage_type = 'PresidentMotionConsideration')
+--
+-- SPROSTOWANIE DOPISANE 12.09.2026, po recenzji tej migracji.
+-- Pierwsza wersja tego akapitu wymieniała tu DRUGIE pole:
+--
+--     process_stages.stage_name = 'nie uchwalona ponownie po wecie Prezydenta'
+--
+-- i na nim oparte było zdanie pokazywane czytelnikowi. Sprawdzone na danych:
+-- ta fraza występuje 7 razy na 629 etapów `End` w całej bazie. Osiem z tych
+-- piętnastu procesów (druki 410, 643, 865, 935, 1109, 1110, 1131, 1600) ma
+-- etap końcowy nazwany po prostu „Uchwalono" — to druki rozpatrywane ŁĄCZNIE,
+-- które rejestr zamyka en bloc.
+--
+-- Czyli w migracji ustanawiającej zasadę „przepisujemy słowa rejestru"
+-- przypisałem rejestrowi słowa, których dla ośmiu procesów nie ma. Sam `CASE`
+-- był poprawny od początku — stoi na `decision`, prawdziwym przy 15 z 15.
+-- Błędne było wyłącznie zdanie w LOS_OPIS i ten komentarz.
+--
+-- Migracji nie przepisuję po cichu, bo już się wykonała. Poprawione zostało
+-- src/lib/queries.ts; ten zapis zostaje jako ostrzeżenie, że pokusa
+-- zacytowania ładniejszego brzmienia działa także na osobę, która właśnie
+-- pisze regułę przeciwko niej.
 --
 -- Flaga `passed` rozkłada te piętnaście procesów na dwie grupy:
 --

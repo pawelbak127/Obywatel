@@ -388,8 +388,21 @@ z niego wniosek o jeden krok za daleko: **uznaliśmy sprawę za niepoznawalną,
 zamiast sprawdzić, czy rejestr nie rozstrzyga jej gdzie indziej.**
 
 Rozstrzyga. Pole `process_stages.decision` niesie zdanie „nie uchwalona
-ponownie", a `stage_name` etapu końcowego — „nie uchwalona ponownie po wecie
-Prezydenta". Oba importujemy od migracji 0016 i nie czytaliśmy ich nigdzie.
+ponownie" przy etapie `PresidentMotionConsideration`. Importujemy je od
+migracji 0016 i nie czytaliśmy go nigdzie.
+
+> **Przypis dopisany po recenzji, i to najważniejsza część tej decyzji.**
+> Pierwsza wersja powoływała się także na `stage_name` etapu końcowego —
+> „nie uchwalona ponownie po wecie Prezydenta". Brzmi lepiej i to zdanie
+> trafiło do interfejsu. Zmierzone: ta fraza występuje **7 razy na 629 etapów
+> `End`**, a osiem z piętnastu procesów ma etap końcowy nazwany „Uchwalono",
+> bo są to druki rozpatrywane łącznie i rejestr zamyka je en bloc.
+>
+> Czyli w decyzji ustanawiającej zasadę „przepisujemy słowa rejestru"
+> przypisałem rejestrowi słowa, których dla ośmiu procesów nie ma.
+> **Reguła ma więc drugą połowę: sprawdź, przy ilu wierszach cytowane słowo
+> naprawdę stoi.** Cytat prawdziwy w połowie przypadków jest gorszy niż
+> ostrożniejsze sformułowanie prawdziwe zawsze — bo wygląda na mocniejszy.
 Pole ma zaledwie **18 różnych wartości na 1 657 wypełnionych etapów** — to
 zamknięty słownik zdań po polsku, gotowy do czytania.
 

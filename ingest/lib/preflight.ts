@@ -43,6 +43,24 @@ const WYMOGI: Wymog[] = [
   { tabela: 'mp_stats', kolumna: 'attendance_lo', migracja: '0009_przedzialy_ufnosci.sql', po_co: 'rankingi po dolnej granicy, nie po surowym procencie' },
   { tabela: 'mp_absence_monthly', kolumna: 'absent_pct', migracja: '0010_kontekst_nieobecnosci.sql', po_co: 'ksztalt nieobecnosci w czasie' },
   { tabela: 'mp_obecnosc_kontekst', kolumna: 'voted_pct', migracja: '0011_widok_pelny_kontrakt.sql', po_co: 'komplet kolumn dla profilu posla' },
+  { tabela: 'mps', kolumna: 'photo_exists', migracja: '0018_zdjecia_okregi_niezgodnosc.sql', po_co: 'zdjecie potwierdzone HEAD-em, inaczej widok nie wypusci adresu' },
+];
+
+/**
+ * Wymogi importu PROCESOW. Osobno z tego samego powodu co SUDOP: nocny import
+ * poslow nie ma powodu przestac dzialac dlatego, ze ktos nie uruchomil migracji
+ * dotyczacej procesow legislacyjnych.
+ */
+export const WYMOGI_PROCESY: Wymog[] = [
+  { tabela: 'process_stages', kolumna: 'voting_id', migracja: '0016_procesy_zmierzone.sql', po_co: 'twarde zlaczenie etap -> glosowanie' },
+  { tabela: 'legislative_processes', kolumna: 'isap_url', migracja: '0016_procesy_zmierzone.sql', po_co: 'adres aktu w rejestrze (D1)' },
+  { tabela: 'process_stages', kolumna: 'decision', migracja: '0016_procesy_zmierzone.sql', po_co: 'slowo rejestru o wyniku etapu (D20)' },
+];
+
+/** Wymogi kopiowania zdjec do Storage. */
+export const WYMOGI_ZDJECIA: Wymog[] = [
+  { tabela: 'mps', kolumna: 'photo_stored_url', migracja: '0023_zdjecia_u_siebie.sql', po_co: 'adres naszej kopii zdjecia' },
+  { tabela: 'mps', kolumna: 'photo_stored_at', migracja: '0023_zdjecia_u_siebie.sql', po_co: 'kiedy skopiowalismy' },
 ];
 
 export async function assertSchema(dodatkowe: Wymog[] = []): Promise<void> {
