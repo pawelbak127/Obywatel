@@ -47,9 +47,53 @@
 -- odrzucił", skoro brak podpisu, ale to już jest nasz wniosek z nieobecności
 -- danych, a nie fakt z rejestru. Pokazujemy więc oba fakty obok siebie
 -- i zostawiamy czytelnikowi złożenie ich w całość.
+--
+-- ---------------------------------------------------------------------
+-- POPRAWKA PO PIERWSZYM URUCHOMIENIU: blad 42P16.
+--
+-- Pierwsza wersja tej migracji zaczynala sie od `create or replace view
+-- proces_los` i Supabase odrzucil ja w pierwszym poleceniu:
+--
+--   ERROR: 42P16: cannot change name of view column "los"
+--          to "ma_rozpatrzenie_wniosku"
+--
+-- POWOD. Widok z migracji 0019 ma kolumny w tej kolejnosci:
+--   1-5  print_number, passed, closure_date, isap_url, eli_address
+--   6-8  ma_weto, ma_trybunal, ma_podpis
+--   9    los
+--
+-- Ta migracja dokłada `ma_rozpatrzenie_wniosku` OBOK pozostalych surowych
+-- faktow, czyli na pozycje 9 — a `create or replace view` potrafi wylacznie
+-- DOPISAC kolumne na koncu listy. Nie umie wstawic kolumny w srodek ani
+-- przemianowac istniejacej. Postgres nie widzi wiec "nowej kolumny 9",
+-- tylko "kolumna 9 zmienila nazwe z los na ma_rozpatrzenie_wniosku" —
+-- i slusznie odmawia.
+--
+-- To jest dokladnie wzorzec C z HANDOFF.md §3.3, ktorego pierwsza wersja
+-- tej migracji nie zastosowala do `proces_los`, choc zastosowala go do
+-- `glosowanie_z_procesem` kilkadziesiat linii nizej.
+--
+-- ROZWIAZANIE: drop + create, w kolejnosci zaleznosci. Najpierw ginie widok
+-- zalezny (`glosowanie_z_procesem` czyta `proces_los`), potem sam `proces_los`.
+--
+-- SWIADOMIE BEZ `cascade`. Gdyby od `proces_los` zalezalo cos jeszcze, o czym
+-- nie wiemy, `cascade` usunaloby to po cichu. Bez niego migracja zatrzyma sie
+-- i poda nazwe tego obiektu — a to jest informacja, ktorej chcemy.
+--
+-- Kolejnosc kolumn nie jest tu kosmetyka: `ma_rozpatrzenie_wniosku` stoi przy
+-- `ma_weto`, `ma_trybunal` i `ma_podpis`, bo to jeden zestaw surowych faktow
+-- z rejestru. `los` jest WNIOSKIEM z nich i dlatego zostaje na koncu.
+--
+-- Migracja jest odporna na powtorzenie: `drop view if exists` przechodzi
+-- niezaleznie od tego, czy poprzednia proba cokolwiek zdazyla zmienic.
 -- =====================================================================
 
-create or replace view proces_los as
+-- Kolejnosc wymuszona zaleznoscia: glosowanie_z_procesem czyta proces_los,
+-- wiec widok zalezny musi zginac pierwszy.
+drop view if exists glosowanie_z_procesem;
+drop view if exists proces_los;
+
+create view proces_los as
 select
   p.print_number,
   p.passed,
@@ -107,9 +151,11 @@ comment on view proces_los is
 -- ---------------------------------------------------------------------
 -- Widok dla interfejsu: dokładamy fakty o wecie, żeby profil posła mógł
 -- pokazać je obok siebie, nie sklejając ich we wniosek.
+--
+-- Widok zostal juz usuniety na gorze pliku, razem z `proces_los` — musial
+-- zginac PRZED nim, bo od niego zalezy. Powtorka `drop` byla tu myląca,
+-- wiec zostaje samo `create`.
 -- ---------------------------------------------------------------------
-drop view if exists glosowanie_z_procesem;
-
 create view glosowanie_z_procesem as
 select
   v.id                as voting_id,
