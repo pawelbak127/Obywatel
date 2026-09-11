@@ -322,6 +322,133 @@ i my też nie powiemy niczego ponad kształt nieobecności.
 
 ---
 
+## D19 · „Nie wiemy" to nie to samo co „nie było czego wiedzieć"
+
+Widok `proces_los` miał kubełek `brak_potwierdzenia` — 185 procesów, przy
+których interfejs pisał: „Nie mamy potwierdzenia publikacji w rejestrze
+i nie wiemy, na czym proces stanął".
+
+Rozbicie po typie dokumentu pokazało, czym te 185 procesów naprawdę jest:
+
+```
+wniosek                    88     projekt uchwały   11
+informacja innych organów  32     zawiadomienie      6
+informacja rządowa         28     lista kandydatów   3
+wniosek (bez druku)        14     sprawozdanie       2
+                                  projekt ustawy     1
+```
+
+**184 ze 185 to sprawy, które nigdy nie idą do Prezydenta.** Wniosek o wotum
+nieufności nie czeka na publikację w Dzienniku Ustaw — on się po prostu
+skończył. Pisanie przy nim „nie wiemy, na czym proces stanął" sugerowało lukę
+w naszej wiedzy tam, gdzie nie było czego wiedzieć.
+
+To ten sam błąd co „uchwalono" przy ustawie zawetowanej (D-kontekst migracji
+0019), tylko odwrócony: opisywaliśmy proces kategorią, która do niego nie pasuje.
+
+**Rozdzielamy faktem z rejestru, nie typem dokumentu.** Kuszące byłoby podzielić
+po `document_type` — wniosek w jedno, ustawa w drugie. Ale `document_type` mówi,
+czym proces **jest**, a nie którędy **poszedł**, a to nie zawsze to samo i nie
+nam to rozstrzygać za rejestr. Rejestr mówi wprost etapem `ToPresident`
+(„Ustawę przekazano Prezydentowi do podpisu"). W spornym kubełku miał go
+**dokładnie jeden proces na 185** — rozdziela te dane niemal idealnie.
+
+Stąd dwa losy zamiast jednego (migracja 0021):
+
+| los | znaczy |
+|---|---|
+| `u_prezydenta` | rejestr odnotował przekazanie do podpisu i nic więcej |
+| `bez_etapu_prezydenckiego` | rejestr nie odnotował przekazania w ogóle |
+
+**Kolejność w `CASE` ma znaczenie i kosztowała osobną migrację.** W 0021 próg
+90 dni („świeżo uchwalone") stał przed testem na `ToPresident`, więc sześć
+ustaw świeżo przekazanych Prezydentowi dostawało los `oczekuje` wraz ze zdaniem
+„rejestr nie odnotował jeszcze żadnego etapu prezydenckiego" — nieprawdziwym
+i sprzecznym z kolumną, którą ta sama migracja wystawiła.
+
+Poprawione w 0022: **próg czasowy chroni wyłącznie gałąź, która twierdzi,
+że czegoś w rejestrze NIE MA.** Gałąź stwierdzająca fakt nie potrzebuje zapasu
+czasowego, bo fakt się nie przeterminowuje.
+
+**Sprawdzone:** migracje 0021 i 0022 z pięcioma blokami kontrolnymi;
+`oczekuje` 38 → 32 (zero z etapem `ToPresident`), `u_prezydenta` 1 → 7.
+Błąd kolejności wyłapała recenzja, nie autor — patrz D21.
+
+---
+
+## D20 · Kody grupują, słowa mówią. Przy sporze wygrywają słowa rejestru
+
+Przy funkcji `opisWeta()` w `src/lib/queries.ts` stało:
+
+> Kuszące byłoby napisać „Sejm weta nie odrzucił", skoro nie ma podpisu — ale
+> to jest wnioskowanie z nieobecności danych, a nie fakt z rejestru.
+
+Zdanie było słuszne i uchroniło nas przed realnym błędem. Ale wyciągnęliśmy
+z niego wniosek o jeden krok za daleko: **uznaliśmy sprawę za niepoznawalną,
+zamiast sprawdzić, czy rejestr nie rozstrzyga jej gdzie indziej.**
+
+Rozstrzyga. Pole `process_stages.decision` niesie zdanie „nie uchwalona
+ponownie", a `stage_name` etapu końcowego — „nie uchwalona ponownie po wecie
+Prezydenta". Oba importujemy od migracji 0016 i nie czytaliśmy ich nigdzie.
+Pole ma zaledwie **18 różnych wartości na 1 657 wypełnionych etapów** — to
+zamknięty słownik zdań po polsku, gotowy do czytania.
+
+Kosztowało to konkretną nieprawdę na stronie. Piętnaście procesów jest
+w identycznej sytuacji: Sejm uchwalił, Prezydent zawetował, Sejm nie zebrał 3/5.
+Flaga `passed` rozkładała je na dwie grupy — sześć z `false`, dziewięć z `true` —
+i czytelnik dostawał **dwa przeciwne komunikaty przy tym samym fakcie**:
+
+- przy `passed = false` → „nie uchwalono", czyli „Sejm był przeciw"
+  (a Sejm był za: III czytanie ma decyzję „uchwalono"),
+- przy `passed = true` → „uchwalono — Prezydent zawetował", bez słowa o tym,
+  że weto się utrzymało i sprawa jest zamknięta.
+
+**Zasada.** „Nie wnioskujemy z nieobecności danych" zostaje w mocy. Dochodzi
+do niej druga, lustrzana: **zanim ogłosisz niewiedzę, sprawdź, czy rejestr nie
+powiedział tego w polu, którego nie czytasz.** Gdy rejestr mówi coś słowami,
+przepisujemy jego słowa zamiast składać własne zdanie z kodów etapu.
+
+To jest ta sama lekcja co D18, odwrócona. D18 mówi: nie wpisuj ręcznie faktu,
+który rejestr podaje. D20 mówi: nie ogłaszaj niewiedzy w sprawie, którą rejestr
+rozstrzyga. **Czwarty raz w tym projekcie fakt siedział w bazie, a my go
+zasłanialiśmy** — po funkcji państwowej Tuska, po powodzie wygaśnięcia mandatu
+i po etapach weta z 0019.
+
+**Sprawdzone:** migracja 0024, los `weto_utrzymane` wyprowadzony z `decision`,
+a nie z flagi `passed` ani z nieobecności podpisu. 15 procesów, 225 głosowań
+w widoku interfejsowym. Dwa bloki kontrolne, w tym jeden pilnujący, że kontrakt
+ze słowem rejestru żyje — gdyby Sejm zmienił brzmienie, kubełek opustoszałby
+po cichu.
+
+---
+
+## D21 · Większe zmiany recenzuje osobny agent, nie autor
+
+Po migracji 0021 zrobiłem samodzielną recenzję i uznałem kolejność warunków
+za „potwierdzoną danymi", bo kubełek `oczekuje` miał te same 38 procesów przed
+zmianą i po niej.
+
+Ten test mierzył **stabilność rozkładu**, a nie **prawdziwość etykiety** —
+i przeszedł, mimo że sześć wierszy niosło zdanie sprzeczne z kolumną dołożoną
+przez tę samą migrację. Liczba 6 była wypisana na ekranie w wyniku końcowego
+zapytania migracji. Nie zobaczyłem jej.
+
+Znalazła to recenzja uruchomiona jako osobny agent, bez kontekstu autora.
+Ta sama recenzja rozstrzygnęła zapytaniem pytanie, które zostawiłem jako
+hipotezę (wszystkie 149 opublikowanych uchwał ma adres w Monitorze Polskim,
+więc przy 11 bez adresu mamy lukę w imporcie, a nie „normalny koniec drogi").
+
+**Zasada:** każda zmiana dotykająca migracji, `src/lib/queries.ts` albo warstwy
+importu idzie do recenzji osobnym agentem, **zanim** zostanie zgłoszona jako
+gotowa. Recenzent dostaje commit, `CLAUDE.md`, `docs/decyzje.md`, dostęp do bazy
+tylko do odczytu i wyraźny zakaz zmieniania czegokolwiek.
+
+Powód jest prosty i nie chodzi o staranność: **autor sprawdza, czy jego
+rozumowanie się trzyma, a nie czy jest prawdziwe.** Przy jednoosobowym zespole
+bez testów integracyjnych to jedyna dostępna druga para oczu.
+
+---
+
 ## Wzorzec, który wynikł z pięciu pomyłek
 
 Pięć razy wyciągnąłem wniosek z własnego wyobrażenia o danych zamiast je odczytać:

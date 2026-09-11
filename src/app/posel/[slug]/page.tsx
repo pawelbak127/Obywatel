@@ -304,10 +304,22 @@ function CzegoDotyczylo({ procesy }: { procesy: ProcesGlosowania[] }) {
           z etapow rejestru. Gdy widok go nie zna — bo migracja nie poszla —
           wracamy do starego, uczciwie ogolnego zdania.
         */
+        /*
+          LOS MA PIERWSZENSTWO NAD FLAGA `passed` — od migracji 0024.
+
+          Wczesniej stalo tu `p.passed ? … : 'nie uchwalono'`, wiec flaga
+          rozstrzygala pierwsza. Przy pietnastu procesach, w ktorych Sejm nie
+          odrzucil weta, dawalo to DWA PRZECIWNE komunikaty przy tym samym
+          fakcie: szesc drukow z `passed = false` czytalo sie jako
+          „nie uchwalono" (czyli „Sejm byl przeciw", choc byl za), a dziewiec
+          z `passed = true` jako „Prezydent zawetowal", bez slowa o tym, ze
+          sprawa jest zamknieta.
+
+          Los pochodzi ze slow rejestru i jest konsekwentny, flaga nie jest.
+          Gdy widok losu nie zna — bo migracja nie poszla — wracamy do flagi.
+        */
         const los = p.los_procesu ? LOS_OPIS[p.los_procesu] : null;
-        const etykieta = p.passed
-          ? (los?.etykieta ?? 'uchwalono przez Sejm')
-          : 'nie uchwalono';
+        const etykieta = los?.etykieta ?? (p.passed ? 'uchwalono przez Sejm' : 'nie uchwalono');
 
         return (
           <li key={p.print_number} className="text-[11px] leading-snug">
@@ -330,7 +342,9 @@ function CzegoDotyczylo({ procesy }: { procesy: ProcesGlosowania[] }) {
                 ) : (
                   <span
                     className={`font-medium ${
-                      p.los_procesu === 'weto' || p.los_procesu === 'trybunal'
+                      p.los_procesu === 'weto' ||
+                      p.los_procesu === 'trybunal' ||
+                      p.los_procesu === 'weto_utrzymane'
                         ? 'text-[color:var(--color-warn)]'
                         : ''
                     }`}
@@ -355,7 +369,14 @@ function CzegoDotyczylo({ procesy }: { procesy: ProcesGlosowania[] }) {
                   Napisanie "Sejm weta nie odrzucil" byloby wnioskowaniem
                   z nieobecnosci danych — dokladnie tym, czego ten serwis nie robi.
                 */}
-                {opisWeta(p) && (
+                {/*
+                  Przy `weto_utrzymane` NIE wolamy opisWeta(): etykieta mowi juz,
+                  ze weto sie utrzymalo, a dopisek „rejestr odnotowuje wniosek
+                  Prezydenta oraz rozpatrywanie tego wniosku" brzmialby przy niej
+                  jak wahanie. Ta funkcja zostaje dla wet, przy ktorych rejestr
+                  naprawde milczy o wyniku — po migracji 0024 jest ich 48.
+                */}
+                {p.los_procesu !== 'weto_utrzymane' && opisWeta(p) && (
                   <span className="block text-[color:var(--color-ink-soft)]">{opisWeta(p)}</span>
                 )}
               </>

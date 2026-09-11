@@ -21,9 +21,11 @@ on:
         default: 'all'
         type: choice
         options:
-          - all                # poslowie + glosowania przyrostowo
+          - all                # poslowie + glosowania + procesy + zdjecia
           - sync-mps           # sami poslowie i kluby
           - sync-votings       # glosowania przyrostowo
+          - sync-processes     # procesy legislacyjne i ich etapy
+          - sync-photos        # kopiowanie brakujacych zdjec do Storage
           - backfill-votings   # PELNY import kadencji (dlugi!)
 
 concurrency:
@@ -63,6 +65,32 @@ jobs:
       - name: Glosowania (przyrostowo)
         if: ${{ inputs.job == 'sync-votings' || inputs.job == 'all' || github.event_name == 'schedule' }}
         run: npx tsx ingest/jobs/sync-votings.ts
+
+      # PROCESY LEGISLACYJNE — codziennie, po glosowaniach.
+      #
+      # KOLEJNOSC NIE JEST DOWOLNA. Etap procesu niesie surowe wspolrzedne
+      # glosowania (posiedzenie + numer), ale `voting_id` domyka sie tylko
+      # wtedy, gdy to glosowanie jest juz w bazie. Uruchomiony PRZED importem
+      # glosowan zostawilby nowe etapy bez powiazania — i blok "czego dotyczylo
+      # glosowanie" nie pojawilby sie na profilu posla.
+      #
+      # DLACZEGO CODZIENNIE, A NIE RAZ W TYGODNIU. Pelny przebieg to ~1 670
+      # zapytan i okolo trzech minut przy CONCURRENCY=8. Rozwazalismy tygodniowy
+      # harmonogram "z uprzejmosci wobec serwera Kancelarii", ale to bylo zle
+      # wywazone: do dnia 11.09.2026 KAZDY czytelnik wchodzacy na /poslowie
+      # generowal 60 zadan do tego samego serwera po zdjecia posłow. Trzy minuty
+      # ruchu na dobe z jednego runnera to ulamek tego, co wlasnie przestalismy
+      # robic — a dane sa swiezsze o szesc dni.
+      - name: Procesy legislacyjne
+        if: ${{ inputs.job == 'sync-processes' || inputs.job == 'all' || github.event_name == 'schedule' }}
+        run: npx tsx ingest/jobs/sync-processes.ts
+
+      # ZDJECIA — dokopiowanie brakujacych. Przy braku nowych poslow to jedno
+      # zapytanie do bazy i koniec, wiec nie ma powodu robic tego rzadziej.
+      # Musi isc PO sync-mps, ktory ustawia photo_exists.
+      - name: Zdjecia poslow do Storage
+        if: ${{ inputs.job == 'sync-photos' || inputs.job == 'all' || github.event_name == 'schedule' }}
+        run: npx tsx ingest/jobs/sync-mp-photos.ts
 
       # Uruchamiane WYLACZNIE recznie. Kursor w sync_state sprawia, ze przerwany
       # backfill wznawia sie od nastepnego posiedzenia, a nie od poczatku.

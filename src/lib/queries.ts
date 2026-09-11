@@ -39,8 +39,8 @@ export class BrakObiektuWBazie extends Error {
 const MIGRACJE: Record<string, string> = {
   mp_obecnosc_kontekst: '0018_zdjecia_okregi_niezgodnosc.sql',
   okregi_wyborcze: '0018_zdjecia_okregi_niezgodnosc.sql',
-  glosowanie_z_procesem: '0022_los_fakt_przed_progiem.sql',
-  proces_los: '0022_los_fakt_przed_progiem.sql',
+  glosowanie_z_procesem: '0024_weto_utrzymane.sql',
+  proces_los: '0024_weto_utrzymane.sql',
   mp_absence_monthly: '0010_kontekst_nieobecnosci.sql',
   mp_stats_ranking: '0009_przedzialy_ufnosci.sql',
   mp_stats: '0002_rls_hardening.sql',
@@ -329,6 +329,14 @@ export type LosProcesu =
   | 'u_prezydenta'
   | 'bez_etapu_prezydenckiego'
   /**
+   * Sejm uchwalił, Prezydent zawetował, Sejm nie odrzucił weta.
+   *
+   * To jedyny los, który NIE zależy od flagi `passed` — bo flaga jest tu
+   * niekonsekwentna. Z piętnastu procesów w tej samej sytuacji faktycznej
+   * sześć ma `passed = false`, a dziewięć `true` (migracja 0024).
+   */
+  | 'weto_utrzymane'
+  /**
    * Wycofany w migracji 0021 — widok nie ma go już jak wyprodukować.
    * Zostaje w typie i w LOS_OPIS wyłącznie na czas, w którym baza mogłaby
    * być jeszcze na 0020. Gdy 0021 jest wszędzie wykonana, można usunąć.
@@ -353,6 +361,27 @@ export const LOS_OPIS: Record<LosProcesu, { etykieta: string; wyjasnienie: strin
   weto: {
     etykieta: 'uchwalono — Prezydent zawetował',
     wyjasnienie: 'Nie mamy w rejestrze ani podpisu Prezydenta, ani publikacji aktu.',
+  },
+
+  /**
+   * Jedyna etykieta w tym słowniku przepisana ze SŁÓW rejestru, a nie złożona
+   * przez nas z kodów etapu.
+   *
+   * `process_stages.decision` = „nie uchwalona ponownie" i `stage_name`
+   * = „nie uchwalona ponownie po wecie Prezydenta". Oba pola importujemy
+   * od migracji 0016 i do 0024 nie używaliśmy ich nigdzie — a to one, a nie
+   * kody, mówią, czym skończyło się ponowne głosowanie.
+   *
+   * Do 0024 te piętnaście procesów czytało się na dwa przeciwne sposoby,
+   * zależnie od niekonsekwentnej flagi `passed`: sześć jako „nie uchwalono"
+   * (czyli „Sejm był przeciw", choć był za), dziewięć jako „Prezydent
+   * zawetował" (bez słowa, że sprawa jest zamknięta).
+   */
+  weto_utrzymane: {
+    etykieta: 'uchwalona przez Sejm — weto Prezydenta utrzymane',
+    wyjasnienie:
+      'Sejm uchwalił ustawę, Prezydent ją zawetował, a w ponownym głosowaniu Sejm nie uchwalił ' +
+      'jej ponownie. Rejestr zapisuje ten etap słowami „nie uchwalona ponownie po wecie Prezydenta".',
   },
   trybunal: {
     etykieta: 'uchwalono — skierowano do Trybunału Konstytucyjnego',
@@ -419,11 +448,35 @@ export const LOS_OPIS: Record<LosProcesu, { etykieta: string; wyjasnienie: strin
 /**
  * Zdanie o wecie, budowane z FAKTÓW, nie z wniosku.
  *
- * Kuszące byłoby napisać „Sejm weta nie odrzucił", skoro nie ma podpisu — ale
- * to jest wnioskowanie z nieobecności danych, a nie fakt z rejestru. Rejestr
- * mówi dwie rzeczy osobno: że Prezydent złożył wniosek (weto) i że Sejm ten
- * wniosek rozpatrywał. Podajemy obie i zostawiamy czytelnikowi złożenie ich
- * w całość — tak samo jak przy kształcie nieobecności.
+ * Rejestr mówi dwie rzeczy osobno: że Prezydent złożył wniosek (weto) i że
+ * Sejm ten wniosek rozpatrywał. Podajemy obie i zostawiamy czytelnikowi
+ * złożenie ich w całość — tak samo jak przy kształcie nieobecności.
+ *
+ * ---------------------------------------------------------------------
+ * POPRAWKA Z 11.09.2026 — I JEST TO LEKCJA WARTA ZAPAMIĘTANIA.
+ *
+ * Stał tu wcześniej taki komentarz:
+ *
+ *   „Kuszące byłoby napisać »Sejm weta nie odrzucił«, skoro nie ma podpisu —
+ *    ale to jest wnioskowanie z nieobecności danych, a nie fakt z rejestru."
+ *
+ * Zdanie było słuszne i chroniło nas przed realnym błędem. Ale wyciągnęliśmy
+ * z niego wniosek o jeden krok za daleko: **uznaliśmy sprawę za niepoznawalną,
+ * zamiast poszukać, czy rejestr jej nie rozstrzyga gdzie indziej.**
+ *
+ * Rozstrzyga. Pole `process_stages.decision` niesie zdanie „nie uchwalona
+ * ponownie", a `stage_name` etapu końcowego — „nie uchwalona ponownie po
+ * wecie Prezydenta". Oba importujemy od migracji 0016 i nie czytaliśmy ich
+ * nigdzie. Dotyczy to piętnastu procesów (migracja 0024, los `weto_utrzymane`).
+ *
+ * Zasada „nie wnioskujemy z nieobecności danych" zostaje w mocy. Dochodzi
+ * do niej druga, lustrzana: **zanim ogłosisz niewiedzę, sprawdź, czy rejestr
+ * nie powiedział tego w polu, którego nie czytasz.** Kody grupują; słowa
+ * mówią, co się stało.
+ *
+ * Ta funkcja zostaje dla wet, przy których rejestr naprawdę milczy o wyniku —
+ * po 0024 jest ich 48. Przy `weto_utrzymane` interfejs jej NIE woła, bo
+ * etykieta mówi już wszystko, a powtórzenie brzmiałoby jak wahanie.
  */
 export function opisWeta(p: { ma_weto: boolean; ma_rozpatrzenie_wniosku: boolean }): string | null {
   if (!p.ma_weto) return null;
