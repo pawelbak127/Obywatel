@@ -53,6 +53,40 @@ export function assignSlugs(people: readonly SlugCandidate[], existing = new Map
     let slug = base;
     if (taken.has(slug)) slug = `${base}-${p.districtNum}`;      // okreg rozroznia imienników
     if (taken.has(slug)) slug = `${base}-${p.districtNum}-${p.id}`; // ostatnia deska ratunku
+
+    /*
+      TRZECI POZIOM TEZ MUSI BYC SPRAWDZONY.
+      Znalezione 12.09.2026 przy pisaniu pierwszych testow tego pliku.
+
+      Do tej pory `base-okreg-id` bylo przyjmowane BEZ sprawdzenia `taken` —
+      dwa pierwsze poziomy sprawdzaly, trzeci nie. Zwykle bezpieczne, bo `id`
+      jest unikalne wsrod przetwarzanych. Ale `taken` zawiera TAKZE slugi
+      utrwalone w bazie, a te sa niezmienne i moga miec dowolna postac
+      historyczna. Gdyby ktorys z nich mial dokladnie ksztalt liczony dzis dla
+      nowego posla, funkcja przypisalaby DWOM ROZNYM LUDZIOM ten sam adres
+      /posel/… — cicho, bez wyjatku i bez sladu w logu.
+
+      Rzucamy zamiast eskalowac dalej. Doklejenie kolejnego sufiksu dawaloby
+      adres, ktorego nikt nie przewidzial, a slug jest w tym projekcie
+      niezmienny na zawsze — lepiej przerwac import i dac czlowiekowi
+      rozstrzygnac, niz zapiec w URL-u przypadek. To ten sam wzorzec co
+      kontrola dziedziny przed zapisem (CLAUDE.md §7.1).
+
+      Ta galaz jest dzis nieosiagalna przy danych z Sejm API — zeby ja odpalic,
+      utrwalony slug musialby zawierac `id` innej osoby. Zmiana nie moze wiec
+      przestawic zadnego istniejacego adresu; dziala wylacznie tam, gdzie kod
+      do tej pory po cichu sie mylil.
+    */
+    if (taken.has(slug)) {
+      const kolizja = [...existing.entries()].find(([, v]) => v === slug)?.[0];
+      throw new Error(
+        `Slug "${slug}" dla posla ${p.id} (${p.firstName} ${p.lastName}, okreg ${p.districtNum}) ` +
+          `jest juz zajety${kolizja !== undefined ? ` przez posla ${kolizja}` : ''}. ` +
+          'Slug jest niezmienny na zawsze, wiec NIE nadpisuje go automatycznie. ' +
+          'Rozstrzygnij recznie, ktory posel ma zachowac ten adres.',
+      );
+    }
+
     taken.add(slug);
     out.set(p.id, slug);
   }
