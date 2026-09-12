@@ -47,6 +47,15 @@ type Widok = {
   /** Nagłówek H1 — pytanie, nie termin. */
   naglowek: string;
   wprowadzenie: string;
+  /**
+   * Zastrzeżenie stało kiedyś DRUGI RAZ, w osobnej ramce pod filtrami —
+   * czytelnik czytał to samo zdanie o Sejmie i braku powodu/dyscypliny
+   * dwukrotnie, zanim dotarł do pierwszego posła (zmierzone: 266 elementów
+   * tekstowych przed pierwszym nazwiskiem). Samo zdanie zostaje we
+   * wprowadzeniu i pada raz; to, co w ramce było ponad nie — konkretne
+   * przykłady — ląduje tutaj i chowa się pod „?" obok wprowadzenia.
+   */
+  szczegoly: { tytul: string; tresc: string };
   /** Podpisy przełącznika kierunku, w kolejności [„najgorsi", „najlepsi"]. */
   kierunki: readonly [string, string];
 };
@@ -58,6 +67,13 @@ const WIDOKI: Record<Metryka, Widok> = {
     wprowadzenie:
       'Obecność to udział głosowań, w których poseł oddał głos. Sejm nie podaje, ' +
       'dlaczego posła nie było — więc my też nie podajemy.',
+    szczegoly: {
+      tytul: 'Co wygląda w danych identycznie',
+      tresc:
+        'Sprawowanie urzędu, choroba, urlop rodzicielski i nieprzychodzenie do pracy ' +
+        'wyglądają w danych identycznie. Kolumna „kształt" mówi tylko tyle, czy ' +
+        'nieobecności skupiają się w czasie.',
+    },
     kierunki: ['najczęściej nieobecni', 'najczęściej obecni'],
   },
   niezgodnosc: {
@@ -66,6 +82,17 @@ const WIDOKI: Record<Metryka, Widok> = {
     wprowadzenie:
       'Odsetek głosowań, w których poseł zagłosował inaczej niż większość jego klubu. ' +
       'Sejm nie publikuje, czy obowiązywała dyscyplina — pokazujemy sam fakt rozbieżności.',
+    szczegoly: {
+      tytul: 'To nie jest miara buntu',
+      // „Z niej" w oryginalnej ramce odnosiło się do zdania „Sejm nie publikuje,
+      // czy w danym głosowaniu obowiązywała dyscyplina klubowa" — usuniętego
+      // tutaj jako dosłowne powtórzenie wprowadzenia. Zastępujemy zaimek
+      // rzeczownikiem („z dyscypliny klubowej"), żeby zdanie nadal miało sens
+      // czytane samo, bez zdania, które zniknęło wyżej.
+      tresc:
+        'Głosowanie zwolnione z dyscypliny klubowej, brak stanowiska klubu i pomyłka ' +
+        'przy przycisku wyglądają w danych tak samo — pokazujemy rozbieżność, nie jej powód.',
+    },
     kierunki: ['najczęściej inaczej', 'najrzadziej inaczej'],
   },
 };
@@ -132,9 +159,17 @@ export default async function Poslowie({
         Sejm X kadencji
       </p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">{w.naglowek}</h1>
-      <p className="mt-4 max-w-prose text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
+      {/*
+        `<div>`, NIE `<p>`. `<Wyjasnienie>` renderuje `<details>` — element
+        blokowy — a wstawienie go do akapitu przeglądarka rozjeżdża z
+        Reactem (zamyka `<p>` przed `<details>`, błąd hydracji, patrz
+        Wyjasnienie.tsx i CLAUDE.md §8). Wprowadzenie było wcześniej w `<p>`,
+        bo nic obok niego nie stało — teraz stoi.
+      */}
+      <div className="mt-4 max-w-prose text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
         {w.wprowadzenie}
-      </p>
+        <Wyjasnienie tytul={w.szczegoly.tytul}>{w.szczegoly.tresc}</Wyjasnienie>
+      </div>
 
       {/* ---------------------------------------------------------------
           Przełącznik metryki. Dwie różne odpowiedzialności posła — bycie
@@ -246,23 +281,6 @@ export default async function Poslowie({
           </Wyjasnienie>
         </span>
       </nav>
-
-      {/* Ostrzeżenie merytoryczne — zostaje, ale krótsze i tylko tam, gdzie dotyczy. */}
-      {metryka === 'obecnosc' && (
-        <div className="mt-5 max-w-prose rounded border-l-2 border-[color:var(--color-rule)] bg-black/[0.02] py-2.5 pl-3 text-sm leading-relaxed dark:bg-white/[0.03]">
-          <strong>Sejm nie podaje powodu nieobecności.</strong> Sprawowanie urzędu, choroba,
-          urlop rodzicielski i nieprzychodzenie do pracy wyglądają w danych identycznie.
-          Kolumna „kształt" mówi tylko tyle, czy nieobecności skupiają się w czasie.
-        </div>
-      )}
-      {metryka === 'niezgodnosc' && (
-        <div className="mt-5 max-w-prose rounded border-l-2 border-[color:var(--color-rule)] bg-black/[0.02] py-2.5 pl-3 text-sm leading-relaxed dark:bg-white/[0.03]">
-          <strong>To nie jest miara buntu.</strong> Sejm nie publikuje, czy w danym głosowaniu
-          obowiązywała dyscyplina klubowa. Głosowanie z niej zwolnione, brak stanowiska klubu
-          i pomyłka przy przycisku wyglądają w danych tak samo — pokazujemy rozbieżność,
-          nie jej powód.
-        </div>
-      )}
 
       {filtrowane && (
         <p className="mt-5 text-sm text-[color:var(--color-ink-soft)]">
