@@ -169,7 +169,7 @@ const bezKomentarzy = sql
 
 const NIEBEZPIECZNE = [
   [/\bdrop\s+(table|schema|database|type|index|function|trigger)\b/i, 'drop table/schema/… — usuwa obiekt razem z zawartoscia'],
-  [/\balter\s+table\b[\s\S]{0,200}?\bdrop\s+(column|constraint)\b/i, 'alter table … drop column — usuwa dane z kolumny'],
+  [/\balter\s+table\b[\s\S]{0,200}?\bdrop\s+(column|constraint)\b/i, 'alter table … drop column/constraint — usuwa dane z kolumny albo zdejmuje ochrone przed zlymi danymi'],
   [/\btruncate\b/i, 'truncate — czysci cala tabele'],
   [/\bdelete\s+from\b(?![\s\S]{0,400}?\bwhere\b)/i, 'delete from bez where — kasuje wszystkie wiersze'],
   /*
