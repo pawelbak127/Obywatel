@@ -110,21 +110,24 @@ export default async function Poslowie({
     metryka === 'niezgodnosc' ? skalaDo(lista.map((m) => m.niezgodnosc_hi), 10) : 100;
 
   /** Adres z zachowaniem wszystkich pozostałych filtrów. */
-  const adres = (zmiana: Partial<{ kierunek: string | null; widok: string | null; okreg: string | null }>) => {
+  const adres = (
+    zmiana: Partial<{ kierunek: string | null; widok: string | null; okreg: string | null; q: string | null }>,
+  ) => {
     const p = new URLSearchParams();
     const kier = 'kierunek' in zmiana ? zmiana.kierunek : najlepsi ? 'najlepsi' : null;
     const wid = 'widok' in zmiana ? zmiana.widok : metryka === 'niezgodnosc' ? 'klub' : null;
     const okr = 'okreg' in zmiana ? zmiana.okreg : okreg !== null ? String(okreg) : null;
+    const q = 'q' in zmiana ? zmiana.q : fraza;
     if (kier) p.set('kierunek', kier);
     if (wid) p.set('widok', wid);
     if (okr) p.set('okreg', okr);
-    if (fraza) p.set('q', fraza);
+    if (q) p.set('q', q);
     const s = p.toString();
     return s ? `/poslowie?${s}` : '/poslowie';
   };
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
+    <main className="mx-auto max-w-6xl px-6 py-12">
       <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
         Sejm X kadencji
       </p>
@@ -209,7 +212,7 @@ export default async function Poslowie({
         </button>
         {filtrowane && (
           <Link
-            href={adres({ okreg: null })}
+            href={adres({ okreg: null, q: null })}
             className="pb-1.5 font-mono text-xs text-[color:var(--color-ink-soft)] underline decoration-dotted underline-offset-2 hover:text-[color:var(--color-accent)]"
           >
             wyczyść
@@ -349,7 +352,20 @@ function Wiersz({
       <div className="flex min-w-0 gap-3">
         <Portret src={mp.photo_url} nazwa={mp.full_name} rozmiar="sm" />
 
-        <div className="min-w-0">
+        {/*
+          `flex-1` DOPEŁNIA poszerzenie kontenera do max-w-6xl i bez niego
+          tamta zmiana pogarszałaby stronę zamiast poprawiać.
+
+          Portret ma sztywne 36 px, a ten blok bez klasy rozciągającej brałby
+          szerokość z treści (`flex: 0 1 auto`). Cała dodana szerokość lądowała
+          więc w pustym pasie między nazwiskiem a kolumną paska, zamiast trafić
+          tam, gdzie są dane. Teraz idzie do zdania kontekstu, które przy
+          wąskiej kolumnie łamało się na trzy linie.
+
+          `min-w-0` zostaje — bez niego `truncate` w środku przestaje działać,
+          bo element flex nie kurczy się poniżej swojej treści.
+        */}
+        <div className="min-w-0 flex-1">
           <Link
             href={`/posel/${mp.slug}`}
             className="font-medium hover:text-[color:var(--color-accent)] hover:underline"

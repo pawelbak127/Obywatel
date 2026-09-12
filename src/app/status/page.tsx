@@ -60,7 +60,8 @@ export default async function StatusPage() {
       <h1 className="mt-3 text-4xl font-semibold tracking-tight">Stan bazy</h1>
       <p className="mt-4 max-w-prose text-[color:var(--color-ink-soft)]">
         Ta strona istnieje po to, żeby jednym spojrzeniem potwierdzić, że deploy działa, a aplikacja
-        widzi bazę. Puste tabele na tym etapie są poprawnym wynikiem — dane wjeżdżają w Sprincie 1.
+        widzi bazę. Tabela pusta nie znaczy „awaria" — znaczy, że danego modułu jeszcze nie
+        uruchomiliśmy. Przy każdej pozycji stoi notatka, czego dotyczy.
       </p>
 
       <nav className="mt-6 flex gap-2 font-mono text-xs">
