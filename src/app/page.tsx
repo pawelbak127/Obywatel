@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { createClient } from '@/lib/supabase/server';
 import { hasPublicConfig } from '@/lib/env';
+import { pobierzOkregi, type Okreg } from '@/lib/queries';
 
 /**
  * Strona glowna.
@@ -45,6 +46,20 @@ async function policz(): Promise<Liczby> {
   }
 }
 
+/**
+ * Okregi do wyboru na wejsciu. Blad NIE wywraca strony glownej — lista
+ * okregow jest udogodnieniem, a nie trescia. Gdy zabraknie widoku, zostaje
+ * samo przejscie do pelnego zestawienia.
+ */
+async function okregi(): Promise<Okreg[]> {
+  if (!hasPublicConfig) return [];
+  try {
+    return await pobierzOkregi();
+  } catch {
+    return [];
+  }
+}
+
 /** Liczby na stronie glownej sa ZAOKRAGLONE i tak sie je opisuje. */
 function okolo(n: number | null): string {
   if (n === null) return '—';
@@ -54,7 +69,7 @@ function okolo(n: number | null): string {
 }
 
 export default async function StronaGlowna() {
-  const l = await policz();
+  const [l, lista] = await Promise.all([policz(), okregi()]);
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
@@ -68,14 +83,61 @@ export default async function StronaGlowna() {
         z którego pochodzi.
       </p>
 
-      <div className="mt-8 flex flex-wrap gap-3">
-        <Link
-          href="/poslowie"
-          className="rounded border border-[color:var(--color-accent)] px-4 py-2 font-mono text-sm text-[color:var(--color-accent)] transition-colors hover:bg-[color:var(--color-accent)] hover:text-white"
-        >
-          obecność posłów →
-        </Link>
-      </div>
+      {/* ---------------------------------------------------------------
+          WEJSCIE W DANE PRZEZ OKREG, NIE PRZEZ RANKING.
+
+          Do 12.09.2026 stal tu jeden przycisk i nic wiecej — strona glowna
+          nie pokazywala ani jednego nazwiska, glosowania czy ustawy, tylko
+          cztery zaokraglone liczby i trzy akapity o zasadach. Czytelnik
+          musial uwierzyc na slowo, zanim cokolwiek zobaczyl.
+
+          Rozwazana i ODRZUCONA alternatywa: wiersz rankingu („najczesciej
+          nieobecni") wprost na stronie glownej. Dawalby konkret natychmiast,
+          ale serwis, ktory w trzech akapitach obiecuje „nie zgadujemy
+          powodow", otwieralby sie lista wstydu — a przedzial ufnosci (D10)
+          chroni przed niesprawiedliwoscia statystyczna, nie przed rama
+          interpretacyjna, ktora czytelnik zabiera ze soba dalej.
+
+          Okreg odpowiada na inne pytanie: nie „kto jest najgorszy", tylko
+          „kto reprezentuje mnie". Prowadzi do tych samych danych, filtr
+          juz istnieje, a formularz to zwykly GET — bez JavaScriptu.
+      --------------------------------------------------------------- */}
+      {lista.length > 0 ? (
+        <form method="get" action="/poslowie" className="mt-8 flex flex-wrap items-end gap-2">
+          <label className="flex flex-col gap-1">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-[color:var(--color-ink-faint)]">
+              twój okręg wyborczy
+            </span>
+            <select
+              name="okreg"
+              defaultValue=""
+              className="w-72 max-w-full rounded border border-[color:var(--color-rule)] bg-[color:var(--color-surface)] px-2 py-1.5 text-sm"
+            >
+              <option value="">wszystkie okręgi</option>
+              {lista.map((o) => (
+                <option key={o.district_num} value={o.district_num}>
+                  {o.district_num} · {o.district_name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="submit"
+            className="rounded border border-[color:var(--color-accent)] px-4 py-2 font-mono text-sm text-[color:var(--color-accent)] transition-colors hover:bg-[color:var(--color-accent)] hover:text-white"
+          >
+            pokaż posłów →
+          </button>
+        </form>
+      ) : (
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link
+            href="/poslowie"
+            className="rounded border border-[color:var(--color-accent)] px-4 py-2 font-mono text-sm text-[color:var(--color-accent)] transition-colors hover:bg-[color:var(--color-accent)] hover:text-white"
+          >
+            obecność posłów →
+          </Link>
+        </div>
+      )}
 
       {/* ---------------------------------------------------------------
           Liczby jako dowod, ze to nie jest makieta. Zaokraglone i opisane
