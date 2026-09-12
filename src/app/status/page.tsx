@@ -100,7 +100,7 @@ export default async function StatusPage() {
   const [{ rows, error }, swiezosc] = await Promise.all([readCounts(), readFreshness()]);
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16">
+    <main className="mx-auto max-w-6xl px-6 py-16">
       <p className="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
         dane
       </p>

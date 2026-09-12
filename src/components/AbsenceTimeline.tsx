@@ -137,10 +137,10 @@ export function AbsenceTimeline({
         </svg>
       </div>
 
-      <p className="mt-2 text-xs leading-relaxed text-[color:var(--color-ink-soft)]">{opis.opis}</p>
+      <p className="mt-2 max-w-prose text-xs leading-relaxed text-[color:var(--color-ink-soft)]">{opis.opis}</p>
 
       {funkcje && (
-        <p className="mt-2 rounded border-l-2 border-[color:var(--color-rule)] bg-black/[0.02] py-2 pl-3 text-xs leading-relaxed dark:bg-white/[0.03]">
+        <p className="mt-2 max-w-prose rounded border-l-2 border-[color:var(--color-rule)] bg-black/[0.02] py-2 pl-3 text-xs leading-relaxed dark:bg-white/[0.03]">
           <strong className="font-semibold">Funkcje państwowe w tym okresie:</strong>{' '}
           {polskieDaty(funkcje)}
         </p>

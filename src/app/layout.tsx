@@ -24,12 +24,26 @@ export const metadata: Metadata = {
  *
  * Jeden pasek u gory, ten sam wszedzie, bez menu rozwijanych i bez JavaScriptu.
  *
- * Szerokosc max-w-6xl, nie max-w-3xl: layout nie wie, na ktorej stronie stoi,
- * a najszersza tresc w serwisie (/poslowie) ma max-w-6xl. Waskiego naglowka
- * nad szeroka trescia nie da sie odroznic od bledu renderowania; szerokiego
- * naglowka nad waska trescia (np. profil posla) - da sie, to zwykly uklad
- * wiekszosci serwisow. Odrzucona alternatywa: osobna szerokosc per strona -
- * wymagalaby przekazywania propsa przez kazdy layout, ktorego dzis nie ma.
+ * SZEROKOSC max-w-6xl — TAKA SAMA JAK KAZDA STRONA. To sie zmienilo
+ * 12.09.2026 i warto wiedziec dlaczego, bo poprzednia wersja tego komentarza
+ * bronila stanu odwrotnego.
+ *
+ * Bylo tak: naglowek i /poslowie mialy max-w-6xl, a strona glowna, profil,
+ * /status i /zglos — max-w-3xl. Komentarz twierdzil, ze szeroki naglowek nad
+ * waska trescia „da sie odroznic od bledu renderowania, to zwykly uklad
+ * wiekszosci serwisow".
+ *
+ * Nie dalo sie. Przy oknie 1900 px naglowek zaczynal sie 374 px od lewej,
+ * a tresc strony glownej 566 px — 192 px rozjazdu. Taka roznica nie czyta sie
+ * jako zamierzony waski lam (ten robi sie widoczny dopiero, gdy jest duzo
+ * wiekszy i tresc stoi na srodku), tylko jako dwie krawedzie, ktore mialy sie
+ * pokryc i nie pokryly.
+ *
+ * ZASADA, KTORA Z TEGO ZOSTAJE: szerokosc KONTENERA jest stala dla calego
+ * serwisu, a komfort czytania to wlasnosc BLOKU TEKSTU (`max-w-prose`),
+ * nie calej strony. Dzieki temu akapit ma swoje 65 znakow w wierszu, a tabela
+ * szescdziesieciu wierszy dostaje miejsce, ktorego potrzebuje — i nic nie
+ * musi wiedziec, na ktorej stronie stoi.
  */
 function Naglowek() {
   return (

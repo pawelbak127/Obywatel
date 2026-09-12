@@ -81,7 +81,7 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
       : null;
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
+    <main className="mx-auto max-w-6xl px-6 py-12">
       <Link
         href="/poslowie"
         className="font-mono text-xs text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-accent)]"
@@ -147,7 +147,7 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
         w której poseł mandatu po prostu już nie sprawował.
       */}
       {mp.powod_zakonczenia && (
-        <p className="mt-6 rounded border-l-2 border-[color:var(--color-rule)] bg-black/[0.02] py-2.5 pl-3 text-sm leading-relaxed dark:bg-white/[0.03]">
+        <p className="mt-6 max-w-prose rounded border-l-2 border-[color:var(--color-rule)] bg-black/[0.02] py-2.5 pl-3 text-sm leading-relaxed dark:bg-white/[0.03]">
           {mp.powod_zakonczenia}{' '}
           <span className="text-[color:var(--color-ink-soft)]">
             Wszystkie liczby niżej dotyczą wyłącznie okresu sprawowania mandatu.
@@ -171,7 +171,7 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
         czego nie rozstrzyga --color-rule.
       */}
       {mp.funkcje_panstwowe && (
-        <p className="mt-6 rounded border-l-2 border-[color:var(--color-rule)] bg-black/[0.02] py-2.5 pl-3 text-sm leading-relaxed dark:bg-white/[0.03]">
+        <p className="mt-6 max-w-prose rounded border-l-2 border-[color:var(--color-rule)] bg-black/[0.02] py-2.5 pl-3 text-sm leading-relaxed dark:bg-white/[0.03]">
           <strong className="font-semibold">Funkcja państwowa w tym okresie:</strong>{' '}
           {polskieDaty(mp.funkcje_panstwowe)}
           <span className="block text-xs text-[color:var(--color-ink-soft)]">
@@ -259,7 +259,7 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
             </tbody>
           </table>
         </div>
-        <p className="mt-2 text-xs text-[color:var(--color-ink-soft)]">
+        <p className="mt-2 max-w-prose text-xs text-[color:var(--color-ink-soft)]">
           Każdy wiersz prowadzi do oficjalnego protokołu na serwerze Kancelarii Sejmu.
           Nie prosimy, żeby nam wierzyć.
         </p>
@@ -277,7 +277,7 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
         jej druga polowa: skoro mozna nas sprawdzic, musi byc gdzie powiedziec,
         ze sprawdzenie wypadlo zle.
       */}
-      <p className="mt-10 border-t border-[color:var(--color-rule)] pt-5 text-xs text-[color:var(--color-ink-soft)]">
+      <p className="mt-10 max-w-prose border-t border-[color:var(--color-rule)] pt-5 text-xs text-[color:var(--color-ink-soft)]">
         Któraś z tych liczb się nie zgadza?{' '}
         <Link
           href={`/zglos?typ=mp&id=${mp.id}&co=${encodeURIComponent(mp.full_name)}`}

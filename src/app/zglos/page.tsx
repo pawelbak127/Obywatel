@@ -60,7 +60,7 @@ export default async function Zglos({
   const blad = sp.blad ? BLEDY[sp.blad] : undefined;
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
+    <main className="mx-auto max-w-6xl px-6 py-12">
       <h1 className="text-3xl font-semibold tracking-tight">Zgłoś błąd w danych</h1>
 
       {sp.ok === '1' ? (

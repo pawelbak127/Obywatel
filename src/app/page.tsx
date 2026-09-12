@@ -110,7 +110,7 @@ export default async function StronaGlowna() {
   const [l, lista, procesy] = await Promise.all([policz(), okregi(), ostatnie()]);
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16">
+    <main className="mx-auto max-w-6xl px-6 py-16">
       <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
         Co robią posłowie, których wybraliśmy
       </h1>
@@ -213,7 +213,7 @@ export default async function StronaGlowna() {
         techniczny i uczciwy — dokladny COUNT(*) na 2,1 mln wierszy przekracza
         statement_timeout roli anon (CLAUDE.md §6).
       */}
-      <p className="mt-3 text-xs text-[color:var(--color-ink-soft)]">
+      <p className="mt-3 max-w-prose text-xs text-[color:var(--color-ink-soft)]">
         Liczby pobierane na żywo z bazy. Są to szacunki — dokładne policzenie
         dwóch milionów wierszy przekracza limit czasu zapytania. Wartości bez
         zaokrąglenia pokazuje{' '}
@@ -249,7 +249,7 @@ export default async function StronaGlowna() {
               const akt = adresAktu(p);
               return (
                 <li key={p.print_number} className="py-3">
-                  <p className="text-sm leading-snug">{p.tytul}</p>
+                  <p className="max-w-prose text-sm leading-snug">{p.tytul}</p>
                   <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] text-[color:var(--color-ink-soft)]">
                     <span className="tabular-nums">{polskieDaty(p.closure_date)}</span>
                     <span aria-hidden="true">·</span>
@@ -270,7 +270,7 @@ export default async function StronaGlowna() {
             })}
           </ul>
 
-          <p className="mt-3 text-xs text-[color:var(--color-ink-soft)]">
+          <p className="mt-3 max-w-prose text-xs text-[color:var(--color-ink-soft)]">
             Pięć procesów o najświeższej dacie zamknięcia w rejestrze Sejmu. „Uchwalono" nie
             znaczy „obowiązuje" — dlatego przy każdym stoi, co się z nim stało dalej.
           </p>
@@ -284,7 +284,7 @@ export default async function StronaGlowna() {
       <section className="mt-14 space-y-6 border-t border-[color:var(--color-rule)] pt-8">
         <h2 className="text-sm font-semibold">Na czym to stoi</h2>
 
-        <div className="space-y-5 text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
+        <div className="max-w-prose space-y-5 text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
           <p>
             <strong className="text-[color:var(--color-ink)]">Każda liczba ma źródło.</strong>{' '}
             Nie prosimy, żeby nam wierzyć. Przy każdym głosowaniu jest odnośnik do protokołu
@@ -306,7 +306,7 @@ export default async function StronaGlowna() {
         </div>
       </section>
 
-      <p className="mt-12 border-t border-[color:var(--color-rule)] pt-6 text-xs text-[color:var(--color-ink-soft)]">
+      <p className="mt-12 border-t border-[color:var(--color-rule)] pt-6 text-xs max-w-prose text-[color:var(--color-ink-soft)]">
         Projekt w budowie. Dane o głosowaniach i procesach legislacyjnych są kompletne
         dla obecnej kadencji; obietnice i dotacje dopiero powstają.{' '}
         <Link href="/status" className="underline decoration-dotted underline-offset-2">
