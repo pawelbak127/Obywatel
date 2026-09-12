@@ -75,6 +75,19 @@ function Stopka() {
         >
           Skąd pochodzą dane i kiedy je pobraliśmy
         </Link>
+        .{' '}
+        {/*
+          Odnosnik do formularza stoi w stopce KAZDEJ strony, nie tylko profilu.
+          Blad, ktory czytelnik zauwaza, i strona, na ktorej go zauwaza, to nie
+          zawsze to samo miejsce — a droga odwolawcza, ktorej trzeba szukac,
+          jest droga odwolawcza tylko z nazwy.
+        */}
+        <Link
+          href="/zglos"
+          className="underline decoration-dotted underline-offset-2 hover:text-[color:var(--color-accent)]"
+        >
+          Zgłoś błąd w danych
+        </Link>
         .
       </div>
     </footer>

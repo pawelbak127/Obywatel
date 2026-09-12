@@ -252,6 +252,29 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
           Nie prosimy, żeby nam wierzyć.
         </p>
       </section>
+
+      {/*
+        ZGLOSZENIE BLEDU STOI NA KONCU PROFILU, nie w naglowku.
+
+        Tu konczy sie czytanie i tu powstaje mysl „to sie nie zgadza" —
+        po zobaczeniu liczb, nie przed. Formularz dostaje w adresie tozsamosc
+        posla, zeby czytelnik nie musial przepisywac nazwiska, a zgloszenie
+        trafialo do wlasciwego wpisu.
+
+        Zdanie „Nie prosimy, zeby nam wierzyc" wyzej jest deklaracja. To jest
+        jej druga polowa: skoro mozna nas sprawdzic, musi byc gdzie powiedziec,
+        ze sprawdzenie wypadlo zle.
+      */}
+      <p className="mt-10 border-t border-[color:var(--color-rule)] pt-5 text-xs text-[color:var(--color-ink-soft)]">
+        Któraś z tych liczb się nie zgadza?{' '}
+        <Link
+          href={`/zglos?typ=mp&id=${mp.id}&co=${encodeURIComponent(mp.full_name)}`}
+          className="underline decoration-dotted underline-offset-2 hover:text-[color:var(--color-accent)]"
+        >
+          Zgłoś błąd w tym profilu
+        </Link>
+        .
+      </p>
     </main>
   );
 }
