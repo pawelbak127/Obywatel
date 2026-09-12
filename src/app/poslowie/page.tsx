@@ -432,37 +432,61 @@ function Wiersz({
       </div>
 
       <div className="col-span-2 mt-2 sm:col-span-1 sm:mt-0">
-        <div className="flex items-baseline justify-between gap-2 sm:justify-end">
-          <span className="font-mono text-sm tabular-nums">{procent(pct)}%</span>
-          <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--color-ink-soft)]">
-            ±{procent((gora - dol) / 2 || 0)} pkt
-          </span>
-        </div>
-        {/*
-          WYSOKOSC h-2.5, nie h-1.5. Przy szescdziesieciu wierszach jeden nad
-          drugim roznica miedzy 11,5% a 14,5% byla praktycznie niewidoczna,
-          a pasek jest tu glownym nosnikiem informacji — liczba obok podaje
-          wartosc, ale to pasek pozwala POROWNAC posla z poslem.
-        */}
-        <div
-          className="relative mt-1.5 h-2.5 w-full overflow-hidden rounded-sm bg-black/[0.07] dark:bg-white/[0.09]"
-          role="img"
-          aria-label={`${procent(pct)} procent, margines błędu od ${procent(dol)} do ${procent(gora)}`}
-        >
-          {/* Krycie /45, nie /25 — pole przedzialu ufnosci ma byc odrozniane
-              od tla toru golym okiem, a nie tylko istniec w kodzie. */}
+        {pct === null ? (
+          /*
+            BRAK PASKA, NIE PASEK NA ZERZE. `dol`/`gora` wyzej maja fallback
+            do 0 tylko po to, zeby skala i naSkali() dostaly liczbe, a nie
+            `null` — to fallback matematyczny, nie stwierdzenie "wartosc to
+            zero". Tor z kreska przy 0% mowilby co innego niz liczba obok
+            ("—%"), a D14 zabrania tej niezgodnosci (dzis nieosiagalne, bo
+            pobierzRanking filtruje po *_lo is not null — ale kod ma to
+            wyrazac sam, nie polegac na filtrze). StatBar (profil posla) w tej
+            samej sytuacji tez nie rysuje paska, tylko pokazuje tekst „brak
+            danych" — trzymamy sie tego samego rozwiazania i brzmienia.
+          */
+          <p className="text-right font-mono text-sm text-[color:var(--color-ink-soft)]">brak danych</p>
+        ) : (
+          <>
+            {/*
+              Procent i przedzial stoja WEWNATRZ galezi z danymi, a nie nad nia.
+              Przy pustej wartosci renderowalyby sie jako „—%" i „±0,0 pkt"
+              obok napisu „brak danych" — czyli trzy komunikaty, z ktorych dwa
+              mowia nieprawde. StatBar na profilu posla pokazuje w tej sytuacji
+              JEDNO zdanie i lista ma robic to samo.
+            */}
+            <div className="flex items-baseline justify-between gap-2 sm:justify-end">
+              <span className="font-mono text-sm tabular-nums">{procent(pct)}%</span>
+              <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--color-ink-soft)]">
+                ±{procent((gora - dol) / 2 || 0)} pkt
+              </span>
+            </div>
+          /*
+            WYSOKOSC h-2.5, nie h-1.5. Przy szescdziesieciu wierszach jeden nad
+            drugim roznica miedzy 11,5% a 14,5% byla praktycznie niewidoczna,
+            a pasek jest tu glownym nosnikiem informacji — liczba obok podaje
+            wartosc, ale to pasek pozwala POROWNAC posla z poslem.
+          */
           <div
-            className="absolute inset-y-0 bg-[color:var(--color-accent)]/45"
-            style={{ left: `${naSkali(dol)}%`, width: `${Math.max(0.4, naSkali(gora) - naSkali(dol))}%` }}
-          />
-          {/* Kreska 3px zamiast 2px, bo po wzmocnieniu pola cienka ginela.
-              `- 1.5px` to polowa nowej szerokosci — bez tego srodek kreski
-              przestalby stac dokladnie na wartosci. */}
-          <div
-            className="absolute inset-y-0 w-[3px] bg-[color:var(--color-accent)]"
-            style={{ left: `calc(${naSkali(pct ?? 0)}% - 1.5px)` }}
-          />
-        </div>
+            className="relative mt-1.5 h-2.5 w-full overflow-hidden rounded-sm bg-black/[0.07] dark:bg-white/[0.09]"
+            role="img"
+            aria-label={`${procent(pct)} procent, margines błędu od ${procent(dol)} do ${procent(gora)}`}
+          >
+            {/* Krycie /45, nie /25 — pole przedzialu ufnosci ma byc odrozniane
+                od tla toru golym okiem, a nie tylko istniec w kodzie. */}
+            <div
+              className="absolute inset-y-0 bg-[color:var(--color-accent)]/45"
+              style={{ left: `${naSkali(dol)}%`, width: `${Math.max(0.4, naSkali(gora) - naSkali(dol))}%` }}
+            />
+            {/* Kreska 3px zamiast 2px, bo po wzmocnieniu pola cienka ginela.
+                `- 1.5px` to polowa nowej szerokosci — bez tego srodek kreski
+                przestalby stac dokladnie na wartosci. */}
+            <div
+              className="absolute inset-y-0 w-[3px] bg-[color:var(--color-accent)]"
+              style={{ left: `calc(${naSkali(pct)}% - 1.5px)` }}
+            />
+            </div>
+          </>
+        )}
       </div>
     </li>
   );
