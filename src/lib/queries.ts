@@ -43,6 +43,7 @@ const MIGRACJE: Record<string, string> = {
   okregi_wyborcze: '0018_zdjecia_okregi_niezgodnosc.sql',
   glosowanie_z_procesem: '0025_niezmienniki_losu.sql',
   proces_los: '0025_niezmienniki_losu.sql',
+  procesy_ostatnie: '0026_procesy_ostatnie.sql',
   mp_absence_monthly: '0010_kontekst_nieobecnosci.sql',
   mp_stats_ranking: '0009_przedzialy_ufnosci.sql',
   mp_stats: '0002_rls_hardening.sql',
@@ -512,6 +513,35 @@ export function opisWeta(p: { ma_weto: boolean; ma_rozpatrzenie_wniosku: boolean
   return p.ma_rozpatrzenie_wniosku
     ? 'Rejestr odnotowuje wniosek Prezydenta (weto) oraz rozpatrywanie tego wniosku przez Sejm.'
     : 'Rejestr odnotowuje wniosek Prezydenta (weto).';
+}
+
+export type ProcesOstatni = {
+  print_number: string;
+  tytul: string;
+  closure_date: string;
+  los: LosProcesu;
+  isap_url: string | null;
+  eli_address: string | null;
+};
+
+/**
+ * Ostatnio zamkniete procesy legislacyjne — material dla strony glownej.
+ *
+ * NIE „rozstrzygniete". Widok `procesy_ostatnie` (0026) zwraca wszystko, co
+ * ma ustalony los i date zamkniecia, lacznie z wetem i oczekiwaniem na
+ * publikacje. O tym, co sie naprawde stalo, mowi etykieta losu przy kazdym
+ * wierszu, a nie naglowek sekcji — ten sam powod, dla ktorego `passed`
+ * nigdy nie jest renderowane jednym slowem „uchwalono".
+ */
+export async function pobierzOstatnieProcesy(limit = 5): Promise<ProcesOstatni[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('procesy_ostatnie')
+    .select('print_number, tytul, closure_date, los, isap_url, eli_address')
+    .order('closure_date', { ascending: false })
+    .limit(limit);
+  sprawdzBlad('procesy_ostatnie', error);
+  return (data ?? []) as ProcesOstatni[];
 }
 
 /**

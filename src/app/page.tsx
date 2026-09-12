@@ -2,7 +2,16 @@ import Link from 'next/link';
 
 import { createClient } from '@/lib/supabase/server';
 import { hasPublicConfig } from '@/lib/env';
-import { pobierzOkregi, type Okreg } from '@/lib/queries';
+import {
+  pobierzOkregi,
+  pobierzOstatnieProcesy,
+  adresAktu,
+  LOS_OPIS,
+  type Okreg,
+  type ProcesOstatni,
+} from '@/lib/queries';
+import { polskieDaty } from '@/lib/format';
+import { SourceLink } from '@/components/SourceLink';
 
 /**
  * Strona glowna.
@@ -60,6 +69,35 @@ async function okregi(): Promise<Okreg[]> {
   }
 }
 
+/**
+ * Przebieg procesu w rejestrze Sejmu. Nie eksportujemy tego — `page.tsx`
+ * dopuszcza tylko ustalony zestaw eksportow (CLAUDE.md §8).
+ *
+ * POTRZEBNE, BO `adresAktu()` NIE WYSTARCZA NA TEJ SEKCJI. Adres aktu
+ * istnieje dopiero po publikacji, a najswiezsze procesy z definicji jeszcze
+ * opublikowane nie sa — zmierzone 12.09.2026: zadna z pieciu pozycji nie
+ * miala ani `isap_url`, ani `eli_address`. Sekcja stalaby wiec na stronie,
+ * ktora obiecuje odnosnik przy kazdej informacji, bez ani jednego zrodla.
+ *
+ * Przebieg procesu istnieje od chwili zlozenia druku i jest tym samym
+ * rejestrem, z ktorego bierzemy los. Gdy akt juz jest, ma pierwszenstwo —
+ * prowadzi do tekstu, a nie do opisu drogi.
+ */
+const SEJM_PROCES = (druk: string) => `https://api.sejm.gov.pl/sejm/term10/processes/${druk}`;
+
+/**
+ * Ostatnio zamkniete procesy. Blad NIE wywraca strony glownej — tak samo
+ * jak przy liczbach i okregach, sekcja po prostu znika.
+ */
+async function ostatnie(): Promise<ProcesOstatni[]> {
+  if (!hasPublicConfig) return [];
+  try {
+    return await pobierzOstatnieProcesy(5);
+  } catch {
+    return [];
+  }
+}
+
 /** Liczby na stronie glownej sa ZAOKRAGLONE i tak sie je opisuje. */
 function okolo(n: number | null): string {
   if (n === null) return '—';
@@ -69,7 +107,7 @@ function okolo(n: number | null): string {
 }
 
 export default async function StronaGlowna() {
-  const [l, lista] = await Promise.all([policz(), okregi()]);
+  const [l, lista, procesy] = await Promise.all([policz(), okregi(), ostatnie()]);
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
@@ -184,6 +222,60 @@ export default async function StronaGlowna() {
         </Link>
         .
       </p>
+
+      {/* ---------------------------------------------------------------
+          CO OSTATNIO PRZESZLO PRZEZ SEJM.
+
+          Pierwsza tresc na stronie glownej, ktora jest danymi, a nie
+          deklaracja — piec prawdziwych ustaw z data, losem i odnosnikiem
+          do rejestru. Czytelnik widzi, ze serwis zyje, zanim zdecyduje,
+          czy nam wierzy.
+
+          NAGLOWEK MOWI „przeszlo przez Sejm", NIE „rozstrzygnieto".
+          Na tej liscie staja obok siebie ustawa opublikowana w Dzienniku
+          i ustawa zawetowana — druga nie jest rozstrzygnieta i nazwanie jej
+          tak byloby dokladnie tym bledem, przed ktorym broni typ LosProcesu.
+          Prawde o kazdym wierszu mowi jego wlasna etykieta.
+
+          Odnosnik stoi tylko tam, gdzie rejestr ma akt. Brak odnosnika jest
+          informacja — D1 zabrania udawac zrodlo, ktorego nie ma.
+      --------------------------------------------------------------- */}
+      {procesy.length > 0 && (
+        <section className="mt-14 border-t border-[color:var(--color-rule)] pt-8">
+          <h2 className="text-sm font-semibold">Co ostatnio przeszło przez Sejm</h2>
+
+          <ul className="mt-5 divide-y divide-[color:var(--color-rule)] border-y border-[color:var(--color-rule)]">
+            {procesy.map((p) => {
+              const akt = adresAktu(p);
+              return (
+                <li key={p.print_number} className="py-3">
+                  <p className="text-sm leading-snug">{p.tytul}</p>
+                  <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] text-[color:var(--color-ink-soft)]">
+                    <span className="tabular-nums">{polskieDaty(p.closure_date)}</span>
+                    <span aria-hidden="true">·</span>
+                    <span>{LOS_OPIS[p.los].etykieta}</span>
+                    <span aria-hidden="true">·</span>
+                    <span>druk {p.print_number}</span>
+                    <SourceLink
+                      href={akt ?? SEJM_PROCES(p.print_number)}
+                      label={
+                        akt
+                          ? `Tekst aktu w oficjalnym rejestrze (druk ${p.print_number})`
+                          : `Przebieg procesu legislacyjnego w rejestrze Sejmu (druk ${p.print_number})`
+                      }
+                    />
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+
+          <p className="mt-3 text-xs text-[color:var(--color-ink-soft)]">
+            Pięć procesów o najświeższej dacie zamknięcia w rejestrze Sejmu. „Uchwalono" nie
+            znaczy „obowiązuje" — dlatego przy każdym stoi, co się z nim stało dalej.
+          </p>
+        </section>
+      )}
 
       {/* ---------------------------------------------------------------
           Zasady. Nie "o nas", tylko konkretne zobowiazania, ktore czytelnik
