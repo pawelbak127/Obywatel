@@ -12,9 +12,21 @@
   --color-rule: #dce2ea;
   --color-accent: #a6172b;
   /* Kolory semantyczne — oddzielone od akcentu, bo znaczą stan, nie markę.
-     `ok` i `warn` opisują GŁOS (za / wstrzymał się), a nie ocenę posła. */
+     `ok` i `warn` opisują JAKOŚĆ DANYCH i stan serwisu: obecność bez istotnych
+     luk, mandat krótszy niż kadencja, brakującą migrację. Nie opisują głosu. */
   --color-ok: #1c6b48;
   --color-warn: #8a5300;
+
+  /* GŁOSY. Osobna para, celowo NIE zielono-czerwona.
+     Do 12.09.2026 „za" było zielone, a „przeciw" dostawało --color-accent —
+     tę samą ciemną czerwień, którą serwis oznacza słowo „błąd" na /status
+     i nieudany import. Zwykła czynność parlamentarna była więc pomalowana
+     na kolor usterki, w serwisie, który deklaruje apolityczność.
+     Granat i bursztyn rozróżniają dwie strony bez sugerowania, która jest
+     właściwa, i są czytelne dla daltonistów — w przeciwieństwie do pary
+     zielony/czerwony, która jest dla nich najgorsza z możliwych. */
+  --color-vote-for: #1d4e89;
+  --color-vote-against: #b35c00;
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
@@ -40,5 +52,7 @@ body {
     --color-accent: #e36175;
     --color-ok: #55ba88;
     --color-warn: #d8a44a;
+    --color-vote-for: #7aa9dd;
+    --color-vote-against: #e0a355;
   }
 }

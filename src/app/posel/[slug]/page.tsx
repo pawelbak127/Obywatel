@@ -279,10 +279,26 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
   );
 }
 
+/*
+  KOLORY GLOSOW SA CELOWO NIE-ZIELONO-CZERWONE.
+
+  Do 12.09.2026 „za" bylo zielone, a „przeciw" dostawalo --color-accent —
+  te sama ciemna czerwien, ktorej serwis uzywa na slowo „blad" i nieudany
+  import. Glosowanie przeciw ustawie jest zwykla czynnoscia parlamentarna,
+  nie usterka, a serwis deklaruje apolitycznosc.
+
+  „Wstrzymal sie" schodzi do neutralnego atramentu razem z „nieobecny"
+  i „obecny, nie glosowal": kolor dostaja te dwie wartosci, ktore oznaczaja
+  zajecie stanowiska. Slowo i tak stoi obok, wiec nic nie znika.
+
+  Odrzucona alternatywa: zostawic konwencje znana z tablicy w Sejmie.
+  Czytelnik jej faktycznie oczekuje — ale oczekuje tez, ze zielone znaczy
+  „dobrze", a tego akurat nie wiemy i nie naszą rzeczą jest sugerowac.
+*/
 const OPIS_GLOSU: Record<string, { tekst: string; klasa: string }> = {
-  YES: { tekst: 'za', klasa: 'text-[color:var(--color-ok,#1c6b48)]' },
-  NO: { tekst: 'przeciw', klasa: 'text-[color:var(--color-accent)]' },
-  ABSTAIN: { tekst: 'wstrzymał się', klasa: 'text-[color:var(--color-warn,#8a5300)]' },
+  YES: { tekst: 'za', klasa: 'text-[color:var(--color-vote-for,#1d4e89)]' },
+  NO: { tekst: 'przeciw', klasa: 'text-[color:var(--color-vote-against,#b35c00)]' },
+  ABSTAIN: { tekst: 'wstrzymał się', klasa: 'text-[color:var(--color-ink-soft)]' },
   ABSENT: { tekst: 'nieobecny', klasa: 'text-[color:var(--color-ink-soft)]' },
   PRESENT: { tekst: 'obecny, nie głosował', klasa: 'text-[color:var(--color-ink-soft)]' },
 };
