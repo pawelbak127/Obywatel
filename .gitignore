@@ -22,3 +22,25 @@ supabase/.temp/
 
 # Dane wprowadzane recznie (mp_roles). Decyzja Pawla: trzymamy lokalnie.
 /data/
+
+# --- Dokumenty WEWNETRZNE (12.09.2026) --------------------------------
+# Repozytorium jest PUBLICZNE. Ponizsze pliki zostaja na dysku Pawla, ale
+# nie ida na GitHub. Kazdy z innego powodu:
+#
+#   CLAUDE.md                  zasady pracy zespolu, nie produkt
+#   HANDOFF.md                 stan wewnetrzny, blokady, mapa drogowa
+#   docs/plan-rozwoju.md       lista rzeczy jeszcze niezrobionych
+#   docs/audyt-*.md            audyt wewnetrzny
+#   docs/uokik-*.md            CUDZA korespondencja + niewyslany szkic pisma
+#   docs/historia/             archiwum paczek dostarczanych Pawlowi
+#
+# ZOSTAJA PUBLICZNE i to jest swiadome: docs/decyzje.md, docs/zrodla-danych.md,
+# docs/funkcje-panstwowe.md i README.md. Opisuja METODE, a nie stan prac —
+# i sa najlepsza wizytowka tego projektu.
+CLAUDE.md
+HANDOFF.md
+docs/plan-rozwoju.md
+docs/audyt-*.md
+docs/uokik-korespondencja.md
+docs/uokik-odpowiedz-projekt.md
+docs/historia/

@@ -1,5 +1,27 @@
 # Kontakt z UOKiK w sprawie API SUDOP
 
+> ## SPRAWA ZAMKNIĘTA — 12 września 2026
+>
+> **Pismo zostało wysłane, urząd odpowiedział, a kluczowe twierdzenie tego
+> dokumentu okazało się nieprawdziwe.** Zostawiamy go w całości, bo pokazuje,
+> na czym się przejechaliśmy.
+>
+> Poniżej pada zdanie, że pomiar sondy 29 jest „metodycznie poprawny: jedno
+> zgłoszenie, jeden identyfikator, 36 odpytań przez **sześć minut**".
+> Metodycznie poprawne było jedno zgłoszenie i jeden identyfikator. **Sześć
+> minut nie było.**
+>
+> UOKiK odpowiedział, że kolejka trwa **do kilkudziesięciu minut**, a wynik,
+> który uznaliśmy za nieistniejący, „został poprawnie obliczony i zapisany".
+> Powtórzyliśmy pomiar właściwą metodą — 62 sprawdzenia co 60 sekund, dwa
+> niezależne zgłoszenia — i dopiero to jest obserwacja warta czegokolwiek.
+>
+> **Wniosek praktyczny się nie zmienił** (danych nie da się dziś pobrać przez
+> API), ale dowód, na którym stał, był nieważny. Dobra odpowiedź z błędnego
+> rozumowania to nadal błędne rozumowanie.
+>
+> Aktualny stan: `docs/zrodla-danych.md`, wiersz o API przypadków pomocy.
+
 **Wersja 2, 4 września 2026.** Poprzednia wersja została wyrzucona w całości.
 Opierała się na twierdzeniu, że odpowiedzi API nie zawierają nagłówka `Location` —
 nieprawdziwym, wynikającym z tego, że nasz klient HTTP podążał za przekierowaniem
