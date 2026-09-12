@@ -11,7 +11,7 @@ jest wynik pomiaru.
 | Sejm API — procesy legislacyjne | działa | etapy z numerami głosowań | Sprint 4 |
 | ELI — akty prawne | działa | pełny tekst ustaw w PDF | Sprint 5 |
 | Oświadczenia majątkowe | **zablokowane** | skany PDF, brak API | poza MVP |
-| SUDOP — API przypadków pomocy | **działa, ale wolno** | kolejka od minut do kilkudziesięciu minut; wynik żyje 60 min | nie automatyzujemy (D13) |
+| SUDOP — API przypadków pomocy | **możliwości tak, przepustowość nie** | 28 pól z TERYT, zapytanie po samej gminie przyjęte; ale 2 z 2 wyszukań nieodebranych w oknie 60 min | nie automatyzujemy (D13) |
 | SUDOP — słownik gmin (API) | działa | 4 170 kodów TERYT z nazwami | `ingest:sudop-gminy` |
 | SUDOP — eksport CSV | działa, ręcznie | 14 kolumn z TERYT, kwotami i formą pomocy | `ingest:sudop-csv` |
 
