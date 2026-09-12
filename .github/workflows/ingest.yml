@@ -85,8 +85,15 @@ jobs:
         if: ${{ inputs.job == 'sync-processes' || inputs.job == 'all' || github.event_name == 'schedule' }}
         run: npx tsx ingest/jobs/sync-processes.ts
 
-      # ZDJECIA — dokopiowanie brakujacych. Przy braku nowych poslow to jedno
-      # zapytanie do bazy i koniec, wiec nie ma powodu robic tego rzadziej.
+      # ZDJECIA — dokopiowanie brakujacych ORAZ odswiezenie 17 najstarszych
+      # kopii (P0-4, migracja 0027). Odswiezanie jest domyslne i NIE wymaga
+      # tu zadnej flagi — celowo, bo flaga oznaczalaby, ze o rotacji trzeba
+      # pamietac w dwoch plikach naraz, a zapomnienie nie daloby sygnalu.
+      #
+      # Koszt ZMIERZONY 12.09.2026 na pelnej porcji: 17 zdjec w 8,9 s.
+      # Plan zakladal ~35 s; realnie jest czterokrotnie taniej, bo pobranie
+      # trwa ulamek sekundy, a nie dwie. Kazde z 499 zdjec wraca raz na
+      # okolo 30 dni.
       # Musi isc PO sync-mps, ktory ustawia photo_exists.
       - name: Zdjecia poslow do Storage
         if: ${{ inputs.job == 'sync-photos' || inputs.job == 'all' || github.event_name == 'schedule' }}

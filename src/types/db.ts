@@ -90,6 +90,20 @@ export type Database = {
             referencedColumns: ["print_number"]
           },
           {
+            foreignKeyName: "ai_contents_print_number_fkey"
+            columns: ["print_number"]
+            isOneToOne: false
+            referencedRelation: "proces_los"
+            referencedColumns: ["print_number"]
+          },
+          {
+            foreignKeyName: "ai_contents_print_number_fkey"
+            columns: ["print_number"]
+            isOneToOne: false
+            referencedRelation: "procesy_ostatnie"
+            referencedColumns: ["print_number"]
+          },
+          {
             foreignKeyName: "ai_contents_promise_id_fkey"
             columns: ["promise_id"]
             isOneToOne: false
@@ -279,53 +293,74 @@ export type Database = {
       }
       legislative_processes: {
         Row: {
+          change_date: string | null
           closure_date: string | null
+          comments: string | null
           description: string | null
           document_type: string | null
+          document_type_enum: string | null
           eli_address: string | null
           isap_url: string | null
+          legislative_committee: boolean | null
           passed: boolean | null
+          principle_of_subsidiarity: boolean | null
           print_number: string
+          prints_jointly: string[] | null
           process_start: string | null
-          rcl_url: string | null
+          shorten_procedure: boolean | null
           source_id: string
           term: number
           title: string
           title_final: string | null
+          ue: string | null
           updated_at: string
           urgency_status: string | null
         }
         Insert: {
+          change_date?: string | null
           closure_date?: string | null
+          comments?: string | null
           description?: string | null
           document_type?: string | null
+          document_type_enum?: string | null
           eli_address?: string | null
           isap_url?: string | null
+          legislative_committee?: boolean | null
           passed?: boolean | null
+          principle_of_subsidiarity?: boolean | null
           print_number: string
+          prints_jointly?: string[] | null
           process_start?: string | null
-          rcl_url?: string | null
+          shorten_procedure?: boolean | null
           source_id: string
           term: number
           title: string
           title_final?: string | null
+          ue?: string | null
           updated_at?: string
           urgency_status?: string | null
         }
         Update: {
+          change_date?: string | null
           closure_date?: string | null
+          comments?: string | null
           description?: string | null
           document_type?: string | null
+          document_type_enum?: string | null
           eli_address?: string | null
           isap_url?: string | null
+          legislative_committee?: boolean | null
           passed?: boolean | null
+          principle_of_subsidiarity?: boolean | null
           print_number?: string
+          prints_jointly?: string[] | null
           process_start?: string | null
-          rcl_url?: string | null
+          shorten_procedure?: boolean | null
           source_id?: string
           term?: number
           title?: string
           title_final?: string | null
+          ue?: string | null
           updated_at?: string
           urgency_status?: string | null
         }
@@ -642,6 +677,11 @@ export type Database = {
           nsf_id: string | null
           number_of_votes: number | null
           oath_date: string | null
+          photo_checked_at: string | null
+          photo_exists: boolean | null
+          photo_sha256: string | null
+          photo_stored_at: string | null
+          photo_stored_url: string | null
           photo_url: string | null
           profession: string | null
           second_name: string | null
@@ -670,6 +710,11 @@ export type Database = {
           nsf_id?: string | null
           number_of_votes?: number | null
           oath_date?: string | null
+          photo_checked_at?: string | null
+          photo_exists?: boolean | null
+          photo_sha256?: string | null
+          photo_stored_at?: string | null
+          photo_stored_url?: string | null
           photo_url?: string | null
           profession?: string | null
           second_name?: string | null
@@ -698,6 +743,11 @@ export type Database = {
           nsf_id?: string | null
           number_of_votes?: number | null
           oath_date?: string | null
+          photo_checked_at?: string | null
+          photo_exists?: boolean | null
+          photo_sha256?: string | null
+          photo_stored_at?: string | null
+          photo_stored_url?: string | null
           photo_url?: string | null
           profession?: string | null
           second_name?: string | null
@@ -728,30 +778,48 @@ export type Database = {
       process_stages: {
         Row: {
           child_print: string | null
+          committee_code: string | null
+          decision: string | null
+          depth: number
           ordinal: number
           print_number: string
+          sitting_num: number | null
           stage_date: string | null
           stage_name: string
           stage_type: string | null
           voting_id: number | null
+          voting_number: number | null
+          voting_sitting: number | null
         }
         Insert: {
           child_print?: string | null
+          committee_code?: string | null
+          decision?: string | null
+          depth?: number
           ordinal: number
           print_number: string
+          sitting_num?: number | null
           stage_date?: string | null
           stage_name: string
           stage_type?: string | null
           voting_id?: number | null
+          voting_number?: number | null
+          voting_sitting?: number | null
         }
         Update: {
           child_print?: string | null
+          committee_code?: string | null
+          decision?: string | null
+          depth?: number
           ordinal?: number
           print_number?: string
+          sitting_num?: number | null
           stage_date?: string | null
           stage_name?: string
           stage_type?: string | null
           voting_id?: number | null
+          voting_number?: number | null
+          voting_sitting?: number | null
         }
         Relationships: [
           {
@@ -759,6 +827,20 @@ export type Database = {
             columns: ["print_number"]
             isOneToOne: false
             referencedRelation: "legislative_processes"
+            referencedColumns: ["print_number"]
+          },
+          {
+            foreignKeyName: "process_stages_print_number_fkey"
+            columns: ["print_number"]
+            isOneToOne: false
+            referencedRelation: "proces_los"
+            referencedColumns: ["print_number"]
+          },
+          {
+            foreignKeyName: "process_stages_print_number_fkey"
+            columns: ["print_number"]
+            isOneToOne: false
+            referencedRelation: "procesy_ostatnie"
             referencedColumns: ["print_number"]
           },
           {
@@ -900,6 +982,20 @@ export type Database = {
             columns: ["verifying_print"]
             isOneToOne: false
             referencedRelation: "legislative_processes"
+            referencedColumns: ["print_number"]
+          },
+          {
+            foreignKeyName: "promises_verifying_print_fkey"
+            columns: ["verifying_print"]
+            isOneToOne: false
+            referencedRelation: "proces_los"
+            referencedColumns: ["print_number"]
+          },
+          {
+            foreignKeyName: "promises_verifying_print_fkey"
+            columns: ["verifying_print"]
+            isOneToOne: false
+            referencedRelation: "procesy_ostatnie"
             referencedColumns: ["print_number"]
           },
           {
@@ -1271,6 +1367,28 @@ export type Database = {
         }
         Relationships: []
       }
+      glosowanie_z_procesem: {
+        Row: {
+          closure_date: string | null
+          document_type: string | null
+          eli_address: string | null
+          isap_url: string | null
+          los_procesu: string | null
+          ma_rozpatrzenie_wniosku: boolean | null
+          ma_weto: boolean | null
+          passed: boolean | null
+          pewnosc_powiazania: string | null
+          print_number: string | null
+          process_title: string | null
+          sitting: number | null
+          title_final: string | null
+          voted_at: string | null
+          voting_id: number | null
+          voting_number: number | null
+          voting_title: string | null
+        }
+        Relationships: []
+      }
       mp_obecnosc_kontekst: {
         Row: {
           absent_count: number | null
@@ -1278,6 +1396,8 @@ export type Database = {
           attendance_hi: number | null
           attendance_lo: number | null
           attendance_pct: number | null
+          district_name: string | null
+          district_num: number | null
           first_voted_at: string | null
           full_name: string | null
           funkcje_panstwowe: string | null
@@ -1293,9 +1413,14 @@ export type Database = {
           miesiecy_lacznie: number | null
           miesiecy_prawie_bez_obecnosci: number | null
           niepewnosc_pkt: number | null
+          niezgodnosc_hi: number | null
+          niezgodnosc_lo: number | null
+          niezgodnosc_z_klubem_pct: number | null
+          photo_url: string | null
           powod_zakonczenia: string | null
           present_count: number | null
           slug: string | null
+          voivodeship: string | null
           voted_pct: number | null
           votes_total: number | null
           w_rankingu: boolean | null
@@ -1344,6 +1469,44 @@ export type Database = {
         }
         Relationships: []
       }
+      okregi_wyborcze: {
+        Row: {
+          district_name: string | null
+          district_num: number | null
+          poslow: number | null
+          poslow_aktywnych: number | null
+          voivodeship: string | null
+        }
+        Relationships: []
+      }
+      proces_los: {
+        Row: {
+          closure_date: string | null
+          eli_address: string | null
+          isap_url: string | null
+          los: string | null
+          ma_do_prezydenta: boolean | null
+          ma_podpis: boolean | null
+          ma_rozpatrzenie_wniosku: boolean | null
+          ma_trybunal: boolean | null
+          ma_weto: boolean | null
+          passed: boolean | null
+          print_number: string | null
+          weto_utrzymane: boolean | null
+        }
+        Relationships: []
+      }
+      procesy_ostatnie: {
+        Row: {
+          closure_date: string | null
+          eli_address: string | null
+          isap_url: string | null
+          los: string | null
+          print_number: string | null
+          tytul: string | null
+        }
+        Relationships: []
+      }
       public_ai_contents: {
         Row: {
           ai_disclaimer: string | null
@@ -1366,6 +1529,20 @@ export type Database = {
             columns: ["print_number"]
             isOneToOne: false
             referencedRelation: "legislative_processes"
+            referencedColumns: ["print_number"]
+          },
+          {
+            foreignKeyName: "ai_contents_print_number_fkey"
+            columns: ["print_number"]
+            isOneToOne: false
+            referencedRelation: "proces_los"
+            referencedColumns: ["print_number"]
+          },
+          {
+            foreignKeyName: "ai_contents_print_number_fkey"
+            columns: ["print_number"]
+            isOneToOne: false
+            referencedRelation: "procesy_ostatnie"
             referencedColumns: ["print_number"]
           },
           {

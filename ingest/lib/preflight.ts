@@ -61,6 +61,7 @@ export const WYMOGI_PROCESY: Wymog[] = [
 export const WYMOGI_ZDJECIA: Wymog[] = [
   { tabela: 'mps', kolumna: 'photo_stored_url', migracja: '0023_zdjecia_u_siebie.sql', po_co: 'adres naszej kopii zdjecia' },
   { tabela: 'mps', kolumna: 'photo_stored_at', migracja: '0023_zdjecia_u_siebie.sql', po_co: 'kiedy skopiowalismy' },
+  { tabela: 'mps', kolumna: 'photo_sha256', migracja: '0027_suma_kontrolna_zdjec.sql', po_co: 'odswiezanie kroczace — czy plik u zrodla to nadal ten sam plik' },
 ];
 
 export async function assertSchema(dodatkowe: Wymog[] = []): Promise<void> {
