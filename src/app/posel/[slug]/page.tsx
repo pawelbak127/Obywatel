@@ -148,9 +148,18 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
         Funkcja panstwowa stoi PRZED liczbami, nie pod osia czasu.
         Blad interpretacyjny rodzi sie przy liczbie 50,5% — wiec kontekst
         musi byc tam, gdzie ta liczba, a nie kilka ekranow nizej.
+
+        RAMKA JEST W --color-rule, NIE W AKCENCIE. Ten sam element — lewa
+        kreska plus lekkie tlo — wystepuje w projekcie piec razy i mial dwa
+        rozne kolory dla tej samej roli: akapit wyzej byl szary, ten czerwony.
+        Akcent (#a6172b) oznacza w serwisie takze blad importu i glos
+        „przeciw", wiec zwykly kontekst dostawal zabarwienie ostrzezenia,
+        ktorego nie ma. Odrzucona alternatywa: osobny token --color-context.
+        Byl to szosty odcien na czterech stronach i nie rozstrzygal niczego,
+        czego nie rozstrzyga --color-rule.
       */}
       {mp.funkcje_panstwowe && (
-        <p className="mt-6 rounded border-l-2 border-[color:var(--color-accent)] bg-black/[0.02] py-2.5 pl-3 text-sm leading-relaxed dark:bg-white/[0.03]">
+        <p className="mt-6 rounded border-l-2 border-[color:var(--color-rule)] bg-black/[0.02] py-2.5 pl-3 text-sm leading-relaxed dark:bg-white/[0.03]">
           <strong className="font-semibold">Funkcja państwowa w tym okresie:</strong>{' '}
           {polskieDaty(mp.funkcje_panstwowe)}
           <span className="block text-xs text-[color:var(--color-ink-soft)]">

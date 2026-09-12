@@ -249,14 +249,14 @@ export default async function Poslowie({
 
       {/* Ostrzeżenie merytoryczne — zostaje, ale krótsze i tylko tam, gdzie dotyczy. */}
       {metryka === 'obecnosc' && (
-        <div className="mt-5 max-w-prose rounded border-l-2 border-[color:var(--color-accent)] bg-black/[0.02] py-2.5 pl-3 text-sm leading-relaxed dark:bg-white/[0.03]">
+        <div className="mt-5 max-w-prose rounded border-l-2 border-[color:var(--color-rule)] bg-black/[0.02] py-2.5 pl-3 text-sm leading-relaxed dark:bg-white/[0.03]">
           <strong>Sejm nie podaje powodu nieobecności.</strong> Sprawowanie urzędu, choroba,
           urlop rodzicielski i nieprzychodzenie do pracy wyglądają w danych identycznie.
           Kolumna „kształt" mówi tylko tyle, czy nieobecności skupiają się w czasie.
         </div>
       )}
       {metryka === 'niezgodnosc' && (
-        <div className="mt-5 max-w-prose rounded border-l-2 border-[color:var(--color-accent)] bg-black/[0.02] py-2.5 pl-3 text-sm leading-relaxed dark:bg-white/[0.03]">
+        <div className="mt-5 max-w-prose rounded border-l-2 border-[color:var(--color-rule)] bg-black/[0.02] py-2.5 pl-3 text-sm leading-relaxed dark:bg-white/[0.03]">
           <strong>To nie jest miara buntu.</strong> Sejm nie publikuje, czy w danym głosowaniu
           obowiązywała dyscyplina klubowa. Głosowanie z niej zwolnione, brak stanowiska klubu
           i pomyłka przy przycisku wyglądają w danych tak samo — pokazujemy rozbieżność,
