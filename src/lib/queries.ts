@@ -193,10 +193,18 @@ export async function pobierzRanking(
     limit?: number;
     szukaj?: string;
     okreg?: number | null;
+    /**
+     * DOKLADNY skrot klubu, nie fraza. To osobny parametr od `szukaj`
+     * z konkretnego powodu: `szukaj` idzie przez `ilike.%fraza%` po nazwisku
+     * ORAZ po klubie, wiec „KO" wyciagaloby Kowalskiego, Sikorskiego
+     * i Kosiniaka-Kamysza. Odnosnik z nazwy klubu musi dawac klub, a nie
+     * przypadkowa zbieznosc liter w nazwiskach.
+     */
+    klub?: string | null;
     metryka?: Metryka;
   } = {},
 ) {
-  const { kierunek = 'najgorsi', limit = 100, szukaj, okreg = null, metryka = 'obecnosc' } = opts;
+  const { kierunek = 'najgorsi', limit = 100, szukaj, okreg = null, klub = null, metryka = 'obecnosc' } = opts;
   const supabase = await createClient();
 
   // Sortowanie ZAWSZE po dolnej granicy przedziału. Dla niezgodności z klubem
@@ -223,6 +231,13 @@ export async function pobierzRanking(
   // co nie jest liczbą całkowitą z zakresu okręgów, odpada już przy parsowaniu.
   if (Number.isInteger(okreg) && okreg !== null && okreg > 0) {
     zapytanie = zapytanie.eq('district_num', okreg);
+  }
+
+  // `eq`, nie `ilike`: skrót klubu przychodzi z naszego własnego odnośnika,
+  // więc ma pasować dokładnie albo nie pasować wcale. Wartość i tak trafia
+  // do PostgREST-a jako parametr, nie jako sklejony tekst zapytania.
+  if (klub) {
+    zapytanie = zapytanie.eq('klub', klub.trim().slice(0, 60));
   }
 
   // Przy niezgodności „najgorsi" znaczy NAJWYŻSZA rozbieżność z klubem, więc

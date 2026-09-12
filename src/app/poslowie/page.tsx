@@ -102,12 +102,15 @@ const LIMIT = 60;
 export default async function Poslowie({
   searchParams,
 }: {
-  searchParams: Promise<{ kierunek?: string; q?: string; okreg?: string; widok?: string }>;
+  searchParams: Promise<{ kierunek?: string; q?: string; okreg?: string; widok?: string; klub?: string }>;
 }) {
   const sp = await searchParams;
   const najlepsi = sp.kierunek === 'najlepsi';
   const metryka: Metryka = sp.widok === 'klub' ? 'niezgodnosc' : 'obecnosc';
   const fraza = (sp.q ?? '').trim().slice(0, 60);
+  // Skrot klubu przychodzi z NASZEGO odnosnika, nie z pola tekstowego, wiec
+  // dopasowanie jest dokladne (patrz komentarz przy `klub` w queries.ts).
+  const klub = (sp.klub ?? '').trim().slice(0, 60) || null;
 
   // Okręg z adresu jest danymi od użytkownika. Parsujemy go na liczbę i wszystko,
   // co nie jest liczbą całkowitą, po prostu przepada — nie ma tu czego czyścić,
@@ -119,7 +122,14 @@ export default async function Poslowie({
   let okregi: Okreg[];
   try {
     [lista, okregi] = await Promise.all([
-      pobierzRanking({ kierunek: najlepsi ? 'najlepsi' : 'najgorsi', limit: LIMIT, szukaj: fraza, okreg, metryka }),
+      pobierzRanking({
+        kierunek: najlepsi ? 'najlepsi' : 'najgorsi',
+        limit: LIMIT,
+        szukaj: fraza,
+        okreg,
+        klub,
+        metryka,
+      }),
       pobierzOkregi(),
     ]);
   } catch (e) {
@@ -128,7 +138,7 @@ export default async function Poslowie({
   }
 
   const w = WIDOKI[metryka];
-  const filtrowane = Boolean(fraza) || okreg !== null;
+  const filtrowane = Boolean(fraza) || okreg !== null || klub !== null;
 
   // Skala paska. Dla obecności zakres jest naturalnie pełny (0–100%), dla
   // niezgodności mieści się w praktyce poniżej 35% — pasek 0–100 dałby 60
@@ -138,17 +148,25 @@ export default async function Poslowie({
 
   /** Adres z zachowaniem wszystkich pozostałych filtrów. */
   const adres = (
-    zmiana: Partial<{ kierunek: string | null; widok: string | null; okreg: string | null; q: string | null }>,
+    zmiana: Partial<{
+      kierunek: string | null;
+      widok: string | null;
+      okreg: string | null;
+      q: string | null;
+      klub: string | null;
+    }>,
   ) => {
     const p = new URLSearchParams();
     const kier = 'kierunek' in zmiana ? zmiana.kierunek : najlepsi ? 'najlepsi' : null;
     const wid = 'widok' in zmiana ? zmiana.widok : metryka === 'niezgodnosc' ? 'klub' : null;
     const okr = 'okreg' in zmiana ? zmiana.okreg : okreg !== null ? String(okreg) : null;
     const q = 'q' in zmiana ? zmiana.q : fraza;
+    const kl = 'klub' in zmiana ? zmiana.klub : klub;
     if (kier) p.set('kierunek', kier);
     if (wid) p.set('widok', wid);
     if (okr) p.set('okreg', okr);
     if (q) p.set('q', q);
+    if (kl) p.set('klub', kl);
     const s = p.toString();
     return s ? `/poslowie?${s}` : '/poslowie';
   };
@@ -290,6 +308,7 @@ export default async function Poslowie({
             <>
               <strong className="text-[color:var(--color-ink)]">{lista.length}</strong>
               {lista.length === 1 ? ' wynik' : lista.length < 5 ? ' wyniki' : ' wyników'}
+              {klub && ` z klubu ${klub}`}
               {okreg !== null && ` z okręgu nr ${okreg}`}
               {fraza && ` dla „${fraza}"`}. To wycinek listy, więc numery pozycji nie mają tu
               sensu — nie pokazujemy ich.
@@ -391,11 +410,36 @@ function Wiersz({
             {mp.full_name}
           </Link>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] text-[color:var(--color-ink-soft)]">
-            {mp.klub && <span>{mp.klub}</span>}
+            {/*
+              KLUB I OKREG SA ODNOSNIKAMI, nie samym tekstem.
+
+              „Kto jeszcze glosuje tak jak on" i „kto jeszcze startowal
+              u mnie" to dwa najczestsze kolejne pytania czytelnika, a przed
+              12.09.2026 oba wymagaly powrotu na gore strony i wpisania tego
+              samego ciagu recznie. Profil posla mial to od dawna dla okregu —
+              lista nie miala dla zadnego z dwoch.
+
+              Klub celuje w `?klub=`, a nie w pole szukania: `?q=KO` przechodzi
+              przez `ilike.%KO%` po nazwisku i wyciagneloby Kowalskiego,
+              Sikorskiego i Kosiniaka-Kamysza (patrz queries.ts).
+            */}
+            {mp.klub && (
+              <Link
+                href={`/poslowie?${metryka === 'niezgodnosc' ? 'widok=klub&' : ''}klub=${encodeURIComponent(mp.klub)}`}
+                className="hover:text-[color:var(--color-accent)] hover:underline"
+              >
+                {mp.klub}
+              </Link>
+            )}
             {mp.district_name && (
               <>
                 <span aria-hidden="true">·</span>
-                <span>okręg {mp.district_num}, {mp.district_name}</span>
+                <Link
+                  href={`/poslowie?${metryka === 'niezgodnosc' ? 'widok=klub&' : ''}okreg=${mp.district_num}`}
+                  className="hover:text-[color:var(--color-accent)] hover:underline"
+                >
+                  okręg {mp.district_num}, {mp.district_name}
+                </Link>
               </>
             )}
             <span aria-hidden="true">·</span>

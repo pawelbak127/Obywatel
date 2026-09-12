@@ -101,7 +101,19 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
 
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-[color:var(--color-accent)]">
-            {mp.klub && <span>{mp.klub}</span>}
+            {/*
+              Klub jest odnosnikiem do listy przefiltrowanej tym klubem —
+              z tego samego powodu, dla ktorego okreg nizej jest odnosnikiem:
+              to najczestsze kolejne pytanie czytelnika, a nie ozdoba naglowka.
+            */}
+            {mp.klub && (
+              <Link
+                href={`/poslowie?klub=${encodeURIComponent(mp.klub)}`}
+                className="hover:underline"
+              >
+                {mp.klub}
+              </Link>
+            )}
             {!mp.active && <span className="text-[color:var(--color-ink-soft)]">mandat wygasł</span>}
             <span className="text-[color:var(--color-ink-soft)] normal-case tracking-normal">
               {mp.zakres_mandatu}
