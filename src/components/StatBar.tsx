@@ -71,25 +71,53 @@ export function StatBar({
         a przy 50,5% jak w polowie pustego paska. Kreska w 50% i dwie liczby
         na koncach wystarcza, zeby pasek dalo sie przeczytac bez zgadywania.
       */}
+      {/*
+        WYSOKOSC h-3, nie h-2. Ten pasek niesie DWIE rzeczy naraz: pole
+        przedzialu ufnosci i kreske wartosci. Przy dwoch pikselach obie
+        zlewaly sie w jedna plame i rozroznienie "ile wynosi" od "jak pewne
+        jest to, ile wynosi" — czyli cala tresc decyzji D10 — przestawalo
+        byc widoczne. Jeden piksel wiecej wystarcza, zeby kreska miala
+        sie gdzie odznaczyc od pola.
+      */}
       <div
-        className="relative mt-2 h-2 w-full overflow-hidden rounded-sm bg-black/[0.07] dark:bg-white/[0.09]"
+        className="relative mt-2 h-3 w-full overflow-hidden rounded-sm bg-black/[0.07] dark:bg-white/[0.09]"
         role="img"
         aria-label={`${label}: ${value.toFixed(1)} procent w skali od 0 do 100, przedział ufności od ${dol.toFixed(1)} do ${gora.toFixed(1)} procent`}
       >
         <span className="absolute inset-y-0 left-1/2 w-px bg-black/[0.16] dark:bg-white/[0.18]" aria-hidden />
+        {/*
+          KRYCIE /45, nie /25. Przy jednej czwartej pole przedzialu bylo ledwo
+          odrozniane od tla toru, wiec niepewnosc pomiaru — rzecz, ktora ten
+          projekt pokazuje SWIADOMIE — znikala z widoku.
+        */}
         <div
-          className="absolute inset-y-0 bg-[color:var(--color-accent)]/25"
+          className="absolute inset-y-0 bg-[color:var(--color-accent)]/45"
           style={{ left: `${dol}%`, width: `${szerokosc}%` }}
         />
+        {/*
+          SZEROKOSC 3px, nie 2px — i przesuniecie o POLOWE tej szerokosci.
+          Po wzmocnieniu pola wyzej cienka kreska zaczynala w nim ginac.
+          `- 1.5px` zamiast `- 1px` utrzymuje srodek kreski dokladnie na
+          wartosci; bez tej poprawki pasek pokazywalby liczbe o pol piksela
+          za daleko w prawo.
+
+          Kreska stoi w DOM PO polu, wiec maluje sie na wierzchu. Sprawdzone —
+          nie przestawiac kolejnosci.
+        */}
         <div
-          className="absolute inset-y-0 w-[2px] bg-[color:var(--color-accent)]"
-          style={{ left: `calc(${value}% - 1px)` }}
+          className="absolute inset-y-0 w-[3px] bg-[color:var(--color-accent)]"
+          style={{ left: `calc(${value}% - 1.5px)` }}
         />
       </div>
 
+      {/*
+        Opisy osi: 11px i `ink-soft`, nie 10px i `ink-faint`. Dziesiec pikseli
+        w najjasniejszym z trzech kolorow tekstu bylo na granicy czytelnosci,
+        a to sa jedyne liczby mowiace, w jakiej skali stoi pasek.
+      */}
       <div
         aria-hidden
-        className="mt-1 flex items-baseline justify-between font-mono text-[10px] tabular-nums text-[color:var(--color-ink-faint,#7d8899)]"
+        className="mt-1 flex items-baseline justify-between font-mono text-[11px] tabular-nums text-[color:var(--color-ink-soft)]"
       >
         <span>0%</span>
         <span>50%</span>

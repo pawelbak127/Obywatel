@@ -422,18 +422,29 @@ function Wiersz({
             ±{procent((gora - dol) / 2 || 0)} pkt
           </span>
         </div>
+        {/*
+          WYSOKOSC h-2.5, nie h-1.5. Przy szescdziesieciu wierszach jeden nad
+          drugim roznica miedzy 11,5% a 14,5% byla praktycznie niewidoczna,
+          a pasek jest tu glownym nosnikiem informacji — liczba obok podaje
+          wartosc, ale to pasek pozwala POROWNAC posla z poslem.
+        */}
         <div
-          className="relative mt-1.5 h-1.5 w-full overflow-hidden rounded-sm bg-black/[0.07] dark:bg-white/[0.09]"
+          className="relative mt-1.5 h-2.5 w-full overflow-hidden rounded-sm bg-black/[0.07] dark:bg-white/[0.09]"
           role="img"
           aria-label={`${procent(pct)} procent, margines błędu od ${procent(dol)} do ${procent(gora)}`}
         >
+          {/* Krycie /45, nie /25 — pole przedzialu ufnosci ma byc odrozniane
+              od tla toru golym okiem, a nie tylko istniec w kodzie. */}
           <div
-            className="absolute inset-y-0 bg-[color:var(--color-accent)]/25"
+            className="absolute inset-y-0 bg-[color:var(--color-accent)]/45"
             style={{ left: `${naSkali(dol)}%`, width: `${Math.max(0.4, naSkali(gora) - naSkali(dol))}%` }}
           />
+          {/* Kreska 3px zamiast 2px, bo po wzmocnieniu pola cienka ginela.
+              `- 1.5px` to polowa nowej szerokosci — bez tego srodek kreski
+              przestalby stac dokladnie na wartosci. */}
           <div
-            className="absolute inset-y-0 w-[2px] bg-[color:var(--color-accent)]"
-            style={{ left: `calc(${naSkali(pct ?? 0)}% - 1px)` }}
+            className="absolute inset-y-0 w-[3px] bg-[color:var(--color-accent)]"
+            style={{ left: `calc(${naSkali(pct ?? 0)}% - 1.5px)` }}
           />
         </div>
       </div>
