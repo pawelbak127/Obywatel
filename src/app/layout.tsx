@@ -44,12 +44,6 @@ function Naglowek() {
         >
           posłowie
         </Link>
-        <Link
-          href="/status"
-          className="ml-auto font-mono text-[11px] text-[color:var(--color-ink-faint,#7d8899)] hover:text-[color:var(--color-accent)]"
-        >
-          stan bazy
-        </Link>
       </nav>
     </header>
   );
@@ -61,7 +55,27 @@ function Stopka() {
       {/* max-w-6xl jak w Naglowku - uzasadnienie w komentarzu nad Naglowkiem */}
       <div className="mx-auto max-w-6xl px-6 py-6 text-xs leading-relaxed text-[color:var(--color-ink-soft)]">
         Dane pochodzą z API Kancelarii Sejmu i innych oficjalnych rejestrów państwowych.
-        Serwis nie jest powiązany z żadną instytucją publiczną ani partią.
+        Serwis nie jest powiązany z żadną instytucją publiczną ani partią.{' '}
+        {/*
+          LINK PRZENIESIONY Z NAWIGACJI DO STOPKI (12.09.2026).
+
+          W glownej nawigacji stal na rowni z „poslowie", czyli narzedzie
+          diagnostyczne konkurowalo o miejsce z trescia serwisu. Odnosnik
+          o pochodzeniu danych nalezy do stopki — tam sie go szuka i tam
+          sasiaduje ze zdaniem o zrodlach, ktore mowi to samo jednym zdaniem.
+
+          NIE ukrywamy go. Dla serwisu, ktorego produktem jest wiarygodnosc,
+          publiczna strona o stanie i swiezosci danych jest atutem — to
+          odpowiednik <SourceLink> na poziomie calego serwisu. Zmienia sie
+          miejsce i jezyk, nie dostepnosc.
+        */}
+        <Link
+          href="/status"
+          className="underline decoration-dotted underline-offset-2 hover:text-[color:var(--color-accent)]"
+        >
+          Skąd pochodzą dane i kiedy je pobraliśmy
+        </Link>
+        .
       </div>
     </footer>
   );
