@@ -547,13 +547,13 @@ function Wiersz({
                 ±{procent((gora - dol) / 2 || 0)} pkt
               </span>
             </div>
-          /*
-            WYSOKOSC h-2.5, nie h-1.5. Przy szescdziesieciu wierszach jeden nad
-            drugim roznica miedzy 11,5% a 14,5% byla praktycznie niewidoczna,
-            a pasek jest tu glownym nosnikiem informacji — liczba obok podaje
-            wartosc, ale to pasek pozwala POROWNAC posla z poslem.
-          */
-          <div
+            {/*
+              WYSOKOSC h-2.5, nie h-1.5. Przy szescdziesieciu wierszach jeden nad
+              drugim roznica miedzy 11,5% a 14,5% byla praktycznie niewidoczna,
+              a pasek jest tu glownym nosnikiem informacji — liczba obok podaje
+              wartosc, ale to pasek pozwala POROWNAC posla z poslem.
+            */}
+            <div
             className="relative mt-1.5 h-2.5 w-full overflow-hidden rounded-sm bg-black/[0.07] dark:bg-white/[0.09]"
             role="img"
             aria-label={`${procent(pct)} procent, margines błędu od ${procent(dol)} do ${procent(gora)}`}
