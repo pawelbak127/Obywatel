@@ -3,6 +3,7 @@
  *
  *   node scripts/probes/32-sudop-cierpliwiej.mjs --tylko-spec
  *   node scripts/probes/32-sudop-cierpliwiej.mjs --pelna
+ *   node scripts/probes/32-sudop-cierpliwiej.mjs --gmina=0223083
  *
  * ---------------------------------------------------------------------
  * TA SONDA NIE URUCHAMIA SIĘ SAMA I NIE MA SKRÓTU W `package.json`.
@@ -200,6 +201,64 @@ async function etapSpecyfikacji() {
 // ---------------------------------------------------------------------
 // ETAP 1 — jedno wyszukanie, cierpliwie
 // ---------------------------------------------------------------------
+/**
+ * Tryb --gmina: JEDNO zapytanie o cala pomoc w jednej gminie.
+ *
+ * PO CO OSOBNY TRYB. Etap 1 pyta po NIP-ie i odpowiada na pytanie "jak wyglada
+ * odpowiedz". To zapytanie odpowiada na INNE pytanie, wazniejsze dla produktu:
+ * czy da sie zapytac o gmine BEZ podawania NIP-u i bez wskazywania srodka
+ * pomocowego. Od tego zalezy, czy "Radar Sasiedzki" to jedno zapytanie na gmine,
+ * czy setki zapytan po NIP-ach — a przy kolejce liczonej w dziesiatkach minut
+ * to jest roznica miedzy "wykonalne" a "nie".
+ *
+ * DLACZEGO BEZ DAT. Kusilo, zeby zawezic zakres i byc uprzejmiejszym dla
+ * serwera. Ale gdyby zapytanie zwrocilo blad, nie wiedzielibysmy, czy chodzi
+ * o gmine, czy o format daty — ktorego specyfikacja NIE PODAJE (typ `string`,
+ * bez wzorca). Jedna zmienna na eksperyment.
+ *
+ * CZY TO W OGOLE PRZEJDZIE. Nasz wlasny pomiar (sonda 27) zapisal odpowiedz
+ * API na zapytanie zawezone wylacznie data:
+ *
+ *     "Nie podano zadnych wymaganych kryteriow. Dodaj kryteria wyszukiwania
+ *      inne niz strona oraz dzien udzielenia pomocy"
+ *
+ * Czyli API wymaga JAKIEGOKOLWIEK kryterium poza strona i datami — a gmina
+ * jest kryterium. Ostrzejsza regula "musi byc srodek pomocowy" nalezy do
+ * formularza WWW, nie do API. To jest hipoteza do sprawdzenia, nie pewnik.
+ */
+async function etapGminy(kod) {
+  console.log('');
+  console.log('='.repeat(72));
+  console.log(`TRYB GMINA — JEDNO zapytanie o gmine ${kod}, bez NIP-u i bez dat.`);
+  console.log('To jest jedno miejsce w kolejce UOKiK.');
+  console.log('='.repeat(72));
+
+  const rej = await strzal(
+    `${BAZA}/api/przypadki-pomocy-bez-kolejki?gmina-siedziby-kod=${kod}&strona=1`,
+    `REJESTRACJA po gminie ${kod}`,
+  );
+
+  if (!rej) return;
+
+  // Odmowa jest tu WYNIKIEM, nie awaria — rozstrzyga pytanie na "nie".
+  if (rej.status !== 303) {
+    console.log('');
+    console.log('='.repeat(72));
+    console.log(`API NIE PRZYJELO zapytania po samej gminie (HTTP ${rej.status}).`);
+    console.log('To jest odpowiedz na pytanie badawcze: Radar Sasiedzki nie da sie');
+    console.log('zbudowac jednym zapytaniem na gmine i ręczny CSV zostaje droga.');
+    console.log('Tresc odpowiedzi wyzej — wklej ja w calosci.');
+    console.log('='.repeat(72));
+    return;
+  }
+
+  console.log('');
+  console.log('API PRZYJELO zapytanie po samej gminie — 303 z Location.');
+  console.log('Zostaje sprawdzic, czy wynik naprawde przyjdzie.');
+
+  await odpytujDoSkutku(pelny(rej.loc), `gmina ${kod}`);
+}
+
 async function etapWyszukania() {
   console.log('');
   console.log('='.repeat(72));
@@ -219,7 +278,21 @@ async function etapWyszukania() {
     return;
   }
 
-  const url = pelny(rej.loc);
+  await odpytujDoSkutku(pelny(rej.loc), 'NIP');
+}
+
+/**
+ * Odpytywanie JEDNEGO identyfikatora az do skutku albo do wygasniecia wyniku.
+ *
+ * Wspolne dla obu trybow (NIP i gmina) — inaczej poprawka odstepu albo
+ * horyzontu musialaby byc wprowadzona w dwoch miejscach, a to jest dokladnie
+ * ten rodzaj duplikacji, ktory kiedys sie rozjedzie.
+ *
+ * `etykieta` trafia do nazw zapisywanych plikow, zeby wynik po NIP-ie
+ * nie nadpisal wyniku po gminie.
+ */
+async function odpytujDoSkutku(url, etykieta) {
+  const plik = etykieta.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
   const start = Date.now();
   let runda = 0;
 
@@ -241,8 +314,8 @@ async function etapWyszukania() {
 
     if (r.status === 200 && r.tekst.trim().startsWith('{')) {
       console.log('');
-      console.log(`SA DANE po ${minuty} minutach.`);
-      zapisz('32-sudop-wynik.json', r.tekst);
+      console.log(`SA DANE po ${minuty} minutach (${etykieta}).`);
+      zapisz(`32-sudop-wynik-${plik}.json`, r.tekst);
       try {
         opiszKsztalt(JSON.parse(r.tekst));
       } catch (e) {
@@ -253,7 +326,7 @@ async function etapWyszukania() {
       await sleep(3000);
       const csv = await strzal(`${url}?csv=true`, 'ten sam wynik jako CSV');
       if (csv?.status === 200 && csv.tekst) {
-        zapisz('32-sudop-wynik.csv', csv.tekst);
+        zapisz(`32-sudop-wynik-${plik}.csv`, csv.tekst);
         console.log('');
         console.log(`Naglowek CSV: ${csv.tekst.split('\n')[0]?.slice(0, 300)}`);
       }
@@ -277,15 +350,24 @@ async function etapWyszukania() {
 async function main() {
   const tylkoSpec = process.argv.includes('--tylko-spec');
   const pelna = process.argv.includes('--pelna');
+  const gmina = process.argv.find((a) => a.startsWith('--gmina='))?.split('=')[1];
 
-  if (!tylkoSpec && !pelna) {
+  if (!tylkoSpec && !pelna && !gmina) {
     console.log('');
     console.log('Ta sonda odpytuje serwer UOKiK, ktory sam zglosil przeciazenie.');
     console.log('Uruchom jawnie:');
     console.log('');
     console.log('  --tylko-spec   wersja + specyfikacja OpenAPI. Dwa zadania, ZERO kolejki.');
-    console.log('  --pelna        to samo + JEDNO wyszukanie odpytywane 62 min co 60 s.');
+    console.log('  --pelna        to samo + JEDNO wyszukanie po NIP-ie, odpytywane 62 min co 60 s.');
+    console.log('  --gmina=KOD    JEDNO wyszukanie po samym kodzie TERYT gminy.');
     console.log('');
+    return;
+  }
+
+  if (gmina) {
+    // Tryb gminy NIE pobiera specyfikacji — jest juz zapisana, a kazde zadanie
+    // mniej to zadanie mniej.
+    await etapGminy(gmina);
     return;
   }
 
