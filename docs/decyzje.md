@@ -188,12 +188,74 @@ tak samo niedopuszczalny jak kwota z oświadczenia majątkowego bez skanu.
 
 ## D13 · Nie automatyzujemy wyszukiwarki SUDOP
 
-Pełne uzasadnienie w [`sudop.md`](sudop.md). Skrót: to projekt o rozliczalności
-instytucji publicznych, więc pierwsze pytanie przy pierwszym tekście o dotacjach
-będzie dotyczyło pochodzenia danych. Do tego skala obciążyłaby serwer UOKiK,
-a identyfikatory JSF psułyby import bez ostrzeżenia.
+**Decyzja obowiązuje. Uzasadnienie przepisane 12.09.2026, bo jedna z jego
+przesłanek okazała się nieprawdziwa.**
 
-Droga dopuszczalna: człowiek pobiera oficjalny eksport CSV, my importujemy plik.
+### Co się nie zmieniło
+
+To projekt o rozliczalności instytucji publicznych, więc pierwsze pytanie przy
+pierwszym tekście o dotacjach będzie dotyczyło pochodzenia danych. Droga
+dopuszczalna pozostaje ta sama: **człowiek pobiera oficjalny eksport CSV,
+my importujemy plik.**
+
+### Co upadło
+
+Poprzednia wersja opierała się między innymi na twierdzeniu, że anonimowe
+zapytania **nie wychodzą z kolejki** — czyli że API i tak nie działa.
+**To było nieprawdziwe.** UOKiK odpowiedział na nasze pismo:
+
+> Publiczne API SUDOP jest dostępne anonimowo i wyszukiwanie przypadków pomocy
+> powinno zwracać wyniki również bez logowania. Wynik `4976bbc9-…` został
+> poprawnie obliczony i zapisany.
+
+Nasza sonda odpytywała ten wynik **sześć minut**, a urząd podaje, że kolejka
+trwa **do kilkudziesięciu**. Zmierzyliśmy własne wyobrażenie o czasie, nie czas.
+Co gorsza, sonda z góry nazwała sześć minut „twardym dowodem" — założenie
+nie zostało nigdzie zapisane ani sprawdzone.
+
+**Dobra odpowiedź z błędnego rozumowania to nadal błędne rozumowanie.**
+
+### Na czym decyzja stoi teraz
+
+Straciliśmy wymówkę techniczną i zostało samo zobowiązanie — a ono jest
+mocniejsze, niż było.
+
+**1. Urząd napisał wprost, że nie udźwignie ruchu.**
+
+> Z powodu dużego zainteresowania danymi, przekraczającego nasze możliwości
+> infrastrukturalne, moduł z indywidualnym kluczem jest niedostępny
+> i nie planujemy jego udostępnienia. […] Zaplanowaliśmy prace modernizacyjne
+> […] w miarę dostępności funduszy.
+
+Dokładanie się do problemu, o którym instytucja publiczna mówi tymi słowami,
+jest sprzeczne z tym, po co ten serwis istnieje.
+
+**2. Kolejka nie oddaje wyniku przed jego wygaśnięciem.** Zmierzone 12.09.2026,
+dwa niezależne wyszukania, odstęp 60 sekund zgodny z zaleceniem urzędu:
+**62 sprawdzenia w ciągu 62 minut, za każdym razem `404`** — raz po numerze
+NIP, raz po kodzie gminy. Wynik żyje 60 minut, więc zadanie czekające dłużej
+nie może zostać odebrane niezależnie od cierpliwości.
+
+**3. Moduł z indywidualnym kluczem nie powstanie.** Wcześniejsze notatki
+traktowały go jako drogę wyjścia. Urząd zamknął tę drogę wprost.
+
+### Czego ta decyzja NIE mówi
+
+**Nie mówi, że API jest bezużyteczne.** Przeciwnie — sprawdzone na zapisanej
+specyfikacji: `AidEventEntity` ma **28 pól**, w tym `gmina-siedziby-kod`,
+oba numery NIP i trzy wartości pomocy. To **więcej niż oba eksporty CSV razem
+wzięte**. Zapytanie po samej gminie zostało przez API **przyjęte** (`303`
+z nagłówkiem `Location`), więc „Radar Sąsiedzki" byłby wykonalny jednym
+zapytaniem na gminę.
+
+Blokadą nie jest więc to, **czego API nie umie**, tylko **ile czasu potrzebuje**.
+To rozróżnienie ma znaczenie praktyczne: przepustowość może się poprawić po
+zapowiedzianej modernizacji, możliwości nie muszą zmienić się wcale. Gdy to
+nastąpi, tę decyzję należy rozważyć od nowa — ale wtedy na podstawie pomiaru,
+a nie założenia.
+
+Pełny zapis pomiarów i korespondencji: `docs/uokik-korespondencja.md`
+(dokument wewnętrzny, poza repozytorium publicznym).
 
 ---
 
