@@ -16,8 +16,10 @@
  */
 
 export function normalizeSupabaseUrl(raw: string | undefined, varName: string): string {
-  // CRLF z plikow .env edytowanych na Windowsie potrafi zostac w wartosci.
-  const value = (raw ?? '').trim().replace(/[\r\n]+$/g, '');
+  // CRLF z plikow .env edytowanych na Windowsie potrafi zostac w wartosci —
+  // ale .trim() traktuje \r i \n jako biale znaki i usuwa je z obu brzegow
+  // sam, wiec osobny krok na to nie jest potrzebny.
+  const value = (raw ?? '').trim();
 
   if (!value) {
     throw new Error(`Brak zmiennej ${varName}. Skopiuj .env.example do .env.local i uzupelnij.`);

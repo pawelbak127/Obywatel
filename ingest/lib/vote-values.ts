@@ -41,6 +41,28 @@ const ZNANE = new Set<string>(ZNANE_WARTOSCI);
  */
 export const STANOWISKA: readonly VoteValue[] = ['YES', 'NO', 'ABSTAIN'];
 
+/*
+  ZADEN KOD PRODUKCYJNY NIE WOLA DZIS TYCH DWOCH PREDYKATOW.
+
+  Realne liczenie dzieje sie w SQL, w widoku `mp_stats`, i te dwie liczby
+  licza sie tam ROZNYMI regulami — dokladnie tak, jak wymagaja D7 i D8:
+
+    obecnosc   `v.value <> 'ABSENT'`            (0001_init.sql:204)
+               wszystko poza jawna nieobecnoscia — PRESENT sie liczy
+
+    lojalnosc  `v.value in ('YES','NO','ABSTAIN')`  (0006_vote_value_present.sql:53)
+               LISTA DOZWOLONYCH, nie zakazanych
+
+  Pierwsza wersja tego komentarza mowila, ze lojalnosc tez liczy sie przez
+  `<> 'ABSENT'`, bo jej autor zajrzal wylacznie do 0001. To bylo nieprawda
+  od migracji 0006 — i mylace podwojnie, bo sugerowalo, ze poprawka z D7
+  nigdy nie weszla do bazy. Weszla.
+
+  Funkcje zostaja mimo braku wywolan: to jednoznaczny, przetestowany
+  (13 testow) zapis obu regul w TypeScripcie, zeby dalo sie je sprawdzic
+  bez czytania czterech migracji. Gdyby kiedys liczyc to po stronie kodu
+  zamiast w SQL — sa gotowe.
+*/
 export const jestStanowiskiem = (v: string): boolean => (STANOWISKA as readonly string[]).includes(v);
 
 /** Obecnosc: wszystko poza jawna nieobecnoscia. */

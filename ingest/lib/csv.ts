@@ -47,8 +47,13 @@ export function wykryjKodowanie(bajty: Buffer): Kodowanie {
 }
 
 export function dekoduj(bajty: Buffer, kodowanie: Kodowanie): string {
-  const tekst = new TextDecoder(kodowanie).decode(bajty);
-  return tekst.charCodeAt(0) === 0xfeff ? tekst.slice(1) : tekst; // zdejmij BOM
+  // BOM nie trzeba zdejmowac recznie — TextDecoder (ignoreBOM domyslnie false)
+  // robi to sam przy dekodowaniu. Sprawdzone na bajtach EF BB BF: w galezi
+  // 'utf-8' decoder zwraca tekst juz bez BOM, w galezi 'windows-1250' te same
+  // bajty i tak nigdy nie trafiaja tutaj z BOM (wykryjKodowanie lapie BOM
+  // pierwsze i zwraca 'utf-8'), a gdyby trafily, dekoduja sie na trzy inne
+  // znaki, zaden nie jest U+FEFF.
+  return new TextDecoder(kodowanie).decode(bajty);
 }
 
 /**

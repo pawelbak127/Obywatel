@@ -420,11 +420,36 @@ function Wiersz({
                   <span className="font-medium">{polskieDaty(mp.funkcje_panstwowe)}</span>
                 </p>
               )}
+              {/*
+                PLAKIETKA + WYJASNIENIE, NIE AKAPIT (P2-4). Przy dziesieciu
+                wierszach z rzedu to samo zdanie renderowane dziesiec razy
+                bylo sciana tekstu, przez ktora czytelnik przestawal czytac
+                cokolwiek. D11 nadal wymaga, zeby kazdy wiersz niosl kontekst
+                obok procentu — wiec informacja zostaje, zmienia sie tylko
+                forma: skrot zawsze widoczny, pelne zdanie w dymku.
+
+                Styl plakietki wziety z SourceLink.tsx (AiSummary) — jedyny
+                w repo wzorzec metki w tekscie: `rounded-sm border
+                border-current px-1.5 py-0.5`, kolor przez `currentColor`
+                zamiast osobnej klasy.
+
+                `<Wyjasnienie>` w `<div>`, NIGDY w `<p>` — to element blokowy
+                (`<details>`) i wewnatrz akapitu przegladarka zamknelaby go
+                przed nim, co rozjezdza drzewo serwera z klientem (blad
+                hydracji). Patrz komentarz w Wyjasnienie.tsx.
+              */}
               {obecnosc && ciagla && (
-                <p className="mt-1 text-[11px] leading-snug text-[color:var(--color-ink-soft)]">
-                  Nieobecności skupione w czasie — wygląda na przerwę w wykonywaniu mandatu,
-                  nie na wzorzec.{mp.funkcje_panstwowe ? '' : ' Powód nieznany z danych.'}
-                </p>
+                <div className="mt-1 flex items-center text-[11px] leading-snug text-[color:var(--color-ink-soft)]">
+                  <span className="rounded-sm border border-current px-1.5 py-0.5">
+                    {mp.funkcje_panstwowe ? 'nieobecność ciągła' : 'nieobecność ciągła · powód nieznany'}
+                  </span>
+                  <Wyjasnienie tytul="Co znaczy nieobecność ciągła">
+                    Nieobecności skupiają się w czasie, a nie rozkładają po całej kadencji. Wygląda to
+                    na przerwę w wykonywaniu mandatu, a nie na wzorzec zachowania. Sejm nie podaje
+                    powodu nieobecności — jeśli znamy udokumentowaną funkcję państwową, jest wypisana
+                    wyżej.
+                  </Wyjasnienie>
+                </div>
               )}
             </>
           )}
