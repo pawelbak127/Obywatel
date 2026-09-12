@@ -136,9 +136,21 @@ z komunikatem o czekaniu.
 **Brak `securitySchemes`.** W całej specyfikacji nie ma żadnego schematu
 uwierzytelniania — API nie deklaruje wymogu klucza.
 
-**Schemat wyniku** (`AidEventEntity`) zawiera 29 pól, w tym `gmina-siedziby-kod`
-i `gmina-siedziby-nazwa`, `wielkosc-beneficjenta-kod`, `sektor-dzialalnosci-wersja`
-oraz wszystkie trzy wartości pomocy. To **więcej**, niż daje eksport CSV.
+**Schemat wyniku** (`AidEventEntity`) zawiera ~~29~~ **28** pól, w tym
+`gmina-siedziby-kod` i `gmina-siedziby-nazwa`, `wielkosc-beneficjenta-kod`,
+`sektor-dzialalnosci-wersja` oraz wszystkie trzy wartości pomocy. To **więcej**,
+niż daje eksport CSV.
+
+> **Poprawka z 12.09.2026.** Było 29, jest 28 — policzone z zapisanego pliku
+> specyfikacji (`scripts/probes/out/32-sudop-openapi.json`), a nie z lektury.
+> Pełna lista pól i porównanie z oboma eksportami CSV:
+> [`uokik-korespondencja.md`](uokik-korespondencja.md) §6.
+>
+> Przy okazji wyszło coś ważniejszego: **`gmina-siedziby-kod` jest także
+> PARAMETREM wyszukiwania**, tablicowym i opcjonalnym. Specyfikacja dopuszcza
+> więc zapytanie „cała pomoc w gminach X, Y, Z w okresie od–do" — czyli
+> „Radar Sąsiedzki" jednym zapytaniem na gminę zamiast setek po NIP-ach.
+> Sprzeczne z zapisem niżej o walidacji formularza WWW; nierozstrzygnięte.
 
 ### Dlaczego tego nie zobaczyliśmy
 
