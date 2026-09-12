@@ -284,9 +284,7 @@ function CzegoDotyczylo({ procesy }: { procesy: ProcesGlosowania[] }) {
     <ul className="mt-1.5 space-y-1">
       {procesy.map((p) => {
         const zRejestru = p.pewnosc_powiazania === 'etap procesu';
-        // D1: zdanie o skutku prawnym ma prowadzic do aktu. Gdy adresu nie ma,
-        // etykieta zostaje zwyklym tekstem — nie udajemy zrodla.
-        const adres = adresAktu(p);
+
 
         /*
           „uchwalono" zastepowalo tu CZTERY rozne rzeczy: ustawe opublikowana
@@ -320,6 +318,24 @@ function CzegoDotyczylo({ procesy }: { procesy: ProcesGlosowania[] }) {
         */
         const los = p.los_procesu ? LOS_OPIS[p.los_procesu] : null;
         const etykieta = los?.etykieta ?? (p.passed ? 'uchwalono przez Sejm' : 'nie uchwalono');
+
+        /*
+          D1: zdanie o skutku prawnym ma prowadzic do aktu. Gdy adresu nie ma,
+          etykieta zostaje zwyklym tekstem — nie udajemy zrodla.
+
+          LINKUJEMY WYLACZNIE ETYKIETE POCHODZACA Z LOSU (od migracji 0025).
+          Powod jest konkretny: druk 921 to „Poselski wniosek o wyrazenie wotum
+          nieufnosci", ktorego Sejm NIE przyjal — `passed = false`, wiec los
+          jest pusty i etykieta brzmi „nie uchwalono". Ale proces MA adres
+          w Monitorze Polskim (MP/2025/55), bo opublikowano dokument o tej
+          sprawie. Bez tego warunku napis „nie uchwalono" stawal sie LINKIEM
+          DO AKTU — czyli zdaniem „tego nie uchwalono" prowadzacym do czegos,
+          co wyglada na obowiazujace prawo.
+
+          Adres przy procesie nieuchwalonym nie jest dowodem uchwalenia.
+          Gdy etykieta pochodzi z gołej flagi `passed`, zostaje zwyklym tekstem.
+        */
+        const adres = los ? adresAktu(p) : null;
 
         return (
           <li key={p.print_number} className="text-[11px] leading-snug">

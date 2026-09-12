@@ -41,8 +41,8 @@ const MIGRACJE: Record<string, string> = {
   // 0018 cofneloby te zmiane po cichu, wygladajac na skuteczna naprawe.
   mp_obecnosc_kontekst: '0023_zdjecia_u_siebie.sql',
   okregi_wyborcze: '0018_zdjecia_okregi_niezgodnosc.sql',
-  glosowanie_z_procesem: '0024_weto_utrzymane.sql',
-  proces_los: '0024_weto_utrzymane.sql',
+  glosowanie_z_procesem: '0025_niezmienniki_losu.sql',
+  proces_los: '0025_niezmienniki_losu.sql',
   mp_absence_monthly: '0010_kontekst_nieobecnosci.sql',
   mp_stats_ranking: '0009_przedzialy_ufnosci.sql',
   mp_stats: '0002_rls_hardening.sql',
