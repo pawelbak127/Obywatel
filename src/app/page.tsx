@@ -90,11 +90,38 @@ export default async function StronaGlowna() {
           { l: 'procesów legislacyjnych', v: okolo(l.procesy) },
         ].map((x) => (
           <div key={x.l}>
-            <dt className="font-mono text-2xl tabular-nums">{x.v}</dt>
-            <dd className="mt-0.5 text-xs text-[color:var(--color-ink-soft)]">{x.l}</dd>
+            {/* Bez font-mono: font o stalej szerokosci ma sens w kolumnie
+                cyfr, gdzie liczy sie wyrownanie — tu stoja cztery pojedyncze
+                liczby naglowkowe i monospace nadawal im tylko ton konsoli.
+                tabular-nums zostaje, bo wyrownuje szerokosci cyfr. */}
+            <dt className="text-3xl font-semibold tabular-nums">{x.v}</dt>
+            <dd className="mt-1 text-[13px] text-[color:var(--color-ink-soft)]">{x.l}</dd>
           </div>
         ))}
       </dl>
+
+      {/*
+        TO ZDANIE BYLO W PIERWSZEJ WERSJI NIEPRAWDZIWE i warto pamietac, jak.
+
+        Brzmialo: „Dokladne wartosci sa na stronie stanu bazy". Sprawdzone:
+        `/status` liczy TAK SAMO, przez `count: 'estimated'` — pokazuje te same
+        szacunki, tylko bez zaokraglenia do „mln" i „tys.". Zdanie odsylalo
+        wiec po dokladnosc tam, gdzie jej nie ma.
+
+        Nowa wersja mowi czytelnikowi rzecz, ktora mu sie nalezy i ktorej
+        nigdzie dotad nie mowilismy: te liczby sa SZACUNKAMI. Powod jest
+        techniczny i uczciwy — dokladny COUNT(*) na 2,1 mln wierszy przekracza
+        statement_timeout roli anon (CLAUDE.md §6).
+      */}
+      <p className="mt-3 text-xs text-[color:var(--color-ink-soft)]">
+        Liczby pobierane na żywo z bazy. Są to szacunki — dokładne policzenie
+        dwóch milionów wierszy przekracza limit czasu zapytania. Wartości bez
+        zaokrąglenia pokazuje{' '}
+        <Link href="/status" className="underline decoration-dotted underline-offset-2">
+          strona stanu bazy
+        </Link>
+        .
+      </p>
 
       {/* ---------------------------------------------------------------
           Zasady. Nie "o nas", tylko konkretne zobowiazania, ktore czytelnik

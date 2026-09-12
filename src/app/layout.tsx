@@ -23,11 +23,18 @@ export const metadata: Metadata = {
  * dowiedziec sie, czym w ogole jest ten serwis.
  *
  * Jeden pasek u gory, ten sam wszedzie, bez menu rozwijanych i bez JavaScriptu.
+ *
+ * Szerokosc max-w-6xl, nie max-w-3xl: layout nie wie, na ktorej stronie stoi,
+ * a najszersza tresc w serwisie (/poslowie) ma max-w-6xl. Waskiego naglowka
+ * nad szeroka trescia nie da sie odroznic od bledu renderowania; szerokiego
+ * naglowka nad waska trescia (np. profil posla) - da sie, to zwykly uklad
+ * wiekszosci serwisow. Odrzucona alternatywa: osobna szerokosc per strona -
+ * wymagalaby przekazywania propsa przez kazdy layout, ktorego dzis nie ma.
  */
 function Naglowek() {
   return (
     <header className="border-b border-[color:var(--color-rule)]">
-      <nav className="mx-auto flex max-w-3xl items-baseline gap-5 px-6 py-3">
+      <nav className="mx-auto flex max-w-6xl items-baseline gap-5 px-6 py-3">
         <Link href="/" className="font-semibold tracking-tight hover:text-[color:var(--color-accent)]">
           Obywatel<span className="text-[color:var(--color-accent)]">&nbsp;2.0</span>
         </Link>
@@ -51,7 +58,8 @@ function Naglowek() {
 function Stopka() {
   return (
     <footer className="mt-16 border-t border-[color:var(--color-rule)]">
-      <div className="mx-auto max-w-3xl px-6 py-6 text-xs leading-relaxed text-[color:var(--color-ink-soft)]">
+      {/* max-w-6xl jak w Naglowku - uzasadnienie w komentarzu nad Naglowkiem */}
+      <div className="mx-auto max-w-6xl px-6 py-6 text-xs leading-relaxed text-[color:var(--color-ink-soft)]">
         Dane pochodzą z API Kancelarii Sejmu i innych oficjalnych rejestrów państwowych.
         Serwis nie jest powiązany z żadną instytucją publiczną ani partią.
       </div>
