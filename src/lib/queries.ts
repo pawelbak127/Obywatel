@@ -47,6 +47,45 @@ export class BrakObiektuWBazie extends Error {
   }
 }
 
+/**
+ * PONOWIENIE PRZY PRZEJSCIOWEJ AWARII BRAMKI.
+ *
+ * 13.09.2026 Pawel zobaczyl w konsoli `mp_obecnosc_kontekst: Gateway Timeout`
+ * i cala strona `/poslowie` sie wywalila. Sprawdzone: samo zapytanie trwa
+ * 46 ms (`explain analyze`), wiec nie byl to limit czasu bazy, tylko `504`
+ * z bramki Supabase — chwilowe, po stronie infrastruktury, przy kilku
+ * zadaniach naraz w trakcie kompilacji.
+ *
+ * Takie bledy sa z definicji przejsciowe: druga proba niemal zawsze
+ * przechodzi. Bez ponowienia jedno zajakniecie hostingu zdejmuje najwazniejsza
+ * strone serwisu.
+ *
+ * JEDNA PROBA, NIE PETLA. Ponawianie w kolko zamienia chwilowa awarie
+ * w dlugie ladowanie i dodatkowo obciaza bramke, ktora wlasnie ma klopot.
+ * Jesli druga proba tez padnie, blad idzie dalej — czytelnik ma zobaczyc
+ * awarie, a nie kreciolek.
+ *
+ * PONAWIAMY WYLACZNIE TE KLASE BLEDOW. Brak kolumny, brak widoku czy zla
+ * skladnia zapytania nie naprawia sie powtorzeniem — takie bledy maja
+ * polecic od razu.
+ */
+function przejsciowy(error: { code?: string; message: string } | null): boolean {
+  if (!error) return false;
+  return (
+    /gateway timeout|bad gateway|service unavailable|fetch failed|ECONNRESET|socket hang up/i.test(
+      error.message,
+    ) || ['504', '502', '503'].includes(error.code ?? '')
+  );
+}
+
+async function zPonowieniem<T>(
+  wykonaj: () => PromiseLike<{ data: T; error: { code?: string; message: string } | null }>,
+): Promise<{ data: T; error: { code?: string; message: string } | null }> {
+  const pierwsza = await wykonaj();
+  if (!przejsciowy(pierwsza.error)) return pierwsza;
+  return wykonaj();
+}
+
 const MIGRACJE: Record<string, string> = {
   // 0023 przedefiniowala ten widok (coalesce na adres zdjecia). Wskazanie
   // 0018 cofneloby te zmiane po cichu, wygladajac na skuteczna naprawe.
@@ -257,7 +296,10 @@ export async function pobierzRanking(
   // pokazywałby dokładnie odwrotność tego, co obiecuje etykieta.
   const rosnaco = metryka === 'niezgodnosc' ? kierunek === 'najlepsi' : kierunek === 'najgorsi';
 
-  const { data, error } = await zapytanie.order(kolumna, { ascending: rosnaco }).limit(limit);
+  // Ponowienie wylacznie przy przejsciowej awarii bramki — patrz `zPonowieniem`.
+  const { data, error } = await zPonowieniem(() =>
+    zapytanie.order(kolumna, { ascending: rosnaco }).limit(limit),
+  );
   sprawdzBlad('mp_obecnosc_kontekst', error);
   return (data ?? []) as MpKontekst[];
 }
@@ -319,7 +361,9 @@ export async function pobierzPoslow(
   }
   if (klub) zapytanie = zapytanie.eq('klub', klub.trim().slice(0, 60));
 
-  const { data, error } = await zapytanie.limit(500);
+  // Ta lista niesie cala tresc `/poslowie`, wiec jedno zajakniecie bramki
+  // zdejmowaloby najwazniejsza strone serwisu — patrz `zPonowieniem`.
+  const { data, error } = await zPonowieniem(() => zapytanie.limit(500));
   sprawdzBlad('mp_obecnosc_kontekst', error);
 
   /*

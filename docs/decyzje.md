@@ -257,6 +257,37 @@ a nie założenia.
 Pełny zapis pomiarów i korespondencji: `docs/uokik-korespondencja.md`
 (dokument wewnętrzny, poza repozytorium publicznym).
 
+### Uzupełnienie z 13.09.2026 — jedno wyszukanie kontrolne na kwartał
+
+**Decyzja w dotychczasowym brzmieniu nie dawała się sprawdzić.** Kończy się
+zdaniem, że gdy przepustowość się poprawi, należy ją rozważyć od nowa „na
+podstawie pomiaru, a nie założenia" — a jednocześnie zakazuje odpytywania,
+czyli zakazuje tego pomiaru. Tak sformułowaną decyzję można było tylko
+podtrzymywać na wiarę.
+
+Co ją do tego popchnęło: zmierzone 13.09.2026, moduł dotacji ma **127 pozycji
+z 15 gmin**, przy słowniku liczącym **4 155 gmin**. To 0,36 % kraju z jednego
+ręcznie pobranego pliku. Praktycznym skutkiem D13 nie jest więc wolniejszy
+moduł dotacji, tylko **jego brak** — a tego pierwotne uzasadnienie nie
+obejmowało.
+
+**Wyjątek:** wolno wykonać **jedno wyszukanie kontrolne na kwartał**, wyłącznie
+po to, żeby sprawdzić, czy kolejka zaczęła oddawać wyniki w deklarowanym oknie
+sześćdziesięciu minut. Wynik — także negatywny — zapisujemy w `docs/sudop.md`
+z datą. Jedno zapytanie na kwartał to mniej, niż urząd obsługuje w minutę,
+a bez niego decyzja przestaje być decyzją opartą na danych.
+
+**Co się NIE zmienia.** Automatyczne odpytywanie wyszukiwarki na żądanie
+czytelnika pozostaje wykluczone niezależnie od wyniku pomiaru. Tamta część
+D13 broni się sama i nie wymaga zmiany. Dane o dotacjach nadal wchodzą
+wyłącznie z ręcznie pobranego eksportu CSV.
+
+**Rzecz, która i tak zdecyduje o sprawie wcześniej:** pismo do UOKiK jest
+napisane i niewysłane. Urząd sam poprosił o te informacje, a pismo proponuje
+eksport zbiorczy z pominięciem kolejki — jedyne rozwiązanie, które obciąża
+ich serwer raz na dobę niezależnie od liczby pytających. To działanie nie
+wymaga ani linijki kodu i powinno wyprzedzić każdy pomiar.
+
 ---
 
 ## D14 · `null` nie jest zerem
