@@ -109,6 +109,14 @@ jobs:
         if: ${{ inputs.job == 'sync-logos' || inputs.job == 'all' || github.event_name == 'schedule' }}
         run: npx tsx ingest/jobs/sync-club-logos.ts
 
+      # INTERPELACJE I ZAPYTANIA — kilka duzych zadan listy, bez zapytan
+      # na posla (w odroznieniu od dni posiedzen). Musi isc PO sync-mps:
+      # autor spoza `mps` jest tylko RAPORTOWANY (§7.2), ale bez importu
+      # poslow kazde powiazanie autor-dokument zostaloby pominiete.
+      - name: Interpelacje i zapytania poselskie
+        if: ${{ inputs.job == 'interpellations' || inputs.job == 'all' || github.event_name == 'schedule' }}
+        run: npx tsx ingest/jobs/sync-interpellations.ts
+
       - name: Zdjecia poslow do Storage
         if: ${{ inputs.job == 'sync-photos' || inputs.job == 'all' || github.event_name == 'schedule' }}
         run: npx tsx ingest/jobs/sync-mp-photos.ts

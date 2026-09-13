@@ -9,12 +9,14 @@ import {
   pobierzGlosyPosla,
   pobierzDaneOsobowe,
   pobierzDniObecnosci,
+  pobierzInterpelacje,
   pobierzProcesyDlaGlosowan,
   BrakObiektuWBazie,
   BrakPolaczeniaZBaza,
   type MpKontekst,
   type DaneOsobowe,
   type DniObecnosci,
+  type Interpelacje,
   adresAktu,
   type ProcesGlosowania,
   LOS_OPIS,
@@ -82,14 +84,16 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
   let glosy: Awaited<ReturnType<typeof pobierzGlosyPosla>>;
   let dane: DaneOsobowe | null;
   let dni: DniObecnosci | null;
+  let pytania: Interpelacje | null;
   try {
     mp = await pobierzPosla(slug);
     if (!mp) notFound();
-    [miesiace, glosy, dane, dni] = await Promise.all([
+    [miesiace, glosy, dane, dni, pytania] = await Promise.all([
       pobierzNieobecnosciMiesieczne(mp.id),
       pobierzGlosyPosla(mp.id, 25),
       pobierzDaneOsobowe(mp.id),
       pobierzDniObecnosci(mp.id),
+      pobierzInterpelacje(mp.id),
     ]);
   } catch (e) {
     if (e instanceof BrakObiektuWBazie) return <BrakMigracji error={e} />;
@@ -226,6 +230,8 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
       </div>
 
       <Usprawiedliwienia dni={dni} mpId={mp.id} />
+
+      <Pytania dane={pytania} />
 
       <ZgodnoscZKlubem mp={mp} />
 
@@ -470,6 +476,57 @@ function Usprawiedliwienia({ dni, mpId }: { dni: DniObecnosci | null; mpId: numb
         </strong>{' '}
         Rejestr zapisuje, że nieobecność usprawiedliwiono, i nic ponadto.{' '}
         <SourceLink href={SEJM_MP(mpId)} label={`Statystyka głosowań posła w rejestrze Sejmu (id ${mpId})`} />
+      </p>
+    </section>
+  );
+}
+
+/**
+ * INTERPELACJE I ZAPYTANIA — i dwie liczby, ktore mowia o RZADZIE.
+ *
+ * CO TA SEKCJA MOWI, A CZEGO NIE. Liczba zlozonych pytan to AKTYWNOSC,
+ * nie jakosc. Jeden posel sklada dwiescie pytan o sprawy lokalne, drugi
+ * dziesiec po pracy w komisji — rejestr nie mowi, ktore bylo potrzebne,
+ * a my nie zamierzamy zgadywac. Dlatego nie ma tu rankingu, przedzialu
+ * ufnosci ani porownania z innymi: te przyrzady sluza do porzadkowania
+ * liczb, ktore czyta sie jako ocena, a ta liczba tak czytana byc nie ma.
+ *
+ * DWIE POZOSTALE LICZBY OPISUJA ADRESATA, NIE AUTORA, i sa tak podpisane.
+ * „Bez odpowiedzi" i „po terminie" to nie zaniedbanie posla — to on
+ * zapytal i odpowiedzi nie dostal. Postawione bez tego zdania przy jego
+ * nazwisku czytalyby sie dokladnie odwrotnie, niz znacza.
+ */
+function Pytania({ dane }: { dane: Interpelacje | null }) {
+  // Brak danych znaczy „import jeszcze nie chodzil". Zera bylyby zarzutem.
+  if (!dane) return null;
+  const zlozone = dane.interpelacji + dane.zapytan;
+  if (zlozone === 0) return null;
+
+  return (
+    <section className="mt-10">
+      <h2 className="text-lg font-semibold">Interpelacje i zapytania</h2>
+
+      <p className="mt-2 max-w-prose text-sm leading-relaxed">
+        {`Poseł złożył ${zlozone} ${odmien(zlozone, ['pytanie', 'pytania', 'pytań'])} na piśmie do rządu: ` +
+          `${dane.interpelacji} ${odmien(dane.interpelacji, ['interpelację', 'interpelacje', 'interpelacji'])} ` +
+          `i ${dane.zapytan} ${odmien(dane.zapytan, ['zapytanie', 'zapytania', 'zapytań'])}.`}
+      </p>
+
+      {(dane.bez_odpowiedzi > 0 || dane.po_terminie > 0) && (
+        <p className="mt-3 max-w-prose rounded border-l-2 border-[color:var(--color-rule)] bg-[color:var(--color-surface)] py-2.5 pl-3 text-sm leading-relaxed">
+          <strong className="font-semibold">Te dwie liczby mówią o adresacie, nie o pośle.</strong>{' '}
+          {dane.bez_odpowiedzi > 0 &&
+            `Na ${dane.bez_odpowiedzi} ${odmien(dane.bez_odpowiedzi, ['pytanie', 'pytania', 'pytań'])} rząd nie odpowiedział w ogóle. `}
+          {dane.po_terminie > 0 &&
+            `${dane.po_terminie} ${odmien(dane.po_terminie, ['odpowiedź przyszła', 'odpowiedzi przyszły', 'odpowiedzi przyszło'])} po terminie. `}
+          To poseł zapytał i odpowiedzi nie otrzymał.
+        </p>
+      )}
+
+      <p className="mt-3 max-w-prose text-xs leading-relaxed text-[color:var(--color-ink-soft)]">
+        <strong className="text-[color:var(--color-ink)]">Liczba pytań nie jest miarą jakości posła.</strong>{' '}
+        Rejestr podaje, ile ich złożył — nie podaje, czy były potrzebne. Nie budujemy z tego
+        zestawienia i nie porównujemy posłów między sobą.
       </p>
     </section>
   );

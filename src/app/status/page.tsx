@@ -51,6 +51,7 @@ const JOBY: Record<string, string> = {
   sitting_days: 'Dni posiedzeń i usprawiedliwienia',
   photos: 'Zdjęcia posłów',
   logos: 'Znaki klubów',
+  interpellations: 'Interpelacje i zapytania poselskie',
 };
 
 /*

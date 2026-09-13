@@ -563,6 +563,58 @@ export async function pobierzSkrotyKlubow(): Promise<string[]> {
   return ((data ?? []) as Array<{ id: string }>).map((r) => r.id);
 }
 
+export type Interpelacje = {
+  interpelacji: number;
+  zapytan: number;
+  bez_odpowiedzi: number;
+  po_terminie: number;
+  ostatnia: string | null;
+};
+
+/**
+ * INTERPELACJE I ZAPYTANIA POSELSKIE — aktywnosc, ktora nie jest glosowaniem.
+ *
+ * Profil posla mowil dotad wylacznie o tym, jak ktos nacisnal przycisk.
+ *
+ * ---------------------------------------------------------------------
+ * DWIE Z TYCH LICZB MOWIA O RZADZIE, NIE O POSLE, i tak musza byc podpisane.
+ *
+ * `bez_odpowiedzi` i `po_terminie` opisuja ADRESATA dokumentu — ministra,
+ * do ktorego posel napisal. Postawione bez podpisu przy nazwisku posla
+ * czytalyby sie jako jego wina, a sa dokladnym przeciwienstwem: to on
+ * zapytal, a odpowiedzi nie dostal.
+ *
+ * Zmierzone 13.09.2026 na pelnym zbiorze: 1 056 dokumentow z 23 727 nie
+ * doczekalo sie odpowiedzi, 694 odpowiedziano po terminie, najdluzsze
+ * opoznienie to 914 dni.
+ *
+ * ---------------------------------------------------------------------
+ * CZEGO Z TEGO NIE WOLNO ZROBIC: RANKINGU.
+ *
+ * Liczba interpelacji nie jest miara jakosci posla. Jeden sklada dwiescie
+ * pytan o sprawy lokalne, drugi dziesiec po pracy w komisji — rejestr nie
+ * mowi, ktore bylo potrzebne. To ten sam problem co przy obecnosci (D11):
+ * liczba bez kontekstu czyta sie jako ocena, a kontekstu nie mamy.
+ */
+export async function pobierzInterpelacje(mpId: number): Promise<Interpelacje | null> {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from('mp_interpelacje')
+    .select('interpelacji, zapytan, bez_odpowiedzi, po_terminie, ostatnia')
+    .eq('mp_id', mpId)
+    .maybeSingle();
+
+  // Brak widoku to brakujaca migracja, nie awaria profilu — sekcja po prostu
+  // nie powstanie, tak samo jak przed importem.
+  if (error) {
+    if (error.code === 'PGRST205' || error.code === '42P01' || /does not exist|schema cache/i.test(error.message)) {
+      return null;
+    }
+    throw new Error(`mp_interpelacje: ${error.message}`);
+  }
+  return (data as Interpelacje | null) ?? null;
+}
+
 export type DniObecnosci = {
   dni_posiedzen: number;
   dni_z_nieobecnoscia: number;

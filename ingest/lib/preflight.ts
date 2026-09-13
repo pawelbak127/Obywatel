@@ -70,6 +70,11 @@ export const WYMOGI_LOGA: Wymog[] = [
   { tabela: 'clubs', kolumna: 'logo_sha256', migracja: '0029_loga_klubow.sql', po_co: 'zapis do Storage tylko przy realnej roznicy' },
 ];
 
+export const WYMOGI_INTERPELACJE: Wymog[] = [
+  { tabela: 'interpellations', kolumna: 'delayed_days', migracja: '0032_interpelacje.sql', po_co: 'ile dni odpowiedz przekroczyla termin' },
+  { tabela: 'interpellations', kolumna: 'replies_count', migracja: '0032_interpelacje.sql', po_co: 'zero oznacza brak odpowiedzi' },
+];
+
 export const WYMOGI_DNI: Wymog[] = [
   { tabela: 'mp_sitting_days', kolumna: 'absence_excuse', migracja: '0030_dni_posiedzen.sql', po_co: 'czy nieobecnosc byla usprawiedliwiona' },
   { tabela: 'mp_sitting_days', kolumna: 'sitting', migracja: '0030_dni_posiedzen.sql', po_co: 'czlon klucza — jedna data miewa dwa posiedzenia' },
