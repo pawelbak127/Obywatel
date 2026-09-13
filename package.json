@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=20.9" },
+  "engines": {
+    "node": ">=20.9"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -30,7 +32,8 @@
     "ingest:sudop-csv": "tsx ingest/jobs/import-sudop-csv.ts",
     "ingest:role": "tsx ingest/jobs/import-mp-roles.ts",
     "ingest:procesy": "tsx ingest/jobs/sync-processes.ts",
-    "ingest:zdjecia": "tsx ingest/jobs/sync-mp-photos.ts"
+    "ingest:zdjecia": "tsx ingest/jobs/sync-mp-photos.ts",
+    "ingest:loga": "tsx ingest/jobs/sync-club-logos.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

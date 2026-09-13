@@ -400,6 +400,15 @@ export type Klub = {
   email: string | null;
   fax: string | null;
   phone: string | null;
+  /**
+   * Adres naszej kopii znaku klubu (migracja 0029), albo `null`.
+   *
+   * `null` ZNACZY DWIE ROZNE RZECZY i interfejs nie musi ich rozrozniac:
+   * klub nie ma znaku w rejestrze (niezrzeszeni) albo jeszcze go nie
+   * skopiowalismy. W obu wypadkach nie pokazujemy nic — nigdy zastepczego
+   * obrazka ani pustej ramki.
+   */
+  logo_stored_url: string | null;
 };
 
 /**
@@ -425,7 +434,7 @@ export async function pobierzKlub(
 
   const { data: k, error: bladKlubu } = await supabase
     .from('clubs')
-    .select('id, name, members_count, email, fax, phone')
+    .select('id, name, members_count, email, fax, phone, logo_stored_url')
     .eq('id', id)
     .maybeSingle();
   sprawdzBlad('clubs', bladKlubu);
@@ -451,7 +460,7 @@ export async function pobierzKluby(): Promise<Klub[]> {
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from('clubs')
-    .select('id, name, members_count, email, fax, phone')
+    .select('id, name, members_count, email, fax, phone, logo_stored_url')
     .order('members_count', { ascending: false, nullsFirst: false });
   sprawdzBlad('clubs', error);
   return (data ?? []) as Klub[];

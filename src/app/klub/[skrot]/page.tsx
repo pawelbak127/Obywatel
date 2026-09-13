@@ -91,7 +91,32 @@ export default async function StronaKlubu({ params }: { params: Promise<{ skrot:
       <p className="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
         Sejm X kadencji
       </p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight">{skrotKlubu(klub.id)}</h1>
+      {/*
+        ZNAK KLUBU Z REJESTRU SEJMU, nie z internetu.
+
+        Zrodlo to `/sejm/term10/clubs/{id}/logo` — ten sam rejestr, z ktorego
+        pochodzi sklad i kontakt. Dlatego wolno go pokazac i dlatego stoi
+        przy nim odnosnik, tak jak przy kazdej innej informacji.
+
+        BRAK ZNAKU NIE DAJE ZASTEPCZEGO OBRAZKA. `logo_stored_url` bywa NULL
+        z dwoch powodow — klub nie ma znaku (niezrzeszeni nie sa partia) albo
+        jeszcze nie skopiowalismy. W obu wypadkach nie pokazujemy NIC: pusta
+        ramka albo szary placeholder sugerowalyby, ze cos sie nie wczytalo.
+
+        Zwykly <img>, nie next/image — optymalizator liczy kazdy obraz jako
+        transformacje (CLAUDE.md §6).
+      */}
+      <div className="mt-2 flex items-center gap-4">
+        {klub.logo_stored_url && (
+          <img
+            src={klub.logo_stored_url}
+            alt=""
+            aria-hidden="true"
+            className="h-14 w-14 shrink-0 rounded border border-[color:var(--color-rule)] bg-white object-contain p-1"
+          />
+        )}
+        <h1 className="text-3xl font-semibold tracking-tight">{skrotKlubu(klub.id)}</h1>
+      </div>
 
       {/*
         PELNA NAZWA JEST TRESCIA, NIE PODPISEM. „KO" to nasz skrot roboczy;

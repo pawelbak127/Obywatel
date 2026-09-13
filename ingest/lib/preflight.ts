@@ -64,6 +64,12 @@ export const WYMOGI_ZDJECIA: Wymog[] = [
   { tabela: 'mps', kolumna: 'photo_sha256', migracja: '0027_suma_kontrolna_zdjec.sql', po_co: 'odswiezanie kroczace — czy plik u zrodla to nadal ten sam plik' },
 ];
 
+export const WYMOGI_LOGA: Wymog[] = [
+  { tabela: 'clubs', kolumna: 'logo_stored_url', migracja: '0029_loga_klubow.sql', po_co: 'adres naszej kopii znaku klubu' },
+  { tabela: 'clubs', kolumna: 'logo_stored_at', migracja: '0029_loga_klubow.sql', po_co: 'kiedy skopiowalismy' },
+  { tabela: 'clubs', kolumna: 'logo_sha256', migracja: '0029_loga_klubow.sql', po_co: 'zapis do Storage tylko przy realnej roznicy' },
+];
+
 export async function assertSchema(dodatkowe: Wymog[] = []): Promise<void> {
   const braki: Wymog[] = [];
 

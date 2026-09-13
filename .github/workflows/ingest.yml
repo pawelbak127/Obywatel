@@ -95,6 +95,13 @@ jobs:
       # trwa ulamek sekundy, a nie dwie. Kazde z 499 zdjec wraca raz na
       # okolo 30 dni.
       # Musi isc PO sync-mps, ktory ustawia photo_exists.
+      # ZNAKI KLUBOW — trzynascie plikow, wiec caly zbior miesci sie w jednym
+      # przebiegu. Musi isc PO sync-mps, ktory tworzy wiersze w `clubs`.
+      # Zapis do Storage nastepuje wylacznie przy realnej roznicy sumy.
+      - name: Znaki klubow do Storage
+        if: ${{ inputs.job == 'sync-logos' || inputs.job == 'all' || github.event_name == 'schedule' }}
+        run: npx tsx ingest/jobs/sync-club-logos.ts
+
       - name: Zdjecia poslow do Storage
         if: ${{ inputs.job == 'sync-photos' || inputs.job == 'all' || github.event_name == 'schedule' }}
         run: npx tsx ingest/jobs/sync-mp-photos.ts

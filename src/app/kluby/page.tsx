@@ -52,10 +52,25 @@ export default async function Kluby() {
 
       <ul className="mt-10 divide-y divide-[color:var(--color-rule)] border-y border-[color:var(--color-rule)]">
         {kluby.map((k) => (
-          <li key={k.id} className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3">
+          <li key={k.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3">
+            {/*
+              Stala szerokosc slotu niezaleznie od tego, czy znak jest —
+              inaczej wiersz klubu bez znaku (niezrzeszeni) przesuwalby sie
+              w lewo i kolumna nazw przestalaby byc kolumna.
+            */}
+            <span className="flex w-8 shrink-0 justify-center">
+              {k.logo_stored_url && (
+                <img
+                  src={k.logo_stored_url}
+                  alt=""
+                  aria-hidden="true"
+                  className="h-8 w-8 rounded-sm bg-white object-contain p-0.5"
+                />
+              )}
+            </span>
             <Link
               href={`/klub/${encodeURIComponent(k.id)}`}
-              className="w-36 shrink-0 font-medium hover:text-[color:var(--color-accent)] hover:underline"
+              className="w-32 shrink-0 font-medium hover:text-[color:var(--color-accent)] hover:underline"
             >
               {skrotKlubu(k.id)}
             </Link>
