@@ -6,7 +6,11 @@
 @theme {
   --color-ink: #131820;
   --color-ink-soft: #4b5566;
-  --color-ink-faint: #7d8899;
+  /* Podniesione z #7d8899 (3,31:1 na papierze) do 4,78:1 — WCAG AA dla
+     tekstu podstawowego. Ten kolor stoi pod NAJMNIEJSZYM tekstem w serwisie
+     (etykiety pol, numery pozycji, kolko „?"), czyli w najgorszym mozliwym
+     polaczeniu: najdrobniejsze litery w najslabszym kontrascie. */
+  --color-ink-faint: #646e7b;
   --color-paper: #f4f6f9;
   --color-surface: #ffffff;
   --color-rule: #dce2ea;
@@ -26,11 +30,26 @@
      właściwa, i są czytelne dla daltonistów — w przeciwieństwie do pary
      zielony/czerwony, która jest dla nich najgorsza z możliwych. */
   --color-vote-for: #1d4e89;
-  --color-vote-against: #b35c00;
+  /* Przyciemnione z #b35c00: tamten mial 4,36:1, czyli o 0,14 PONIZEJ progu
+     AA. Nowy ma 4,85:1. Para granat/bursztyn i cale jej uzasadnienie
+     zostaja nietkniete — zmienia sie sam odcien o niecale trzy procent. */
+  --color-vote-against: #a85600;
   /* Zmienne pochodza z `next/font/google` w layout.tsx — patrz komentarz tam.
      Do 13.09.2026 stala tu sama NAZWA kroju, ktorego nic nie wczytywalo,
      wiec kazdy czytelnik widzial font zastepczy. Stos rezerwowy zostaje
      na wypadek, gdyby plik sie nie pobral. */
+  /* SKALA TEKSTU PODNIESIONA O JEDEN STOPIEN U DOLU (13.09.2026).
+
+     Zmierzone przed zmiana: 89% wszystkich deklaracji rozmiaru bylo
+     mniejsze lub rowne 14 px, a domyslnych 16 px nie uzyto ANI RAZU.
+     Serwis stal w calosci ponizej rozmiaru, ktory przegladarka uwaza
+     za podstawowy — stad uwaga „troche za maly tekst".
+
+     Zmiana dwoch tokenow rusza 113 ze 180 deklaracji, bez dotykania
+     komponentow. Nic nie znika i nic sie nie zwija: rosnie sam rozmiar. */
+  --text-xs: 0.8125rem; /* 12 -> 13 px */
+  --text-sm: 0.9375rem; /* 14 -> 15 px */
+
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
@@ -49,7 +68,8 @@ body {
   :root {
     --color-ink: #e4e9f0;
     --color-ink-soft: #a0abba;
-    --color-ink-faint: #6c7887;
+    /* 4,24:1 -> 5,01:1 na ciemnym tle, z tego samego powodu co wyzej. */
+    --color-ink-faint: #788493;
     --color-paper: #0d1015;
     --color-surface: #151a21;
     --color-rule: #262e39;

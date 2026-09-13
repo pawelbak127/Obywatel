@@ -120,7 +120,7 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
         <Portret src={mp.photo_url} nazwa={mp.full_name} rozmiar="lg" />
 
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-[color:var(--color-accent)]">
+          <div className="flex flex-wrap items-center gap-2 font-mono text-xs uppercase tracking-widest text-[color:var(--color-accent)]">
             {/*
               Klub prowadzi do WLASNEJ STRONY klubu, nie do listy przefiltrowanej
               — uwaga Pawla z 13.09.2026: „wchodzimy w klub i jestesmy
@@ -225,16 +225,16 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
           <table className="w-full min-w-[560px] text-sm">
             <thead>
               <tr className="border-b border-[color:var(--color-rule)] bg-black/[0.03] dark:bg-white/[0.04]">
-                <th className="px-3 py-2 text-left font-mono text-[10.5px] uppercase tracking-widest text-[color:var(--color-ink-soft)]">
+                <th className="px-3 py-2 text-left font-mono text-[11px] uppercase tracking-widest text-[color:var(--color-ink-soft)]">
                   Data
                 </th>
-                <th className="px-3 py-2 text-left font-mono text-[10.5px] uppercase tracking-widest text-[color:var(--color-ink-soft)]">
+                <th className="px-3 py-2 text-left font-mono text-[11px] uppercase tracking-widest text-[color:var(--color-ink-soft)]">
                   Głosowanie
                 </th>
-                <th className="px-3 py-2 text-left font-mono text-[10.5px] uppercase tracking-widest text-[color:var(--color-ink-soft)]">
+                <th className="px-3 py-2 text-left font-mono text-[11px] uppercase tracking-widest text-[color:var(--color-ink-soft)]">
                   Głos
                 </th>
-                <th className="px-3 py-2 text-left font-mono text-[10.5px] uppercase tracking-widest text-[color:var(--color-ink-soft)]">
+                <th className="px-3 py-2 text-left font-mono text-[11px] uppercase tracking-widest text-[color:var(--color-ink-soft)]">
                   Protokół
                 </th>
               </tr>
@@ -249,7 +249,7 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
                       kilka glosowan o identycznym tytule tego samego dnia —
                       bez tych dwoch liczb wiersze wygladaja jak duplikat bledu.
                     */}
-                    <span className="block text-[10px] text-[color:var(--color-ink-faint,#7d8899)]">
+                    <span className="block text-[11px] text-[color:var(--color-ink-faint,#7d8899)]">
                       {v.sitting}/{v.voting_number}
                     </span>
                   </td>
@@ -261,7 +261,7 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
                       to ta sama informacja dwa razy w jednej linii.
                     */}
                     {v.print_numbers?.filter((n) => !v.title.includes(n)).length ? (
-                      <span className="ml-2 whitespace-nowrap font-mono text-[11px] text-[color:var(--color-ink-soft)]">
+                      <span className="ml-2 whitespace-nowrap font-mono text-xs text-[color:var(--color-ink-soft)]">
                         druk {v.print_numbers.filter((n) => !v.title.includes(n)).join(', ')}
                       </span>
                     ) : null}
@@ -384,7 +384,7 @@ function DaneZRejestru({ dane, mpId }: { dane: DaneOsobowe | null; mpId: number 
     <details className="group mt-10 border-t border-[color:var(--color-rule)] pt-5">
       <summary className="cursor-pointer list-none text-sm font-semibold marker:content-['']">
         Kim jest — dane z rejestru
-        <span className="ml-2 font-mono text-[11px] font-normal text-[color:var(--color-ink-faint)]">
+        <span className="ml-2 font-mono text-xs font-normal text-[color:var(--color-ink-faint)]">
           <span className="group-open:hidden">rozwiń ▾</span>
           <span className="hidden group-open:inline">zwiń ▴</span>
         </span>
@@ -503,7 +503,7 @@ function CzegoDotyczylo({ procesy }: { procesy: ProcesGlosowania[] }) {
         const adres = los ? adresAktu(p) : null;
 
         return (
-          <li key={p.print_number} className="text-[11px] leading-snug">
+          <li key={p.print_number} className="text-xs leading-snug">
             <span className="text-[color:var(--color-ink-soft)]">
               {p.document_type ?? 'proces'} nr {p.print_number}:{' '}
             </span>
@@ -563,7 +563,7 @@ function CzegoDotyczylo({ procesy }: { procesy: ProcesGlosowania[] }) {
               </>
             )}
             <span
-              className="ml-1 font-mono text-[10px] text-[color:var(--color-ink-faint,#7d8899)]"
+              className="ml-1 font-mono text-[11px] text-[color:var(--color-ink-faint,#7d8899)]"
               title={
                 zRejestru
                   ? 'Powiązanie pochodzi z rejestru Sejmu — etap procesu wskazuje to głosowanie.'

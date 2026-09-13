@@ -92,8 +92,14 @@ export const metadata: Metadata = {
 function Naglowek() {
   return (
     <header className="border-b border-[color:var(--color-rule)]">
-      <nav className="mx-auto flex max-w-6xl items-baseline gap-5 px-6 py-3">
-        <Link href="/" className="font-semibold tracking-tight hover:text-[color:var(--color-accent)]">
+      {/*
+        ODSTEP JEST NA ODNOSNIKACH, NIE NA <nav>. Wczesniej `py-3` siedzialo
+        na kontenerze, wiec sam odnosnik mial wysokosc litery — okolo 16 px.
+        Minimum WCAG 2.2 (SC 2.5.8) to 24 px, zalecenie producentow telefonow
+        44 px. Na kontenerze zostaje `py-1`, reszta przechodzi na `<a>`.
+      */}
+      <nav className="mx-auto flex max-w-6xl flex-wrap items-baseline gap-x-1 gap-y-1 px-5 py-1">
+        <Link href="/" className="px-1 py-2.5 font-semibold tracking-tight hover:text-[color:var(--color-accent)]">
           Obywatel<span className="text-[color:var(--color-accent)]">&nbsp;2.0</span>
         </Link>
         {/*
@@ -115,7 +121,7 @@ function Naglowek() {
           <Link
             key={adres}
             href={adres!}
-            className="font-mono text-xs text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-accent)]"
+            className="rounded px-2 py-2.5 font-mono text-xs text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-accent)]"
           >
             {podpis}
           </Link>

@@ -26,7 +26,7 @@ export function Wyjasnienie({ tytul, children }: { tytul: string; children: Reac
   return (
     <details className="group relative inline-block align-middle">
       <summary
-        className="ml-1 inline-flex h-4 w-4 cursor-help list-none items-center justify-center rounded-full border border-[color:var(--color-rule)] text-[9px] font-semibold leading-none text-[color:var(--color-ink-faint)] transition-colors marker:content-[''] hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)] group-open:border-[color:var(--color-accent)] group-open:text-[color:var(--color-accent)] group-open:after:fixed group-open:after:inset-0 group-open:after:z-10 group-open:after:content-['']"
+        className="ml-1 inline-flex h-5 w-5 cursor-help list-none items-center justify-center rounded-full border border-[color:var(--color-rule)] text-xs font-semibold leading-none text-[color:var(--color-ink-soft)] transition-colors marker:content-[''] hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)] group-open:border-[color:var(--color-accent)] group-open:text-[color:var(--color-accent)] group-open:after:fixed group-open:after:inset-0 group-open:after:z-10 group-open:after:content-['']"
         aria-label={`Wyjaśnienie: ${tytul}`}
       >
         ?

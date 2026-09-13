@@ -117,14 +117,14 @@ export function StatBar({
       */}
       <div
         aria-hidden
-        className="mt-1 flex items-baseline justify-between font-mono text-[11px] tabular-nums text-[color:var(--color-ink-soft)]"
+        className="mt-1 flex items-baseline justify-between font-mono text-xs tabular-nums text-[color:var(--color-ink-soft)]"
       >
         <span>0%</span>
         <span>50%</span>
         <span>100%</span>
       </div>
 
-      <p className="mt-1 font-mono text-[11px] text-[color:var(--color-ink-soft)] tabular-nums">
+      <p className="mt-1 font-mono text-xs text-[color:var(--color-ink-soft)] tabular-nums">
         {denominator !== null ? `${denominator.toLocaleString('pl-PL')} ${denominatorLabel}` : denominatorLabel}
       </p>
     </div>

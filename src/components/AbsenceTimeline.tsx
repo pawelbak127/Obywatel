@@ -66,7 +66,7 @@ export function AbsenceTimeline({
     <section>
       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-semibold">Nieobecności w czasie</h2>
-        <span className="font-mono text-[11px] text-[color:var(--color-ink-soft)]">
+        <span className="font-mono text-xs text-[color:var(--color-ink-soft)]">
           {miesiace.length} miesięcy · słupek = udział nieobecności w miesiącu
         </span>
       </div>

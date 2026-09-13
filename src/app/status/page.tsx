@@ -178,7 +178,7 @@ export default async function StatusPage() {
                 <dd className="text-right">
                   <span className="text-sm font-medium tabular-nums">{ileTemu(z.last_run)}</span>
                   {z.last_run && (
-                    <span className="ml-2 font-mono text-[11px] text-[color:var(--color-ink-faint)]">
+                    <span className="ml-2 font-mono text-xs text-[color:var(--color-ink-faint)]">
                       {new Date(z.last_run).toLocaleDateString('pl-PL')}
                     </span>
                   )}
@@ -188,12 +188,12 @@ export default async function StatusPage() {
                     ze ostatnia proba ich odswiezenia sie nie powiodla.
                   */}
                   {!z.last_run && (
-                    <span className="block text-[11px] leading-snug text-[color:var(--color-ink-faint)]">
+                    <span className="block text-xs leading-snug text-[color:var(--color-ink-faint)]">
                       dane są, nie zapisaliśmy daty pobrania
                     </span>
                   )}
                   {z.byl_blad && (
-                    <span className="block text-[11px] leading-snug text-[color:var(--color-accent)]">
+                    <span className="block text-xs leading-snug text-[color:var(--color-accent)]">
                       ostatni import zgłosił błąd
                     </span>
                   )}
@@ -226,13 +226,13 @@ export default async function StatusPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[color:var(--color-rule)] bg-black/[0.03] dark:bg-white/[0.04]">
-                <th className="px-4 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
+                <th className="px-4 py-3 text-left font-mono text-xs font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
                   Tabela
                 </th>
-                <th className="px-4 py-3 text-right font-mono text-[11px] font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
+                <th className="px-4 py-3 text-right font-mono text-xs font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
                   Wierszy
                 </th>
-                <th className="px-4 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
+                <th className="px-4 py-3 text-left font-mono text-xs font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
                   Docelowo
                 </th>
               </tr>

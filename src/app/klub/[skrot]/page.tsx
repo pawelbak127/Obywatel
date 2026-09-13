@@ -88,7 +88,7 @@ export default async function StronaKlubu({ params }: { params: Promise<{ skrot:
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
-      <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
+      <p className="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
         Sejm X kadencji
       </p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">{skrotKlubu(klub.id)}</h1>
@@ -122,14 +122,14 @@ export default async function StronaKlubu({ params }: { params: Promise<{ skrot:
       <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-6 border-t border-[color:var(--color-rule)] pt-6 sm:grid-cols-4">
         <div>
           <dt className="text-3xl font-semibold tabular-nums">{obecni.length}</dt>
-          <dd className="mt-1 text-[13px] text-[color:var(--color-ink-soft)]">
+          <dd className="mt-1 text-sm text-[color:var(--color-ink-soft)]">
             {odmien(obecni.length, ['poseł', 'posłowie', 'posłów'])}
           </dd>
         </div>
         {byli.length > 0 && (
           <div>
             <dt className="text-3xl font-semibold tabular-nums">{byli.length}</dt>
-            <dd className="mt-1 text-[13px] text-[color:var(--color-ink-soft)]">
+            <dd className="mt-1 text-sm text-[color:var(--color-ink-soft)]">
               {odmien(byli.length, ['mandat wygasł', 'mandaty wygasły', 'mandatów wygasło'])}
             </dd>
           </div>
@@ -219,7 +219,7 @@ function Kontakt({ etykieta, wartosc }: { etykieta: string; wartosc: string }) {
   return (
     <div className="flex flex-wrap items-baseline justify-between gap-x-4 py-2">
       <dt className="text-sm text-[color:var(--color-ink-soft)]">{etykieta}</dt>
-      <dd className="text-right font-mono text-[13px]">{wartosc}</dd>
+      <dd className="text-right font-mono text-sm">{wartosc}</dd>
     </div>
   );
 }
@@ -252,7 +252,7 @@ function Sklad({
                 {mp.full_name}
               </Link>
               {mp.district_name && (
-                <p className="font-mono text-[11px] text-[color:var(--color-ink-soft)]">
+                <p className="font-mono text-xs text-[color:var(--color-ink-soft)]">
                   okręg {mp.district_num}, {mp.district_name}
                 </p>
               )}

@@ -25,7 +25,7 @@ import { inicjaly } from '@/lib/format';
 type Rozmiar = 'sm' | 'md' | 'lg';
 
 const WYMIARY: Record<Rozmiar, { px: number; klasa: string; tekst: string }> = {
-  sm: { px: 36, klasa: 'h-9 w-9', tekst: 'text-[11px]' },
+  sm: { px: 36, klasa: 'h-9 w-9', tekst: 'text-xs' },
   md: { px: 56, klasa: 'h-14 w-14', tekst: 'text-sm' },
   lg: { px: 88, klasa: 'h-22 w-22', tekst: 'text-xl' },
 };

@@ -230,7 +230,7 @@ export default async function Poslowie({
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
-      <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
+      <p className="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
         Sejm X kadencji
       </p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">{naglowek}</h1>
@@ -262,7 +262,7 @@ export default async function Poslowie({
                 kierunek: null,
               })}
               aria-current={aktywna ? 'page' : undefined}
-              className={`-mb-px border-b-2 px-0.5 pb-2 ${
+              className={`-mb-px border-b-2 px-1.5 py-2.5 ${
                 aktywna
                   ? 'border-[color:var(--color-accent)] font-medium text-[color:var(--color-ink)]'
                   : 'border-transparent text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-accent)]'
@@ -287,7 +287,7 @@ export default async function Poslowie({
         {metryka === 'niezgodnosc' && <input type="hidden" name="widok" value="klub" />}
 
         <label className="flex flex-col gap-1">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-[color:var(--color-ink-faint)]">
+          <span className="font-mono text-[11px] uppercase tracking-wider text-[color:var(--color-ink-faint)]">
             okręg wyborczy
           </span>
           <select
@@ -305,7 +305,7 @@ export default async function Poslowie({
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-[color:var(--color-ink-faint)]">
+          <span className="font-mono text-[11px] uppercase tracking-wider text-[color:var(--color-ink-faint)]">
             nazwisko albo klub
           </span>
           <input
@@ -421,7 +421,7 @@ export default async function Poslowie({
       )}
 
       {tryb !== 'lista' && (
-      <p className="mt-4 font-mono text-[11px] text-[color:var(--color-ink-faint)]">
+      <p className="mt-4 font-mono text-xs text-[color:var(--color-ink-faint)]">
         {metryka === 'niezgodnosc'
           ? `Pasek w skali 0–${skala}%. Zakres dopasowany do danych — najwyższa niezgodność w Sejmie tej kadencji nie sięga jednej trzeciej.`
           : 'Pasek w skali 0–100%. Jaśniejsze pole to margines błędu, kreska to zmierzony wynik.'}
@@ -467,7 +467,7 @@ function WierszListy({ mp }: { mp: PoselNaLiscie }) {
           {mp.full_name}
         </Link>
 
-        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] text-[color:var(--color-ink-soft)]">
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs text-[color:var(--color-ink-soft)]">
           {mp.klub && (
             <Link
               href={`/klub/${encodeURIComponent(mp.klub)}`}
@@ -503,7 +503,7 @@ function WierszListy({ mp }: { mp: PoselNaLiscie }) {
           Zmierzone 13.09.2026: troje takich poslow.
         */}
         {mp.powod_zakonczenia && (
-          <p className="mt-1 max-w-prose text-[11px] leading-snug text-[color:var(--color-ink-soft)]">
+          <p className="mt-1 max-w-prose text-xs leading-snug text-[color:var(--color-ink-soft)]">
             {mp.powod_zakonczenia}
           </p>
         )}
@@ -563,7 +563,7 @@ function Wiersz({
           >
             {mp.full_name}
           </Link>
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] text-[color:var(--color-ink-soft)]">
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs text-[color:var(--color-ink-soft)]">
             {/*
               KLUB I OKREG SA ODNOSNIKAMI, nie samym tekstem.
 
@@ -623,7 +623,7 @@ function Wiersz({
             nie „opuszczał głosowań": on ich po prostu nie miał.
           */}
           {mp.powod_zakonczenia ? (
-            <p className="mt-1 text-[11px] leading-snug text-[color:var(--color-ink-soft)]">
+            <p className="mt-1 text-xs leading-snug text-[color:var(--color-ink-soft)]">
               {mp.powod_zakonczenia} Procent liczony jest wyłącznie z głosowań przypadających
               na czas sprawowania mandatu.
             </p>
@@ -637,7 +637,7 @@ function Wiersz({
                 wpis w mp_roles istniał. Ranking łamał wtedy własną zasadę (D11).
               */}
               {mp.funkcje_panstwowe && (
-                <p className="mt-1 text-[11px] leading-snug">
+                <p className="mt-1 text-xs leading-snug">
                   <span className="text-[color:var(--color-ink-soft)]">W tym okresie: </span>
                   <span className="font-medium">{polskieDaty(mp.funkcje_panstwowe)}</span>
                 </p>
@@ -661,7 +661,7 @@ function Wiersz({
                 hydracji). Patrz komentarz w Wyjasnienie.tsx.
               */}
               {obecnosc && ciagla && (
-                <div className="mt-1 flex items-center text-[11px] leading-snug text-[color:var(--color-ink-soft)]">
+                <div className="mt-1 flex items-center text-xs leading-snug text-[color:var(--color-ink-soft)]">
                   <span className="rounded-sm border border-current px-1.5 py-0.5">
                     {mp.funkcje_panstwowe ? 'nieobecność ciągła' : 'nieobecność ciągła · powód nieznany'}
                   </span>
@@ -703,7 +703,7 @@ function Wiersz({
             */}
             <div className="flex items-baseline justify-between gap-2 sm:justify-end">
               <span className="font-mono text-sm tabular-nums">{procent(pct)}%</span>
-              <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--color-ink-soft)]">
+              <span className="font-mono text-[11px] tabular-nums text-[color:var(--color-ink-soft)]">
                 ±{procent((gora - dol) / 2 || 0)} pkt
               </span>
             </div>

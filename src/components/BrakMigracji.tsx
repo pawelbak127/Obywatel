@@ -12,7 +12,7 @@ export function BrakMigracji({ error }: { error: unknown }) {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
-      <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[color:var(--color-warn)]">
+      <p className="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--color-warn)]">
         Konfiguracja bazy
       </p>
       <h1 className="mt-2 text-2xl font-semibold tracking-tight">
@@ -43,12 +43,12 @@ export function BrakMigracji({ error }: { error: unknown }) {
         </li>
       </ol>
 
-      <p className="mt-6 font-mono text-[11px] text-[color:var(--color-ink-soft)]">
+      <p className="mt-6 font-mono text-xs text-[color:var(--color-ink-soft)]">
         Sprawdź najpierw punkt 2 — jeśli obiekt widać w Table Editorze, to on.
       </p>
 
       {brak?.szczegol && (
-        <p className="mt-3 overflow-x-auto rounded border border-[color:var(--color-rule)] bg-black/[0.03] p-2 font-mono text-[11px] text-[color:var(--color-ink-soft)] dark:bg-white/[0.04]">
+        <p className="mt-3 overflow-x-auto rounded border border-[color:var(--color-rule)] bg-black/[0.03] p-2 font-mono text-xs text-[color:var(--color-ink-soft)] dark:bg-white/[0.04]">
           {brak.szczegol}
         </p>
       )}

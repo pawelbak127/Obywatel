@@ -91,7 +91,7 @@ export default async function StronaOkregu({ params }: { params: Promise<{ nr: s
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
-      <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
+      <p className="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
         Sejm X kadencji
       </p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">
@@ -106,21 +106,21 @@ export default async function StronaOkregu({ params }: { params: Promise<{ nr: s
       <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-6 border-t border-[color:var(--color-rule)] pt-6 sm:grid-cols-4">
         <div>
           <dt className="text-3xl font-semibold tabular-nums">{obecni.length}</dt>
-          <dd className="mt-1 text-[13px] text-[color:var(--color-ink-soft)]">
+          <dd className="mt-1 text-sm text-[color:var(--color-ink-soft)]">
             {odmien(obecni.length, ['poseł', 'posłowie', 'posłów'])} obecnie
           </dd>
         </div>
         {byli.length > 0 && (
           <div>
             <dt className="text-3xl font-semibold tabular-nums">{byli.length}</dt>
-            <dd className="mt-1 text-[13px] text-[color:var(--color-ink-soft)]">
+            <dd className="mt-1 text-sm text-[color:var(--color-ink-soft)]">
               {odmien(byli.length, ['mandat wygasł', 'mandaty wygasły', 'mandatów wygasło'])}
             </dd>
           </div>
         )}
         <div>
           <dt className="text-3xl font-semibold tabular-nums">{kluby.length}</dt>
-          <dd className="mt-1 text-[13px] text-[color:var(--color-ink-soft)]">
+          <dd className="mt-1 text-sm text-[color:var(--color-ink-soft)]">
             {odmien(kluby.length, ['klub', 'kluby', 'klubów'])} z mandatem
           </dd>
         </div>
@@ -228,7 +228,7 @@ function Sklad({ tytul, ludzie, opis }: { tytul: string; ludzie: PoselNaLiscie[]
                 {mp.full_name}
               </Link>
               {mp.klub && (
-                <p className="font-mono text-[11px] text-[color:var(--color-ink-soft)]">{mp.klub}</p>
+                <p className="font-mono text-xs text-[color:var(--color-ink-soft)]">{mp.klub}</p>
               )}
             </div>
           </li>

@@ -160,7 +160,7 @@ export default async function StronaGlowna() {
       {lista.length > 0 ? (
         <form method="get" action="/okreg" className="mt-8 flex flex-wrap items-end gap-2">
           <label className="flex flex-col gap-1">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-[color:var(--color-ink-faint)]">
+            <span className="font-mono text-[11px] uppercase tracking-wider text-[color:var(--color-ink-faint)]">
               twój okręg wyborczy
             </span>
             <select
@@ -225,7 +225,7 @@ export default async function StronaGlowna() {
                 liczby naglowkowe i monospace nadawal im tylko ton konsoli.
                 tabular-nums zostaje, bo wyrownuje szerokosci cyfr. */}
             <dt className="text-3xl font-semibold tabular-nums">{x.v}</dt>
-            <dd className="mt-1 text-[13px] text-[color:var(--color-ink-soft)]">{x.l}</dd>
+            <dd className="mt-1 text-sm text-[color:var(--color-ink-soft)]">{x.l}</dd>
           </div>
         ))}
       </dl>
@@ -280,7 +280,7 @@ export default async function StronaGlowna() {
               return (
                 <li key={p.print_number} className="py-3">
                   <p className="max-w-prose text-sm leading-snug">{p.tytul}</p>
-                  <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] text-[color:var(--color-ink-soft)]">
+                  <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs text-[color:var(--color-ink-soft)]">
                     <span className="tabular-nums">{polskieDaty(p.closure_date)}</span>
                     <span aria-hidden="true">·</span>
                     <span>{LOS_OPIS[p.los].etykieta}</span>

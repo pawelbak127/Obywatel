@@ -36,7 +36,7 @@ export function SourceLink({ href, label, retrievedAt, className = '' }: Props) 
           : label
       }
       className={
-        'inline-flex items-center gap-1 align-middle font-mono text-[11px] text-[color:var(--color-ink-soft)] ' +
+        'inline-flex items-center gap-1 align-middle font-mono text-xs text-[color:var(--color-ink-soft)] ' +
         'underline decoration-dotted underline-offset-2 transition-colors ' +
         'hover:text-[color:var(--color-accent)] focus-visible:outline focus-visible:outline-2 ' +
         'focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-accent)] ' +
@@ -76,7 +76,7 @@ export function AiSummary({
 }) {
   return (
     <figure className="my-4 rounded border border-[color:var(--color-rule)] bg-black/[0.02] p-4 dark:bg-white/[0.03]">
-      <figcaption className="mb-2 flex flex-wrap items-center gap-2 font-mono text-[10.5px] uppercase tracking-widest text-[color:var(--color-accent)]">
+      <figcaption className="mb-2 flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-[color:var(--color-accent)]">
         <span className="rounded-sm border border-current px-1.5 py-0.5">Wygenerowane przez SI</span>
         <span className="text-[color:var(--color-ink-soft)] normal-case tracking-normal">{model}</span>
         <SourceLink href={sourceHref} label={sourceLabel} />

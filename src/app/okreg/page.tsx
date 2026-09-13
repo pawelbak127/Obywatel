@@ -58,7 +58,7 @@ export default async function Okregi({
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
-      <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
+      <p className="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
         Sejm X kadencji
       </p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">Okręgi wyborcze</h1>
@@ -95,7 +95,7 @@ export default async function Okregi({
                     </span>{' '}
                     {o.district_name}
                   </Link>
-                  <span className="shrink-0 font-mono text-[11px] tabular-nums text-[color:var(--color-ink-soft)]">
+                  <span className="shrink-0 font-mono text-xs tabular-nums text-[color:var(--color-ink-soft)]">
                     {o.poslow} {odmien(o.poslow, ['poseł', 'posłowie', 'posłów'])}
                   </span>
                 </li>
