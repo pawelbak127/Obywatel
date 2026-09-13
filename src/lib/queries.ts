@@ -332,6 +332,60 @@ export async function pobierzPoslow(
   );
 }
 
+export type Klub = {
+  id: string;
+  name: string;
+  members_count: number | null;
+  email: string | null;
+  fax: string | null;
+  phone: string | null;
+};
+
+/**
+ * Klub wraz z jego posłami — dla strony `/klub/[skrot]`.
+ *
+ * DLACZEGO OSOBNA STRONA, A NIE FILTR. Do 13.09.2026 odnosnik z nazwy klubu
+ * prowadzil do listy przefiltrowanej tym klubem. Pawel zwrocil uwage, ze
+ * czytelnik klikajacy „PiS" pyta o KLUB, a dostawal kolejny widok poslow.
+ * Rejestr Sejmu ma o klubach wlasne dane — pelna nazwe, liczebnosc, kontakt —
+ * i nie bylo gdzie ich pokazac.
+ *
+ * ROZDZIAL NA OBECNYCH I BYLYCH nie jest kosmetyka. `clubs.members_count`
+ * pochodzi z rejestru i liczy czlonkow AKTYWNYCH; nasza tabela wiaze z klubem
+ * takze poslow z wygaslym mandatem. Zmierzone 13.09.2026: KO ma 156 w rejestrze
+ * i 174 wierszy u nas, z czego 156 aktywnych — zgadza sie co do jednego dla
+ * KAZDEGO klubu. Pokazanie jednej listy pod liczba z rejestru wygladaloby jak
+ * blad; ukrycie bylych lamaloby „nikogo nie ukrywamy".
+ */
+export async function pobierzKlub(
+  id: string,
+): Promise<{ klub: Klub; obecni: PoselNaLiscie[]; byli: PoselNaLiscie[] } | null> {
+  const supabase = await createClient();
+
+  const { data: k, error: bladKlubu } = await supabase
+    .from('clubs')
+    .select('id, name, members_count, email, fax, phone')
+    .eq('id', id)
+    .maybeSingle();
+  sprawdzBlad('clubs', bladKlubu);
+  if (!k) return null;
+
+  const wszyscy = await pobierzPoslow({ klub: id });
+  return {
+    klub: k as Klub,
+    obecni: wszyscy.filter((m) => m.active),
+    byli: wszyscy.filter((m) => !m.active),
+  };
+}
+
+/** Skroty wszystkich klubow — do `generateStaticParams` i do listy klubow. */
+export async function pobierzSkrotyKlubow(): Promise<string[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('clubs').select('id').order('id');
+  sprawdzBlad('clubs', error);
+  return ((data ?? []) as Array<{ id: string }>).map((r) => r.id);
+}
+
 export type DaneOsobowe = {
   birth_date: string | null;
   birth_location: string | null;

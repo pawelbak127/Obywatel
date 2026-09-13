@@ -464,7 +464,7 @@ function WierszListy({ mp }: { mp: PoselNaLiscie }) {
         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] text-[color:var(--color-ink-soft)]">
           {mp.klub && (
             <Link
-              href={`/poslowie?klub=${encodeURIComponent(mp.klub)}`}
+              href={`/klub/${encodeURIComponent(mp.klub)}`}
               className="hover:text-[color:var(--color-accent)] hover:underline"
             >
               {mp.klub}
@@ -567,13 +567,19 @@ function Wiersz({
               samego ciagu recznie. Profil posla mial to od dawna dla okregu —
               lista nie miala dla zadnego z dwoch.
 
-              Klub celuje w `?klub=`, a nie w pole szukania: `?q=KO` przechodzi
-              przez `ilike.%KO%` po nazwisku i wyciagneloby Kowalskiego,
+              Klub prowadzi od 13.09.2026 do WLASNEJ STRONY `/klub/[skrot]`,
+              a nie do listy przefiltrowanej tym klubem — czytelnik klikajacy
+              „PiS" pyta o klub, a dostawal kolejny widok tych samych ludzi.
+              Filtr `?klub=` zostaje i strona klubu sama do niego odsyla;
+              nie jest natomiast tym, w co celuje nazwa klubu.
+
+              `?q=KO` nie nadaje sie do zadnego z tych zastosowan: przechodzi
+              przez `ilike.%KO%` po nazwisku i wyciaga Kowalskiego,
               Sikorskiego i Kosiniaka-Kamysza (patrz queries.ts).
             */}
             {mp.klub && (
               <Link
-                href={`/poslowie?${metryka === 'niezgodnosc' ? 'widok=klub&' : ''}klub=${encodeURIComponent(mp.klub)}`}
+                href={`/klub/${encodeURIComponent(mp.klub)}`}
                 className="hover:text-[color:var(--color-accent)] hover:underline"
               >
                 {mp.klub}

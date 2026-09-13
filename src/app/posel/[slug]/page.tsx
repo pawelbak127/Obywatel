@@ -106,13 +106,15 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-[color:var(--color-accent)]">
             {/*
-              Klub jest odnosnikiem do listy przefiltrowanej tym klubem —
-              z tego samego powodu, dla ktorego okreg nizej jest odnosnikiem:
-              to najczestsze kolejne pytanie czytelnika, a nie ozdoba naglowka.
+              Klub prowadzi do WLASNEJ STRONY klubu, nie do listy przefiltrowanej
+              — uwaga Pawla z 13.09.2026: „wchodzimy w klub i jestesmy
+              przekierowani do obecnosci w tym klubie, a powinnismy miec tam
+              informacje o tym klubie". Rejestr ma o klubach pelna nazwe,
+              liczebnosc i kontakt; nie bylo gdzie ich pokazac.
             */}
             {mp.klub && (
               <Link
-                href={`/poslowie?klub=${encodeURIComponent(mp.klub)}`}
+                href={`/klub/${encodeURIComponent(mp.klub)}`}
                 className="hover:underline"
               >
                 {mp.klub}
