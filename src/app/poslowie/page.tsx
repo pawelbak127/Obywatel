@@ -5,6 +5,7 @@ import {
   pobierzRanking,
   pobierzPoslow,
   pobierzOkregi,
+  pobierzKluby,
   BrakObiektuWBazie,
   type MpKontekst,
   type PoselNaLiscie,
@@ -144,6 +145,28 @@ const LIMIT = 60;
 */
 const NA_STRONE = 120;
 
+/**
+ * Znaki klubow do listy poslow (D3). Osobne zapytanie, bo `pobierzPoslow()`
+ * zwraca poslow, nie kluby, i queries.ts jest na liscie CLAUDE.md §5 —
+ * nie dopisujemy tu zlaczenia. Klubow jest trzynascie, wiec to jedno tanie
+ * zapytanie na strone, tak samo jak `okregi()` w src/app/page.tsx.
+ *
+ * Blad NIE WYWALA STRONY — znak jest dekoracja, nie trescia. Gdy zapytanie
+ * sie nie powiedzie, lista ma wygladac tak jak przed D3, bez znakow.
+ */
+async function pobierzLogaKlubow(): Promise<Record<string, string>> {
+  try {
+    const kluby = await pobierzKluby();
+    const mapa: Record<string, string> = {};
+    for (const k of kluby) {
+      if (k.logo_stored_url) mapa[k.id] = k.logo_stored_url;
+    }
+    return mapa;
+  } catch {
+    return {};
+  }
+}
+
 export default async function Poslowie({
   searchParams,
 }: {
@@ -179,8 +202,11 @@ export default async function Poslowie({
   let lista: MpKontekst[] = [];
   let prosci: PoselNaLiscie[] = [];
   let okregi: Okreg[];
+  // Pobierane tylko w trybie listy — zestawienia nie renderuja WierszListy
+  // i nie maja po co placic za to zapytanie.
+  let logaKlubow: Record<string, string> = {};
   try {
-    [prosci, lista, okregi] = await Promise.all([
+    [prosci, lista, okregi, logaKlubow] = await Promise.all([
       tryb === 'lista' ? pobierzPoslow({ szukaj: fraza, okreg, klub }) : Promise.resolve([]),
       tryb === 'lista'
         ? Promise.resolve([])
@@ -193,6 +219,7 @@ export default async function Poslowie({
             metryka,
           }),
       pobierzOkregi(),
+      tryb === 'lista' ? pobierzLogaKlubow() : Promise.resolve({}),
     ]);
   } catch (e) {
     if (e instanceof BrakObiektuWBazie) return <BrakMigracji error={e} />;
@@ -451,7 +478,7 @@ export default async function Poslowie({
       {tryb === 'lista' && widoczni.length > 0 && (
         <ul className="mt-6 grid gap-x-8 border-y border-[color:var(--color-rule)] sm:grid-cols-2 lg:grid-cols-3">
           {widoczni.map((mp) => (
-            <WierszListy key={mp.id} mp={mp} />
+            <WierszListy key={mp.id} mp={mp} logo={mp.klub ? (logaKlubow[mp.klub] ?? null) : null} />
           ))}
         </ul>
       )}
@@ -532,7 +559,7 @@ export default async function Poslowie({
  * Klub i okreg sa odnosnikami — tak samo jak w zestawieniach — bo „kto
  * jeszcze" jest tu najczestszym kolejnym pytaniem.
  */
-function WierszListy({ mp }: { mp: PoselNaLiscie }) {
+function WierszListy({ mp, logo }: { mp: PoselNaLiscie; logo: string | null }) {
   return (
     <li className="flex items-start gap-3 py-3">
       <Portret src={mp.photo_url} nazwa={mp.full_name} rozmiar="sm" />
@@ -570,12 +597,35 @@ function WierszListy({ mp }: { mp: PoselNaLiscie }) {
         */}
         <div className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs text-[color:var(--color-ink-soft)]">
           {mp.klub && (
-            <Link
-              href={`/klub/${encodeURIComponent(mp.klub)}`}
-              className="font-medium text-[color:var(--color-ink)] hover:text-[color:var(--color-accent)] hover:underline"
-            >
-              {skrotKlubu(mp.klub)}
-            </Link>
+            <>
+              {/*
+                SLOT O STALEJ SZEROKOSCI (16 px), tak jak na /kluby (D3) —
+                inaczej klub bez znaku (np. "niez.") zaczynalby sie blizej
+                lewej krawedzi niz klub ze znakiem i skroty klubow w kolejnych
+                wierszach nie zaczynalyby sie w tym samym miejscu. Brak znaku
+                NIE RYSUJE zastepczej ramki — pusty slot zostaje pusty.
+
+                `self-center`, bo rodzic wyrownuje dzieci po BASELINE tekstu
+                (`items-baseline`), a obrazek baseline'u nie ma — bez tego
+                wisialby przy dolnej krawedzi wiersza zamiast stac na srodku.
+              */}
+              <span className="flex w-4 shrink-0 justify-center self-center">
+                {logo && (
+                  <img
+                    src={logo}
+                    alt=""
+                    aria-hidden="true"
+                    className="h-4 w-4 rounded-sm bg-white object-contain"
+                  />
+                )}
+              </span>
+              <Link
+                href={`/klub/${encodeURIComponent(mp.klub)}`}
+                className="font-medium text-[color:var(--color-ink)] hover:text-[color:var(--color-accent)] hover:underline"
+              >
+                {skrotKlubu(mp.klub)}
+              </Link>
+            </>
           )}
           {mp.district_name && (
             <Link
