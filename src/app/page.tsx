@@ -111,8 +111,25 @@ export default async function StronaGlowna() {
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
-      <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-        Co robią posłowie, których wybraliśmy
+      {/*
+        NAGLOWEK JEST PYTANIEM CZYTELNIKA, NIE OPISEM SERWISU.
+
+        Bylo: „Co robia poslowie, ktorych wybralismy" — zdanie prawdziwe,
+        ale opisujace nas, nie jego. Czytelnik nie przychodzi z pytaniem
+        „co robia poslowie"; przychodzi z pytaniem o KONKRETNEGO posla,
+        najczesciej swojego. Naglowek nazywa teraz to pytanie i prowadzi
+        wprost do pola wyboru okregu, ktore stoi zaraz pod nim.
+
+        Zakres serwisu (ustawy, pieniadze publiczne) niesie akapit nizej —
+        naglowek ma otwierac droge, a nie wyliczac dzialy.
+
+        SWIADOMIE NIE KOPIUJEMY cudzego sformulowania. Sejmograf pyta „Czy
+        Twoj posel chodzi na glosowania?" i jest to lepsze zdanie niz nasze
+        poprzednie — ale zawezone do obecnosci, a my pytamy tez o to, JAK
+        glosuje. Podpatrzony zostal chwyt (pytanie zamiast opisu), nie tekst.
+      */}
+      <h1 className="max-w-prose text-4xl font-semibold tracking-tight sm:text-5xl">
+        Kto reprezentuje Twój okręg i jak głosuje?
       </h1>
 
       <p className="mt-5 max-w-prose text-lg leading-relaxed text-[color:var(--color-ink-soft)]">
