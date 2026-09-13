@@ -7,16 +7,18 @@ import {
   pobierzSlugi,
   pobierzNieobecnosciMiesieczne,
   pobierzGlosyPosla,
+  pobierzDaneOsobowe,
   pobierzProcesyDlaGlosowan,
   BrakObiektuWBazie,
   type MpKontekst,
+  type DaneOsobowe,
   adresAktu,
   type ProcesGlosowania,
   LOS_OPIS,
   opisWeta,
 } from '@/lib/queries';
 import { BrakMigracji } from '@/components/BrakMigracji';
-import { polskieDaty } from '@/lib/format';
+import { polskieDaty, odmien } from '@/lib/format';
 import { SourceLink } from '@/components/SourceLink';
 import { Portret } from '@/components/Portret';
 import { StatystykiPosla, ZgodnoscZKlubem } from '@/components/StatBar';
@@ -58,12 +60,14 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
   let mp: MpKontekst | null;
   let miesiace: Awaited<ReturnType<typeof pobierzNieobecnosciMiesieczne>>;
   let glosy: Awaited<ReturnType<typeof pobierzGlosyPosla>>;
+  let dane: DaneOsobowe | null;
   try {
     mp = await pobierzPosla(slug);
     if (!mp) notFound();
-    [miesiace, glosy] = await Promise.all([
+    [miesiace, glosy, dane] = await Promise.all([
       pobierzNieobecnosciMiesieczne(mp.id),
       pobierzGlosyPosla(mp.id, 25),
+      pobierzDaneOsobowe(mp.id),
     ]);
   } catch (e) {
     if (e instanceof BrakObiektuWBazie) return <BrakMigracji error={e} />;
@@ -195,6 +199,8 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
 
       <ZgodnoscZKlubem mp={mp} />
 
+      <DaneZRejestru dane={dane} mpId={mp.id} />
+
       <section className="mt-12">
         <h2 className="mb-3 text-sm font-semibold">Ostatnie głosowania</h2>
         <div className="overflow-x-auto rounded border border-[color:var(--color-rule)]">
@@ -307,6 +313,87 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
   Czytelnik jej faktycznie oczekuje — ale oczekuje tez, ze zielone znaczy
   „dobrze", a tego akurat nie wiemy i nie naszą rzeczą jest sugerowac.
 */
+/**
+ * DANE Z REJESTRU O CZLOWIEKU — data i miejsce urodzenia, wyksztalcenie,
+ * zawod, liczba glosow w wyborach, slubowanie.
+ *
+ * ZWINIETA, NIE ROZWINIETA. Pawel postawil warunek: „portal ma byc latwy
+ * w obsludze i nie przepchany trescia". Te szesc faktow nie jest powodem,
+ * dla ktorego ktos wchodzi na profil — powodem sa liczby wyzej. Kto chce,
+ * rozwija jednym klknieciem; kto nie chce, nawet ich nie mija.
+ *
+ * STOI PO LICZBACH, nie przed nimi. Kontekst, ktory stoi przed liczbami
+ * (powod zakonczenia mandatu, funkcja panstwowa), jest tam dlatego, ze bez
+ * niego liczby KLAMIA. Rok urodzenia niczego w nich nie zmienia.
+ *
+ * WIEK LICZYMY, ale podajemy obok daty, nie zamiast niej. Data jest faktem
+ * z rejestru, wiek jest naszym rachunkiem — i jutro bedzie inny.
+ */
+function DaneZRejestru({ dane, mpId }: { dane: DaneOsobowe | null; mpId: number }) {
+  if (!dane) return null;
+
+  const wiersze: Array<[string, string]> = [];
+
+  if (dane.birth_date) {
+    const d = new Date(dane.birth_date);
+    const dzis = new Date();
+    let lat = dzis.getFullYear() - d.getFullYear();
+    // Miesiac i dzien decyduja — bez tego kazdy, kto nie mial jeszcze
+    // urodzin w tym roku, bylby o rok starszy.
+    const przed = dzis.getMonth() < d.getMonth() || (dzis.getMonth() === d.getMonth() && dzis.getDate() < d.getDate());
+    if (przed) lat -= 1;
+    wiersze.push([
+      'Urodzony',
+      `${polskieDaty(dane.birth_date)}${dane.birth_location ? `, ${dane.birth_location}` : ''} · ${lat} ${odmien(lat, ['rok', 'lata', 'lat'])}`,
+    ]);
+  } else if (dane.birth_location) {
+    wiersze.push(['Miejsce urodzenia', dane.birth_location]);
+  }
+
+  if (dane.education_level) wiersze.push(['Wykształcenie', dane.education_level]);
+  if (dane.profession) wiersze.push(['Zawód', dane.profession]);
+  if (dane.number_of_votes !== null) {
+    wiersze.push([
+      'Głosów w wyborach',
+      `${dane.number_of_votes.toLocaleString('pl-PL')} ${odmien(dane.number_of_votes, ['głos', 'głosy', 'głosów'])}`,
+    ]);
+  }
+  if (dane.oath_date) wiersze.push(['Ślubowanie', polskieDaty(dane.oath_date)]);
+
+  if (!wiersze.length) return null;
+
+  return (
+    <details className="group mt-10 border-t border-[color:var(--color-rule)] pt-5">
+      <summary className="cursor-pointer list-none text-sm font-semibold marker:content-['']">
+        Kim jest — dane z rejestru
+        <span className="ml-2 font-mono text-[11px] font-normal text-[color:var(--color-ink-faint)]">
+          <span className="group-open:hidden">rozwiń ▾</span>
+          <span className="hidden group-open:inline">zwiń ▴</span>
+        </span>
+      </summary>
+
+      <dl className="mt-4 max-w-prose divide-y divide-[color:var(--color-rule)] border-y border-[color:var(--color-rule)]">
+        {wiersze.map(([etykieta, wartosc]) => (
+          <div key={etykieta} className="flex flex-wrap items-baseline justify-between gap-x-4 py-2">
+            <dt className="text-sm text-[color:var(--color-ink-soft)]">{etykieta}</dt>
+            <dd className="text-right text-sm">{wartosc}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {/*
+        Zrodlo przy tej sekcji tak samo jak przy kazdej liczbie (D1). To nie sa
+        dane, ktore zebralismy skadkolwiek — to ten sam rejestr Kancelarii
+        Sejmu, z ktorego pochodzi reszta profilu.
+      */}
+      <p className="mt-2 text-xs text-[color:var(--color-ink-soft)]">
+        Wszystkie pola pochodzą z rejestru posłów Kancelarii Sejmu.{' '}
+        <SourceLink href={SEJM_MP(mpId)} label={`Wpis posła w rejestrze Sejmu (id ${mpId})`} />
+      </p>
+    </details>
+  );
+}
+
 const OPIS_GLOSU: Record<string, { tekst: string; klasa: string }> = {
   YES: { tekst: 'za', klasa: 'text-[color:var(--color-vote-for,#1d4e89)]' },
   NO: { tekst: 'przeciw', klasa: 'text-[color:var(--color-vote-against,#b35c00)]' },

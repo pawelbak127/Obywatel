@@ -332,6 +332,43 @@ export async function pobierzPoslow(
   );
 }
 
+export type DaneOsobowe = {
+  birth_date: string | null;
+  birth_location: string | null;
+  education_level: string | null;
+  profession: string | null;
+  number_of_votes: number | null;
+  oath_date: string | null;
+};
+
+/**
+ * DANE Z REJESTRU O SAMYM CZLOWIEKU — data i miejsce urodzenia, wyksztalcenie,
+ * zawod, liczba glosow w wyborach, data slubowania.
+ *
+ * Sa w tabeli `mps` OD PIERWSZEJ MIGRACJI i do 13.09.2026 nie byly pokazywane
+ * nigdzie. Import je zapisywal, interfejs o nich nie wiedzial. Zmierzone:
+ * 499/499 wypelnionych dla wszystkich pol poza zawodem (493/499).
+ *
+ * DLACZEGO OSOBNE ZAPYTANIE, A NIE KOLUMNY W WIDOKU. `mp_obecnosc_kontekst`
+ * liczy obecnosc, przedzialy ufnosci i ksztalt nieobecnosci dla 499 poslow
+ * naraz — jest przeliczany przy kazdym wejsciu na liste. Dane osobowe czyta
+ * wylacznie profil, po jednym wierszu. Dolozenie ich do widoku obciazyloby
+ * kazde zapytanie listy o kolumny, ktorych lista nigdy nie uzyje, i wymagaloby
+ * przepisania najwazniejszego widoku w serwisie.
+ *
+ * Czytamy z `mps`, nie z widoku, wiec obowiazuje polityka „public read mps".
+ */
+export async function pobierzDaneOsobowe(mpId: number): Promise<DaneOsobowe | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('mps')
+    .select('birth_date, birth_location, education_level, profession, number_of_votes, oath_date')
+    .eq('id', mpId)
+    .maybeSingle();
+  sprawdzBlad('mps', error);
+  return (data as DaneOsobowe | null) ?? null;
+}
+
 export type Okreg = {
   district_num: number;
   district_name: string;
