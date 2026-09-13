@@ -95,6 +95,13 @@ jobs:
       # trwa ulamek sekundy, a nie dwie. Kazde z 499 zdjec wraca raz na
       # okolo 30 dni.
       # Musi isc PO sync-mps, ktory ustawia photo_exists.
+      # DNI POSIEDZEN — 499 zapytan, jedno na posla. Musi isc PO sync-mps
+      # (klucz obcy do `mps`) i po sync-votings, zeby liczby na profilu
+      # pochodzily z tego samego przebiegu.
+      - name: Dni posiedzen i usprawiedliwienia
+        if: ${{ inputs.job == 'sync-days' || inputs.job == 'all' || github.event_name == 'schedule' }}
+        run: npx tsx ingest/jobs/sync-sitting-days.ts
+
       # ZNAKI KLUBOW — trzynascie plikow, wiec caly zbior miesci sie w jednym
       # przebiegu. Musi isc PO sync-mps, ktory tworzy wiersze w `clubs`.
       # Zapis do Storage nastepuje wylacznie przy realnej roznicy sumy.

@@ -8,10 +8,12 @@ import {
   pobierzNieobecnosciMiesieczne,
   pobierzGlosyPosla,
   pobierzDaneOsobowe,
+  pobierzDniObecnosci,
   pobierzProcesyDlaGlosowan,
   BrakObiektuWBazie,
   type MpKontekst,
   type DaneOsobowe,
+  type DniObecnosci,
   adresAktu,
   type ProcesGlosowania,
   LOS_OPIS,
@@ -77,13 +79,15 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
   let miesiace: Awaited<ReturnType<typeof pobierzNieobecnosciMiesieczne>>;
   let glosy: Awaited<ReturnType<typeof pobierzGlosyPosla>>;
   let dane: DaneOsobowe | null;
+  let dni: DniObecnosci | null;
   try {
     mp = await pobierzPosla(slug);
     if (!mp) notFound();
-    [miesiace, glosy, dane] = await Promise.all([
+    [miesiace, glosy, dane, dni] = await Promise.all([
       pobierzNieobecnosciMiesieczne(mp.id),
       pobierzGlosyPosla(mp.id, 25),
       pobierzDaneOsobowe(mp.id),
+      pobierzDniObecnosci(mp.id),
     ]);
   } catch (e) {
     if (e instanceof BrakObiektuWBazie) return <BrakMigracji error={e} />;
@@ -214,6 +218,8 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
         */}
         <AbsenceTimeline miesiace={miesiace} ksztalt={mp.ksztalt_nieobecnosci} funkcje={null} />
       </div>
+
+      <Usprawiedliwienia dni={dni} mpId={mp.id} />
 
       <ZgodnoscZKlubem mp={mp} />
 
@@ -409,6 +415,57 @@ function DaneZRejestru({ dane, mpId }: { dane: DaneOsobowe | null; mpId: number 
         <SourceLink href={SEJM_MP(mpId)} label={`Wpis posła w rejestrze Sejmu (id ${mpId})`} />
       </p>
     </details>
+  );
+}
+
+/**
+ * NIEOBECNOSCI USPRAWIEDLIWIONE — jedyny kontekst przy nieobecnosci, ktory
+ * jest faktem z rejestru, a nie nasza pochodna.
+ *
+ * STOI ZARAZ POD OSIA NIEOBECNOSCI, bo zmienia sposob, w jaki czyta sie
+ * liczby nad nia. Kontekst, ktory zmienia odczyt liczby, nalezy do tej
+ * liczby — ta sama zasada co przy powodzie wygasniecia mandatu i funkcji
+ * panstwowej.
+ *
+ * ---------------------------------------------------------------------
+ * DLACZEGO W DNIACH, A NIE W PROCENTACH.
+ *
+ * `attendance_pct` liczy sie per GLOSOWANIE, a `absence_excuse` jest per
+ * DZIEN POSIEDZENIA. Ziobro ma 152 dni z jakimkolwiek brakiem przy 4 045
+ * opuszczonych glosowaniach — procent zlozony z tych dwoch zbiorow bylby
+ * bledem rachunkowym, nie uproszczeniem. „W 55 z 152 dni" jest dluzsze
+ * i prawdziwe.
+ *
+ * CZEGO TO ZDANIE NIE MOWI, i to musi byc napisane: usprawiedliwienie NIE
+ * JEST POWODEM. Rejestr odnotowuje, ze nieobecnosc usprawiedliwiono, i nic
+ * ponadto. Zasada „nie zgadujemy powodow" obowiazuje tu tak samo jak wszedzie
+ * — zmienia sie tylko to, ze mamy o jeden fakt wiecej.
+ */
+function Usprawiedliwienia({ dni, mpId }: { dni: DniObecnosci | null; mpId: number }) {
+  // Brak danych znaczy „import jeszcze nie chodzil". Nie pokazujemy zer,
+  // bo „0 usprawiedliwionych" czytaloby sie jako zarzut.
+  if (!dni || dni.dni_z_nieobecnoscia === 0) return null;
+
+  const { dni_z_nieobecnoscia: zBrakiem, dni_usprawiedliwione: uspr } = dni;
+
+  return (
+    <section className="mt-8">
+      <h2 className="text-lg font-semibold">Nieobecności usprawiedliwione</h2>
+      <p className="mt-2 max-w-prose text-sm leading-relaxed">
+        {`W ${uspr} z ${zBrakiem} ${odmien(zBrakiem, ['dnia', 'dni', 'dni'])}, w których poseł opuścił ` +
+          `co najmniej jedno głosowanie, nieobecność była usprawiedliwiona.`}
+      </p>
+      <p className="mt-2 max-w-prose text-xs leading-relaxed text-[color:var(--color-ink-soft)]">
+        Liczymy tu <strong>dni posiedzeń</strong>, nie głosowania — rejestr odnotowuje
+        usprawiedliwienie dla całego dnia. Dlatego tej liczby nie da się zestawić wprost
+        z procentem obecności wyżej, który liczy pojedyncze głosowania.{' '}
+        <strong className="text-[color:var(--color-ink)]">
+          Usprawiedliwienie nie jest powodem.
+        </strong>{' '}
+        Rejestr zapisuje, że nieobecność usprawiedliwiono, i nic ponadto.{' '}
+        <SourceLink href={SEJM_MP(mpId)} label={`Statystyka głosowań posła w rejestrze Sejmu (id ${mpId})`} />
+      </p>
+    </section>
   );
 }
 

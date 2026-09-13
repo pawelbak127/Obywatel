@@ -474,6 +474,53 @@ export async function pobierzSkrotyKlubow(): Promise<string[]> {
   return ((data ?? []) as Array<{ id: string }>).map((r) => r.id);
 }
 
+export type DniObecnosci = {
+  dni_posiedzen: number;
+  dni_z_nieobecnoscia: number;
+  dni_usprawiedliwione: number;
+  dni_nieusprawiedliwione: number;
+  ostatni_dzien: string | null;
+};
+
+/**
+ * DNI POSIEDZEN — z informacja, czy nieobecnosc byla USPRAWIEDLIWIONA.
+ *
+ * To jedyny kontekst przy nieobecnosci, ktory jest FAKTEM Z REJESTRU.
+ * `ksztalt_nieobecnosci`, ktory pokazujemy obok, jest nasza wlasna pochodna.
+ *
+ * ---------------------------------------------------------------------
+ * NIE LICZ Z TEGO PROCENTU. To nie jest ostroznosc, tylko blad rachunkowy.
+ *
+ * `attendance_pct` liczy sie PER GLOSOWANIE (z tabeli `votes`), a te liczby
+ * sa PER DZIEN POSIEDZENIA. Ziobro ma 152 dni z jakimkolwiek brakiem przy
+ * 4 045 opuszczonych glosowaniach — licznik i mianownik pochodzilyby
+ * z dwoch roznych zbiorow.
+ *
+ * Jedyna uczciwa forma to liczba DNI: „w 55 z 152 dni, w ktorych posel
+ * opuscil glosowania, nieobecnosc byla usprawiedliwiona".
+ *
+ * Zwraca `null`, gdy importu jeszcze nie bylo — sekcja wtedy nie powstaje,
+ * zamiast pokazywac zera, ktore czytaloby sie jako „zero usprawiedliwien".
+ */
+export async function pobierzDniObecnosci(mpId: number): Promise<DniObecnosci | null> {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from('mp_dni_obecnosci')
+    .select('dni_posiedzen, dni_z_nieobecnoscia, dni_usprawiedliwione, dni_nieusprawiedliwione, ostatni_dzien')
+    .eq('mp_id', mpId)
+    .maybeSingle();
+
+  // Brak widoku to brakujaca migracja, nie awaria profilu — sekcja po prostu
+  // nie powstanie, tak samo jak przy braku importu.
+  if (error) {
+    if (error.code === 'PGRST205' || error.code === '42P01' || /does not exist|schema cache/i.test(error.message)) {
+      return null;
+    }
+    throw new Error(`mp_dni_obecnosci: ${error.message}`);
+  }
+  return (data as DniObecnosci | null) ?? null;
+}
+
 export type DaneOsobowe = {
   birth_date: string | null;
   birth_location: string | null;

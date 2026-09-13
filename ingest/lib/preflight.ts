@@ -70,6 +70,11 @@ export const WYMOGI_LOGA: Wymog[] = [
   { tabela: 'clubs', kolumna: 'logo_sha256', migracja: '0029_loga_klubow.sql', po_co: 'zapis do Storage tylko przy realnej roznicy' },
 ];
 
+export const WYMOGI_DNI: Wymog[] = [
+  { tabela: 'mp_sitting_days', kolumna: 'absence_excuse', migracja: '0030_dni_posiedzen.sql', po_co: 'czy nieobecnosc byla usprawiedliwiona' },
+  { tabela: 'mp_sitting_days', kolumna: 'sitting', migracja: '0030_dni_posiedzen.sql', po_co: 'czlon klucza — jedna data miewa dwa posiedzenia' },
+];
+
 export async function assertSchema(dodatkowe: Wymog[] = []): Promise<void> {
   const braki: Wymog[] = [];
 
