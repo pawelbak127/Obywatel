@@ -323,9 +323,15 @@ export default async function Poslowie({
         >
           pokaż
         </button>
+        {/*
+          „WYCZYSC" KASUJE TEZ `klub`. Do 13.09.2026 nie kasowal, bo filtr
+          klubu powstal pozniej niz ten odnosnik — na widoku przefiltrowanym
+          klubem prowadzil sam do siebie i nie robil nic. Kazdy nowy filtr
+          musi trafic do tej listy, inaczej przycisk klamie o swoim dzialaniu.
+        */}
         {filtrowane && (
           <Link
-            href={adres({ okreg: null, q: null })}
+            href={adres({ okreg: null, q: null, klub: null })}
             className="pb-1.5 font-mono text-xs text-[color:var(--color-ink-soft)] underline decoration-dotted underline-offset-2 hover:text-[color:var(--color-accent)]"
           >
             wyczyść
