@@ -30,6 +30,7 @@ supabase/.temp/
 #   CLAUDE.md                  zasady pracy zespolu, nie produkt
 #   HANDOFF.md                 stan wewnetrzny, blokady, mapa drogowa
 #   docs/plan-rozwoju.md       lista rzeczy jeszcze niezrobionych
+#   docs/pomysly-odlozone.md   pomysly odrzucone i odlozone, z uzasadnieniem
 #   docs/audyt-*.md            audyt wewnetrzny
 #   docs/uokik-*.md            CUDZA korespondencja + niewyslany szkic pisma
 #   docs/historia/             archiwum paczek dostarczanych Pawlowi
@@ -37,9 +38,18 @@ supabase/.temp/
 # ZOSTAJA PUBLICZNE i to jest swiadome: docs/decyzje.md, docs/zrodla-danych.md,
 # docs/funkcje-panstwowe.md i README.md. Opisuja METODE, a nie stan prac —
 # i sa najlepsza wizytowka tego projektu.
+#
+# UWAGA PRZY `docs/pomysly-odlozone.md`. Czesc tego pliku to stan prac
+# („wrocimy po premierze") i tam jego miejsce. Ale dwa wpisy — odmowa
+# wyprowadzania POGLADOW z glosowan i odmowa PRZEWIDYWANIA glosow — to
+# czysta metoda: opisuja, czego serwis nie zrobi i dlaczego. Gdyby Pawel
+# chcial, ich miejscem docelowym jest `docs/decyzje.md`, czyli dokument
+# publiczny. Zapisanie „czego nie robimy i dlaczego" bywa mocniejsza
+# wizytowka niz lista tego, co robimy.
 CLAUDE.md
 HANDOFF.md
 docs/plan-rozwoju.md
+docs/pomysly-odlozone.md
 docs/audyt-*.md
 docs/uokik-korespondencja.md
 docs/uokik-odpowiedz-projekt.md
