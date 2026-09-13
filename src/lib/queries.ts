@@ -332,6 +332,56 @@ export async function pobierzPoslow(
   );
 }
 
+/**
+ * Okreg wraz z jego poslami — dla strony `/okreg/[nr]`.
+ *
+ * TEN SAM ROZDZIAL CO PRZY KLUBACH i z tego samego powodu. Widok
+ * `okregi_wyborcze` liczy WSZYSTKICH przypisanych do okregu; zmierzone
+ * 13.09.2026: Warszawa 23, z czego 20 aktywnych. Okreg wybiera ustalona
+ * liczbe poslow — troje to osoby, ktore te mandaty zajmowaly wczesniej.
+ * „23 poslow z mojego okregu" byloby nieprawda o dniu dzisiejszym,
+ * a pominiecie tych trojga — nieprawda o kadencji.
+ *
+ * PODZIAL NA KLUBY to zwykle zliczenie, nie wskaznik: nie potrzebuje
+ * mianownika ani przedzialu ufnosci, bo nie jest odsetkiem niczego.
+ * Dlatego wolno go tu podac, w odroznieniu od „sredniej obecnosci okregu".
+ */
+export async function pobierzOkreg(nr: number): Promise<{
+  okreg: Okreg;
+  obecni: PoselNaLiscie[];
+  byli: PoselNaLiscie[];
+  kluby: Array<{ klub: string; ilu: number }>;
+} | null> {
+  const supabase = await createClient();
+
+  const { data: o, error } = await supabase
+    .from('okregi_wyborcze')
+    .select('district_num, district_name, voivodeship, poslow')
+    .eq('district_num', nr)
+    .maybeSingle();
+  sprawdzBlad('okregi_wyborcze', error);
+  if (!o) return null;
+
+  const wszyscy = await pobierzPoslow({ okreg: nr });
+  const obecni = wszyscy.filter((m) => m.active);
+
+  // Kluby liczymy TYLKO z obecnych — podzial mandatow opisuje dzien dzisiejszy.
+  const licznik = new Map<string, number>();
+  for (const m of obecni) {
+    const k = m.klub ?? 'bez klubu';
+    licznik.set(k, (licznik.get(k) ?? 0) + 1);
+  }
+
+  return {
+    okreg: o as Okreg,
+    obecni,
+    byli: wszyscy.filter((m) => !m.active),
+    kluby: [...licznik.entries()]
+      .map(([klub, ilu]) => ({ klub, ilu }))
+      .sort((a, b) => b.ilu - a.ilu || a.klub.localeCompare(b.klub, 'pl')),
+  };
+}
+
 export type Klub = {
   id: string;
   name: string;

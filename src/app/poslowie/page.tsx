@@ -474,7 +474,7 @@ function WierszListy({ mp }: { mp: PoselNaLiscie }) {
             <>
               <span aria-hidden="true">·</span>
               <Link
-                href={`/poslowie?okreg=${mp.district_num}`}
+                href={`/okreg/${mp.district_num}`}
                 className="hover:text-[color:var(--color-accent)] hover:underline"
               >
                 okręg {mp.district_num}, {mp.district_name}
@@ -589,7 +589,7 @@ function Wiersz({
               <>
                 <span aria-hidden="true">·</span>
                 <Link
-                  href={`/poslowie?${metryka === 'niezgodnosc' ? 'widok=klub&' : ''}okreg=${mp.district_num}`}
+                  href={`/okreg/${mp.district_num}`}
                   className="hover:text-[color:var(--color-accent)] hover:underline"
                 >
                   okręg {mp.district_num}, {mp.district_name}

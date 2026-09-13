@@ -158,17 +158,23 @@ export default async function StronaGlowna() {
           juz istnieje, a formularz to zwykly GET — bez JavaScriptu.
       --------------------------------------------------------------- */}
       {lista.length > 0 ? (
-        <form method="get" action="/poslowie" className="mt-8 flex flex-wrap items-end gap-2">
+        <form method="get" action="/okreg" className="mt-8 flex flex-wrap items-end gap-2">
           <label className="flex flex-col gap-1">
             <span className="font-mono text-[10px] uppercase tracking-wider text-[color:var(--color-ink-faint)]">
               twój okręg wyborczy
             </span>
             <select
-              name="okreg"
+              name="nr"
               defaultValue=""
               className="w-72 max-w-full rounded border border-[color:var(--color-rule)] bg-[color:var(--color-surface)] px-2 py-1.5 text-sm"
             >
-              <option value="">wszystkie okręgi</option>
+              {/*
+                Pusta wartosc nie znaczy „pokaz wszystkich poslow", tylko
+                „nie wiem, ktory to okreg" — i prowadzi na spis okregow
+                pogrupowany wojewodztwami. Tak wlasnie szuka czytelnik,
+                ktory swojego numeru nie zna, a to jest wiekszosc.
+              */}
+              <option value="">nie wiem — pokaż spis okręgów</option>
               {lista.map((o) => (
                 <option key={o.district_num} value={o.district_num}>
                   {o.district_num} · {o.district_name}
@@ -180,8 +186,15 @@ export default async function StronaGlowna() {
             type="submit"
             className="rounded border border-[color:var(--color-accent)] px-4 py-2 font-mono text-sm text-[color:var(--color-accent)] transition-colors hover:bg-[color:var(--color-accent)] hover:text-white"
           >
-            pokaż posłów →
+            pokaż →
           </button>
+
+          <Link
+            href="/poslowie"
+            className="pb-2 font-mono text-xs text-[color:var(--color-ink-soft)] underline decoration-dotted underline-offset-2 hover:text-[color:var(--color-accent)]"
+          >
+            albo wszyscy posłowie
+          </Link>
         </form>
       ) : (
         <div className="mt-8 flex flex-wrap gap-3">

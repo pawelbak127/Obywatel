@@ -134,7 +134,7 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
             */}
             {mp.district_num !== null && mp.district_name && (
               <Link
-                href={`/poslowie?okreg=${mp.district_num}`}
+                href={`/okreg/${mp.district_num}`}
                 className="hover:text-[color:var(--color-accent)] hover:underline"
               >
                 okręg {mp.district_num} · {mp.district_name}
