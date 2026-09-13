@@ -7,12 +7,14 @@ import {
   pobierzOkregi,
   pobierzKluby,
   BrakObiektuWBazie,
+  BrakPolaczeniaZBaza,
   type MpKontekst,
   type PoselNaLiscie,
   type Metryka,
   type Okreg,
 } from '@/lib/queries';
 import { BrakMigracji } from '@/components/BrakMigracji';
+import { BrakPolaczenia } from '@/components/BrakPolaczenia';
 import { Portret } from '@/components/Portret';
 import { Wyjasnienie } from '@/components/Wyjasnienie';
 import { polskieDaty, procent, skalaDo, odmien, skrotKlubu } from '@/lib/format';
@@ -223,6 +225,10 @@ export default async function Poslowie({
     ]);
   } catch (e) {
     if (e instanceof BrakObiektuWBazie) return <BrakMigracji error={e} />;
+    // Baza nieosiagalna to co innego niz brakujaca migracja — patrz
+    // `BrakPolaczeniaZBaza` w queries.ts. Bez tego build bez dostepu
+    // do bazy pada, a na produkcji czytelnik dostaje czerwony ekran.
+    if (e instanceof BrakPolaczeniaZBaza) return <BrakPolaczenia co="listy posłów" />;
     throw e;
   }
 

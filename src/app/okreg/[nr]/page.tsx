@@ -2,8 +2,9 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { pobierzOkreg, pobierzOkregi, BrakObiektuWBazie, type PoselNaLiscie } from '@/lib/queries';
+import { pobierzOkreg, pobierzOkregi, BrakObiektuWBazie, BrakPolaczeniaZBaza, type PoselNaLiscie } from '@/lib/queries';
 import { BrakMigracji } from '@/components/BrakMigracji';
+import { BrakPolaczenia } from '@/components/BrakPolaczenia';
 import { Portret } from '@/components/Portret';
 import { SourceLink } from '@/components/SourceLink';
 import { odmien } from '@/lib/format';
@@ -82,6 +83,10 @@ export default async function StronaOkregu({ params }: { params: Promise<{ nr: s
     wynik = await pobierzOkreg(numer);
   } catch (e) {
     if (e instanceof BrakObiektuWBazie) return <BrakMigracji error={e} />;
+    // Baza nieosiagalna to co innego niz brakujaca migracja — patrz
+    // `BrakPolaczeniaZBaza` w queries.ts. Bez tego build bez dostepu
+    // do bazy pada, a na produkcji czytelnik dostaje czerwony ekran.
+    if (e instanceof BrakPolaczeniaZBaza) return <BrakPolaczenia co="posłów z tego okręgu" />;
     throw e;
   }
   if (!wynik) notFound();

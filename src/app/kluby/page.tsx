@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { pobierzKluby, BrakObiektuWBazie } from '@/lib/queries';
+import { pobierzKluby, BrakObiektuWBazie, BrakPolaczeniaZBaza } from '@/lib/queries';
 import { BrakMigracji } from '@/components/BrakMigracji';
+import { BrakPolaczenia } from '@/components/BrakPolaczenia';
 import { SourceLink } from '@/components/SourceLink';
 import { odmien, skrotKlubu } from '@/lib/format';
 
@@ -33,6 +34,10 @@ export default async function Kluby() {
     kluby = await pobierzKluby();
   } catch (e) {
     if (e instanceof BrakObiektuWBazie) return <BrakMigracji error={e} />;
+    // Baza nieosiagalna to co innego niz brakujaca migracja — patrz
+    // `BrakPolaczeniaZBaza` w queries.ts. Bez tego build bez dostepu
+    // do bazy pada, a na produkcji czytelnik dostaje czerwony ekran.
+    if (e instanceof BrakPolaczeniaZBaza) return <BrakPolaczenia co="klubów" />;
     throw e;
   }
 

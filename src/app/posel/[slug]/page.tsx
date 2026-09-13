@@ -11,6 +11,7 @@ import {
   pobierzDniObecnosci,
   pobierzProcesyDlaGlosowan,
   BrakObiektuWBazie,
+  BrakPolaczeniaZBaza,
   type MpKontekst,
   type DaneOsobowe,
   type DniObecnosci,
@@ -20,6 +21,7 @@ import {
   opisWeta,
 } from '@/lib/queries';
 import { BrakMigracji } from '@/components/BrakMigracji';
+import { BrakPolaczenia } from '@/components/BrakPolaczenia';
 import { polskieDaty, odmien, skrotKlubu } from '@/lib/format';
 import { SourceLink } from '@/components/SourceLink';
 import { Portret } from '@/components/Portret';
@@ -91,6 +93,10 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
     ]);
   } catch (e) {
     if (e instanceof BrakObiektuWBazie) return <BrakMigracji error={e} />;
+    // Baza nieosiagalna to co innego niz brakujaca migracja — patrz
+    // `BrakPolaczeniaZBaza` w queries.ts. Bez tego build bez dostepu
+    // do bazy pada, a na produkcji czytelnik dostaje czerwony ekran.
+    if (e instanceof BrakPolaczeniaZBaza) return <BrakPolaczenia co="profilu posła" />;
     throw e;
   }
 

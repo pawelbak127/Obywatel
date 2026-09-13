@@ -32,6 +32,44 @@ import { createPublicClient } from '@/lib/supabase/public';
  * PGRST205 = "Could not find the table ... in the schema cache". Dwie przyczyny:
  * migracja nie zostala wykonana albo PostgREST ma stary cache.
  */
+/**
+ * BAZA JEST NIEOSIAGALNA — co innego niz „baza nie ma tego obiektu".
+ *
+ * POWOD ISTNIENIA: CI BYLO CZERWONE PRZEZ OSIEM PRZEBIEGOW I NIKT TEGO NIE
+ * ZAUWAZYL, LACZNIE ZE MNA.
+ *
+ * Do 13.09.2026 kazda strona wolala `cookies()`, wiec zadna nie mogla
+ * prerenderowac sie statycznie i build nigdy nie dotykal bazy. Naprawa
+ * `DYNAMIC_SERVER_USAGE` (commit fix:) usunela `cookies()` — i to bylo
+ * sluszne — ale przy okazji `/kluby` stala sie strona W PELNI STATYCZNA,
+ * czyli renderowana PRZY BUDOWANIU. CI buduje ze swiadomie zastepczymi
+ * kluczami („build ma przejsc bez dostepu do prawdziwej bazy"), wiec
+ * zapytanie konczy sie `TypeError: fetch failed`, czego `/kluby` nie
+ * lapalo — i build padal.
+ *
+ * Lokalnie build przechodzil, bo `.env.local` ma prawdziwe klucze. Roznicy
+ * nie bylo widac inaczej niz w CI, a ja go po wypchnieciu nie sprawdzalem.
+ *
+ * ---------------------------------------------------------------------
+ * DLACZEGO OSOBNA KLASA, A NIE „zlap wszystko".
+ *
+ * Brak polaczenia i brak kolumny wymagaja ROZNEJ odpowiedzi. Brak kolumny
+ * to brakujaca migracja i strona ma powiedziec, ktora uruchomic. Brak
+ * polaczenia to albo zastepcze klucze przy budowaniu (wtedy strona ma sie
+ * po prostu wyrenderowac pusta, bo i tak nie zostanie wdrozona), albo
+ * niedostepna baza na produkcji (wtedy czytelnik ma zobaczyc, ze to nasza
+ * awaria, a nie brak danych).
+ *
+ * Wspolne `catch (e) { return [] }` zamieniloby oba przypadki w cisze —
+ * dokladnie to, co dzis naprawialismy juz trzy razy.
+ */
+export class BrakPolaczeniaZBaza extends Error {
+  constructor(readonly obiekt: string, readonly szczegol: string) {
+    super(`Nie udalo sie polaczyc z baza przy odczycie "${obiekt}": ${szczegol}`);
+    this.name = 'BrakPolaczeniaZBaza';
+  }
+}
+
 export class BrakObiektuWBazie extends Error {
   constructor(
     readonly obiekt: string,
@@ -115,6 +153,13 @@ function sprawdzBlad(obiekt: string, error: { code?: string; message: string } |
   if (brakSchematu) {
     throw new BrakObiektuWBazie(obiekt, MIGRACJE[obiekt] ?? 'najnowsza migracja', error.message);
   }
+
+  // Awaria sieci, nie schematu. Musi byc rozpoznawalna, bo strony reaguja
+  // na nia inaczej niz na brakujaca migracje — patrz `BrakPolaczeniaZBaza`.
+  if (przejsciowy(error) || /fetch failed|ENOTFOUND|EAI_AGAIN|getaddrinfo/i.test(error.message)) {
+    throw new BrakPolaczeniaZBaza(obiekt, error.message);
+  }
+
   throw new Error(`${obiekt}: ${error.message}`);
 }
 
