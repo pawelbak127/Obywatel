@@ -127,10 +127,34 @@ const WIDOKI: Record<Tryb, Widok> = {
 
 const LIMIT = 60;
 
+/*
+  ILE POSLOW NA STRONE ZWYKLEJ LISTY.
+
+  Przed zmiana `/poslowie` renderowalo wszystkie 499 wierszy naraz, co dawalo
+  2,31 MB HTML-a (dla porownania `/kluby`: 66 kB) i okolo 33 000 pikseli
+  przewijania — mniej wiecej dwadziescia osiem ekranow telefonu w jednej
+  liscie bez podzialu.
+
+  120 na strone daje cztery strony i okolo 550 kB. To NIE JEST ukrywanie
+  kogokolwiek: stronicowanie widac, liczba wszystkich stoi nad lista,
+  a filtr okregu albo klubu prowadzi do kompletu bez podzialu.
+
+  Przy filtrze stronicowania nie ma — najliczniejszy okreg ma 23 poslow,
+  najliczniejszy klub 174, wiec komplet miesci sie na jednej stronie.
+*/
+const NA_STRONE = 120;
+
 export default async function Poslowie({
   searchParams,
 }: {
-  searchParams: Promise<{ kierunek?: string; q?: string; okreg?: string; widok?: string; klub?: string }>;
+  searchParams: Promise<{
+    kierunek?: string;
+    q?: string;
+    okreg?: string;
+    widok?: string;
+    klub?: string;
+    strona?: string;
+  }>;
 }) {
   const sp = await searchParams;
   const najlepsi = sp.kierunek === 'najlepsi';
@@ -148,6 +172,9 @@ export default async function Poslowie({
   // bo do zapytania nie trafia tekst.
   const okregRaw = Number.parseInt(sp.okreg ?? '', 10);
   const okreg = Number.isInteger(okregRaw) && okregRaw > 0 ? okregRaw : null;
+
+  const stronaRaw = Number.parseInt(sp.strona ?? '', 10);
+  const strona = Number.isInteger(stronaRaw) && stronaRaw > 1 ? stronaRaw : 1;
 
   let lista: MpKontekst[] = [];
   let prosci: PoselNaLiscie[] = [];
@@ -175,6 +202,7 @@ export default async function Poslowie({
   const w = WIDOKI[tryb];
   const ile = tryb === 'lista' ? prosci.length : lista.length;
 
+
   /*
     NAGLOWEK LISTY ODPOWIADA NA PYTANIE, Z KTORYM CZYTELNIK PRZYSZEDL.
     Z okregiem w adresie „Poslowie Sejmu X kadencji" bylby prawdziwy
@@ -189,6 +217,17 @@ export default async function Poslowie({
           ? `Posłowie klubu ${klub}`
           : w.naglowek;
   const filtrowane = Boolean(fraza) || okreg !== null || klub !== null;
+  /*
+    STRONICUJEMY TYLKO PELNA LISTE. Filtr okregu albo klubu zawsze miesci sie
+    w calosci, wiec czytelnik, ktory pyta „kto reprezentuje moj okreg",
+    nigdy nie dostaje podzielonej odpowiedzi.
+  */
+  const stronicowane = tryb === 'lista' && !filtrowane && prosci.length > NA_STRONE;
+  const stron = stronicowane ? Math.ceil(prosci.length / NA_STRONE) : 1;
+  const biezaca = Math.min(strona, stron);
+  const widoczni = stronicowane
+    ? prosci.slice((biezaca - 1) * NA_STRONE, biezaca * NA_STRONE)
+    : prosci;
 
   // Skala paska. Dla obecności zakres jest naturalnie pełny (0–100%), dla
   // niezgodności mieści się w praktyce poniżej 35% — pasek 0–100 dałby 60
@@ -204,6 +243,7 @@ export default async function Poslowie({
       okreg: string | null;
       q: string | null;
       klub: string | null;
+      strona: string | null;
     }>,
   ) => {
     const p = new URLSearchParams();
@@ -219,11 +259,15 @@ export default async function Poslowie({
     const okr = 'okreg' in zmiana ? zmiana.okreg : okreg !== null ? String(okreg) : null;
     const q = 'q' in zmiana ? zmiana.q : fraza;
     const kl = 'klub' in zmiana ? zmiana.klub : klub;
+    // Zmiana filtru albo zakladki ZAWSZE wraca na pierwsza strone — inaczej
+    // czytelnik wyladowalby na stronie 4 zbioru, ktory ma jedna.
+    const str = 'strona' in zmiana ? zmiana.strona : null;
     if (kier) p.set('kierunek', kier);
     if (wid) p.set('widok', wid);
     if (okr) p.set('okreg', okr);
     if (q) p.set('q', q);
     if (kl) p.set('klub', kl);
+    if (str) p.set('strona', str);
     const s = p.toString();
     return s ? `/poslowie?${s}` : '/poslowie';
   };
@@ -392,12 +436,46 @@ export default async function Poslowie({
         </p>
       )}
 
-      {tryb === 'lista' && prosci.length > 0 && (
-        <ul className="mt-6 divide-y divide-[color:var(--color-rule)] border-y border-[color:var(--color-rule)]">
-          {prosci.map((mp) => (
+      {/*
+        LISTA W KOLUMNACH, ZESTAWIENIA W JEDNEJ.
+
+        Zmierzone: wiersz listy wykorzystywal okolo 18% szerokosci kontenera
+        (1104 px) — nazwisko i wiersz metadanych to razem niecale 200 px,
+        reszta byla pusta. To jest wlasciwa tresc uwagi „mala czesc strony
+        jest wykorzystana": nie kontener byl waski, tylko forma zla.
+
+        Ten sam wzorzec dziala juz na /okreg. Zestawienia zostaja
+        JEDNOKOLUMNOWE, bo tam pasek ma 11 rem i porownanie wzrokiem wymaga,
+        zeby wszystkie zaczynaly sie w tym samym miejscu.
+      */}
+      {tryb === 'lista' && widoczni.length > 0 && (
+        <ul className="mt-6 grid gap-x-8 border-y border-[color:var(--color-rule)] sm:grid-cols-2 lg:grid-cols-3">
+          {widoczni.map((mp) => (
             <WierszListy key={mp.id} mp={mp} />
           ))}
         </ul>
+      )}
+
+      {stronicowane && (
+        <nav className="mt-6 flex flex-wrap items-center gap-2 text-xs" aria-label="Strony listy">
+          {Array.from({ length: stron }, (_, i) => i + 1).map((n) => (
+            <Link
+              key={n}
+              href={adres({ strona: n === 1 ? null : String(n) })}
+              aria-current={n === biezaca ? 'page' : undefined}
+              className={`rounded border px-3 py-2 font-mono ${
+                n === biezaca
+                  ? 'border-[color:var(--color-accent)] text-[color:var(--color-accent)]'
+                  : 'border-[color:var(--color-rule)] text-[color:var(--color-ink-soft)] hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]'
+              }`}
+            >
+              {n}
+            </Link>
+          ))}
+          <span className="ml-2 text-[color:var(--color-ink-soft)]">
+            {`Pokazujemy ${widoczni.length} z ${prosci.length}. Nikogo nie ukrywamy — filtr okręgu albo klubu daje komplet bez podziału.`}
+          </span>
+        </nav>
       )}
 
       {tryb !== 'lista' && lista.length > 0 && (
@@ -467,25 +545,45 @@ function WierszListy({ mp }: { mp: PoselNaLiscie }) {
           {mp.full_name}
         </Link>
 
-        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs text-[color:var(--color-ink-soft)]">
+        {/*
+          KLUB MA WLASNY REJESTR TYPOGRAFICZNY, NIE WLASNY KOLOR.
+
+          Do 13.09.2026 klub, okreg i zakres mandatu bylo jednym ciagiem
+          11 px monospace rozdzielonym kropkami — trzy rozne rodzaje faktu
+          wygladaly identycznie i przy 499 wierszach oko nie mialo sie o co
+          zaczepic. To jest wlasciwa tresc uwagi „odroznianie partii".
+
+          DLACZEGO NIE KOLOR KLUBU. Barwy partyjne SA rama polityczna.
+          Serwis, ktory dzien wczesniej celowo odebral zielono-czerwonosc
+          glosom „za" i „przeciw", nie moze ta sama reka pomalowac ludzi na
+          barwy ich partii. Do tego trzynascie klubow to znacznie wiecej,
+          niz miesci sie w palecie czytelnej dla daltonistow.
+
+          DLACZEGO NIE LOGO. Rejestr Sejmu serwuje je pod /clubs/{id}/logo
+          (sprawdzone: 11 z 12 klubow), wiec zrodlo BY BYLO. Ale logo partii
+          jest projektem zrobionym po to, zeby wywolywac sympatie — to jest
+          decyzja redakcyjna, nie techniczna, i nalezy do Pawla.
+
+          Zostaje roznica rejestru: klub wychodzi z monospace do kroju
+          tekstowego, dostaje grubosc i pelny kolor atramentu. Reszta
+          metadanych zostaje drobna i szara.
+        */}
+        <div className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs text-[color:var(--color-ink-soft)]">
           {mp.klub && (
             <Link
               href={`/klub/${encodeURIComponent(mp.klub)}`}
-              className="hover:text-[color:var(--color-accent)] hover:underline"
+              className="font-medium text-[color:var(--color-ink)] hover:text-[color:var(--color-accent)] hover:underline"
             >
               {skrotKlubu(mp.klub)}
             </Link>
           )}
           {mp.district_name && (
-            <>
-              <span aria-hidden="true">·</span>
-              <Link
-                href={`/okreg/${mp.district_num}`}
-                className="hover:text-[color:var(--color-accent)] hover:underline"
-              >
-                okręg {mp.district_num}, {mp.district_name}
-              </Link>
-            </>
+            <Link
+              href={`/okreg/${mp.district_num}`}
+              className="font-mono hover:text-[color:var(--color-accent)] hover:underline"
+            >
+              okręg {mp.district_num}, {mp.district_name}
+            </Link>
           )}
           {mp.zakres_mandatu !== 'pelna kadencja' && (
             <>
