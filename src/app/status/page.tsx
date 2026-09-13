@@ -13,6 +13,7 @@ const TABLES: Array<{ label: string; table: string; note: string }> = [
   { label: 'Głosy imienne', table: 'votes', note: 'po jednym na posła i głosowanie' },
   { label: 'Procesy legislacyjne', table: 'legislative_processes', note: 'ścieżka każdego druku' },
   { label: 'Etapy procesów', table: 'process_stages', note: 'kolejne kroki każdego druku' },
+  { label: 'Dni posiedzeń', table: 'mp_sitting_days', note: 'po jednym na posła i dzień, z usprawiedliwieniem' },
   { label: 'Obietnice wyborcze', table: 'promises', note: 'moduł jeszcze nieuruchomiony' },
   { label: 'Podsumowania AI', table: 'ai_contents', note: 'moduł jeszcze nieuruchomiony' },
   { label: 'Źródła', table: 'sources', note: 'jeden wpis na każdy pobrany zasób' },

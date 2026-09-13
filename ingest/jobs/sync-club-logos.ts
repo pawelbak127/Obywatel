@@ -50,11 +50,34 @@ function sha256(buf: Buffer): string {
   return createHash('sha256').update(buf).digest('hex');
 }
 
-/** JPEG zaczyna sie od FF D8 FF, PNG od 89 50 4E 47. Kubelek przyjmuje tylko te dwa. */
-function rozpoznajObraz(buf: Buffer): 'image/jpeg' | 'image/png' | null {
+/**
+ * Format z PIERWSZYCH BAJTOW, nie z naglowka — i to nie jest teoria.
+ *
+ * Przy pierwszym prawdziwym uruchomieniu (13.09.2026) serwer Sejmu zadeklarowal
+ * `content-type: image/jpeg` dla WSZYSTKICH klubow, ale Konfederacja i PiS
+ * przyslaly bajty `47 49 46 38`, czyli ASCII „GIF8" — naglowek pliku GIF.
+ * Gdybysmy ufali naglowkowi, zapisalibysmy GIF-a pod nazwa `.jpg`, a czesc
+ * przegladarek i tak by go pokazala — wiec nikt by tego nie zauwazyl.
+ *
+ *   JPEG  FF D8 FF
+ *   PNG   89 50 4E 47
+ *   GIF   47 49 46 38  („GIF8", obejmuje GIF87a i GIF89a)
+ *
+ * Kubelek przyjmuje te trzy typy (migracja 0031). Cokolwiek innego jest
+ * raportowane i NIE zapisywane.
+ */
+function rozpoznajObraz(buf: Buffer): 'image/jpeg' | 'image/png' | 'image/gif' | null {
   if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'image/jpeg';
   if (buf.length >= 8 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return 'image/png';
+  if (buf.length >= 6 && buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x38) return 'image/gif';
   return null;
+}
+
+/** Rozszerzenie pliku wyprowadzone z ROZPOZNANEGO typu, nie z adresu zrodla. */
+function rozszerzenie(typ: 'image/jpeg' | 'image/png' | 'image/gif'): string {
+  if (typ === 'image/png') return 'png';
+  if (typ === 'image/gif') return 'gif';
+  return 'jpg';
 }
 
 type Klub = { id: string; logo_sha256: string | null };
@@ -117,7 +140,7 @@ async function main() {
 
       // Nazwa pliku z `encodeURIComponent`, bo identyfikatory klubow zawieraja
       // kropke (`niez.`) i podkreslenie (`Konfederacja_KP`).
-      const sciezka = `klub/${encodeURIComponent(k.id)}.${typ === 'image/png' ? 'png' : 'jpg'}`;
+      const sciezka = `klub/${encodeURIComponent(k.id)}.${rozszerzenie(typ)}`;
       const up = await db().storage.from(KUBELEK).upload(sciezka, buffer, {
         contentType: typ,
         upsert: true,
