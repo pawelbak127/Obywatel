@@ -91,14 +91,14 @@ export default async function StronaOkregu({ params }: { params: Promise<{ nr: s
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
-      <p className="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
+      <p className="text-xs font-medium uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
         Sejm X kadencji
       </p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">
         Okręg nr {okreg.district_num} — {okreg.district_name}
       </h1>
       {okreg.voivodeship && (
-        <p className="mt-2 font-mono text-xs text-[color:var(--color-ink-soft)]">
+        <p className="mt-2 text-xs text-[color:var(--color-ink-soft)]">
           województwo {okreg.voivodeship}
         </p>
       )}
@@ -141,7 +141,7 @@ export default async function StronaOkregu({ params }: { params: Promise<{ nr: s
           <ul className="mt-3 max-w-prose divide-y divide-[color:var(--color-rule)] border-y border-[color:var(--color-rule)]">
             {kluby.map(({ klub, ilu }) => (
               <li key={klub} className="flex items-center gap-3 py-2">
-                <span className="w-32 shrink-0 truncate font-mono text-xs">
+                <span className="w-32 shrink-0 truncate text-xs">
                   {klub === 'bez klubu' ? (
                     <span className="text-[color:var(--color-ink-soft)]">bez klubu</span>
                   ) : (
@@ -168,7 +168,7 @@ export default async function StronaOkregu({ params }: { params: Promise<{ nr: s
         </section>
       )}
 
-      <nav className="mt-8 flex flex-wrap gap-2 font-mono text-xs">
+      <nav className="mt-8 flex flex-wrap gap-2 text-xs">
         <Link
           href={`${adresListy}&widok=obecnosc`}
           className="rounded border border-[color:var(--color-rule)] px-3 py-1.5 text-[color:var(--color-ink-soft)] hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
@@ -228,7 +228,7 @@ function Sklad({ tytul, ludzie, opis }: { tytul: string; ludzie: PoselNaLiscie[]
                 {mp.full_name}
               </Link>
               {mp.klub && (
-                <p className="font-mono text-xs text-[color:var(--color-ink-soft)]">{mp.klub}</p>
+                <p className="text-xs text-[color:var(--color-ink-soft)]">{mp.klub}</p>
               )}
             </div>
           </li>

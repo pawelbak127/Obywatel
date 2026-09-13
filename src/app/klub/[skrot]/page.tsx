@@ -88,7 +88,7 @@ export default async function StronaKlubu({ params }: { params: Promise<{ skrot:
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
-      <p className="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
+      <p className="text-xs font-medium uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
         Sejm X kadencji
       </p>
       {/*
@@ -170,14 +170,14 @@ export default async function StronaKlubu({ params }: { params: Promise<{ skrot:
         a nie odkryc samodzielnie.
       */}
       {klub.members_count !== null && klub.members_count !== obecni.length && (
-        <p className="mt-4 max-w-prose rounded border-l-2 border-[color:var(--color-accent)] bg-black/[0.02] py-2.5 pl-3 text-sm leading-relaxed dark:bg-white/[0.03]">
+        <p className="mt-4 max-w-prose rounded border-l-2 border-[color:var(--color-accent)] bg-[color:var(--color-surface)] py-2.5 pl-3 text-sm leading-relaxed">
           <strong>Nasza liczba nie zgadza się z rejestrem.</strong> Rejestr Kancelarii Sejmu podaje{' '}
           {klub.members_count}, my liczymy {obecni.length}. Różnica bierze się z momentu pobrania
           danych — pokazujemy ją zamiast wybierać jedną z dwóch liczb.
         </p>
       )}
 
-      <nav className="mt-8 flex flex-wrap gap-2 font-mono text-xs">
+      <nav className="mt-8 flex flex-wrap gap-2 text-xs">
         <Link
           href={`${adresListy}&widok=obecnosc`}
           className="rounded border border-[color:var(--color-rule)] px-3 py-1.5 text-[color:var(--color-ink-soft)] hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
@@ -277,7 +277,7 @@ function Sklad({
                 {mp.full_name}
               </Link>
               {mp.district_name && (
-                <p className="font-mono text-xs text-[color:var(--color-ink-soft)]">
+                <p className="text-xs text-[color:var(--color-ink-soft)]">
                   okręg {mp.district_num}, {mp.district_name}
                 </p>
               )}

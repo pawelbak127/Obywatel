@@ -274,7 +274,7 @@ export default async function Poslowie({
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
-      <p className="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
+      <p className="text-xs font-medium uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
         Sejm X kadencji
       </p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">{naglowek}</h1>
@@ -331,7 +331,7 @@ export default async function Poslowie({
         {metryka === 'niezgodnosc' && <input type="hidden" name="widok" value="klub" />}
 
         <label className="flex flex-col gap-1">
-          <span className="font-mono text-[11px] uppercase tracking-wider text-[color:var(--color-ink-faint)]">
+          <span className="text-xs font-medium uppercase tracking-wider text-[color:var(--color-ink-faint)]">
             okręg wyborczy
           </span>
           <select
@@ -349,7 +349,7 @@ export default async function Poslowie({
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="font-mono text-[11px] uppercase tracking-wider text-[color:var(--color-ink-faint)]">
+          <span className="text-xs font-medium uppercase tracking-wider text-[color:var(--color-ink-faint)]">
             nazwisko albo klub
           </span>
           <input
@@ -363,7 +363,7 @@ export default async function Poslowie({
 
         <button
           type="submit"
-          className="rounded border border-[color:var(--color-rule)] px-3 py-1.5 font-mono text-xs text-[color:var(--color-ink-soft)] hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
+          className="rounded border border-[color:var(--color-rule)] px-3 py-1.5 text-xs text-[color:var(--color-ink-soft)] hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
         >
           pokaż
         </button>
@@ -376,7 +376,7 @@ export default async function Poslowie({
         {filtrowane && (
           <Link
             href={adres({ okreg: null, q: null, klub: null })}
-            className="pb-1.5 font-mono text-xs text-[color:var(--color-ink-soft)] underline decoration-dotted underline-offset-2 hover:text-[color:var(--color-accent)]"
+            className="pb-1.5 text-xs text-[color:var(--color-ink-soft)] underline decoration-dotted underline-offset-2 hover:text-[color:var(--color-accent)]"
           >
             wyczyść
           </Link>
@@ -390,7 +390,7 @@ export default async function Poslowie({
         nieuporzadkowanym.
       */}
       {w.kierunki && (
-      <nav className="mt-4 flex flex-wrap items-center gap-2 font-mono text-xs">
+      <nav className="mt-4 flex flex-wrap items-center gap-2 text-xs">
         <Link
           href={adres({ kierunek: null })}
           className={`rounded border px-3 py-1.5 ${!najlepsi ? 'border-[color:var(--color-accent)] text-[color:var(--color-accent)]' : 'border-[color:var(--color-rule)] text-[color:var(--color-ink-soft)]'}`}
@@ -463,7 +463,7 @@ export default async function Poslowie({
               key={n}
               href={adres({ strona: n === 1 ? null : String(n) })}
               aria-current={n === biezaca ? 'page' : undefined}
-              className={`rounded border px-3 py-2 font-mono ${
+              className={`rounded border px-3 py-2 ${
                 n === biezaca
                   ? 'border-[color:var(--color-accent)] text-[color:var(--color-accent)]'
                   : 'border-[color:var(--color-rule)] text-[color:var(--color-ink-soft)] hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]'
@@ -499,7 +499,7 @@ export default async function Poslowie({
       )}
 
       {tryb !== 'lista' && (
-      <p className="mt-4 font-mono text-xs text-[color:var(--color-ink-faint)]">
+      <p className="mt-4 text-xs text-[color:var(--color-ink-faint)]">
         {metryka === 'niezgodnosc'
           ? `Pasek w skali 0–${skala}%. Zakres dopasowany do danych — najwyższa niezgodność w Sejmie tej kadencji nie sięga jednej trzeciej.`
           : 'Pasek w skali 0–100%. Jaśniejsze pole to margines błędu, kreska to zmierzony wynik.'}
@@ -580,7 +580,7 @@ function WierszListy({ mp }: { mp: PoselNaLiscie }) {
           {mp.district_name && (
             <Link
               href={`/okreg/${mp.district_num}`}
-              className="font-mono hover:text-[color:var(--color-accent)] hover:underline"
+              className="hover:text-[color:var(--color-accent)] hover:underline"
             >
               okręg {mp.district_num}, {mp.district_name}
             </Link>

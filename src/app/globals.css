@@ -11,6 +11,17 @@
      (etykiety pol, numery pozycji, kolko „?"), czyli w najgorszym mozliwym
      polaczeniu: najdrobniejsze litery w najslabszym kontrascie. */
   --color-ink-faint: #646e7b;
+  /* PAPIER TO TLO STRONY, POWIERZCHNIA TO TO, CO NA NIM LEZY.
+
+     Do 13.09.2026 `surface` sluzyl wylacznie polom formularzy i portretom —
+     nie byl warstwa, tylko kolorem kontrolki. Serwis mial przez to JEDEN
+     cien i kreski `--color-rule` o kontrascie 1,2:1, czyli zaden sygnal
+     glebi; stad wrazenie plaskosci.
+
+     Teraz tabele, os nieobecnosci, bloki kontekstu i ramki zrodel leza na
+     `surface`, a strona na `paper`. To jedyna warstwa, jaka wprowadzamy —
+     nie dokladamy cieni ani nie podbijamy kresek, bo sciana linii przy
+     kilkuset wierszach jest gorszym problemem niz brak glebi. */
   --color-paper: #f4f6f9;
   --color-surface: #ffffff;
   --color-rule: #dce2ea;

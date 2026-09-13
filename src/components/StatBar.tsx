@@ -38,7 +38,7 @@ export function StatBar({
       <div className="py-3">
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-sm font-medium">{label}</span>
-          <span className="font-mono text-sm text-[color:var(--color-ink-soft)]">brak danych</span>
+          <span className="text-sm text-[color:var(--color-ink-soft)]">brak danych</span>
         </div>
         {explainNull && (
           <p className="mt-1 text-xs leading-snug text-[color:var(--color-ink-soft)]">{explainNull}</p>

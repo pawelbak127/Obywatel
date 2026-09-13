@@ -160,7 +160,7 @@ export default async function StronaGlowna() {
       {lista.length > 0 ? (
         <form method="get" action="/okreg" className="mt-8 flex flex-wrap items-end gap-2">
           <label className="flex flex-col gap-1">
-            <span className="font-mono text-[11px] uppercase tracking-wider text-[color:var(--color-ink-faint)]">
+            <span className="text-xs font-medium uppercase tracking-wider text-[color:var(--color-ink-faint)]">
               twój okręg wyborczy
             </span>
             <select
@@ -184,14 +184,14 @@ export default async function StronaGlowna() {
           </label>
           <button
             type="submit"
-            className="rounded border border-[color:var(--color-accent)] px-4 py-2 font-mono text-sm text-[color:var(--color-accent)] transition-colors hover:bg-[color:var(--color-accent)] hover:text-white"
+            className="rounded border border-[color:var(--color-accent)] px-4 py-2 text-sm font-medium text-[color:var(--color-accent)] transition-colors hover:bg-[color:var(--color-accent)] hover:text-white"
           >
             pokaż →
           </button>
 
           <Link
             href="/poslowie"
-            className="pb-2 font-mono text-xs text-[color:var(--color-ink-soft)] underline decoration-dotted underline-offset-2 hover:text-[color:var(--color-accent)]"
+            className="pb-2 text-xs text-[color:var(--color-ink-soft)] underline decoration-dotted underline-offset-2 hover:text-[color:var(--color-accent)]"
           >
             albo wszyscy posłowie
           </Link>
@@ -200,7 +200,7 @@ export default async function StronaGlowna() {
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href="/poslowie"
-            className="rounded border border-[color:var(--color-accent)] px-4 py-2 font-mono text-sm text-[color:var(--color-accent)] transition-colors hover:bg-[color:var(--color-accent)] hover:text-white"
+            className="rounded border border-[color:var(--color-accent)] px-4 py-2 text-sm font-medium text-[color:var(--color-accent)] transition-colors hover:bg-[color:var(--color-accent)] hover:text-white"
           >
             obecność posłów →
           </Link>

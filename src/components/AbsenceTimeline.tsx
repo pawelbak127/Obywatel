@@ -66,12 +66,12 @@ export function AbsenceTimeline({
     <section>
       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-semibold">Nieobecności w czasie</h2>
-        <span className="font-mono text-xs text-[color:var(--color-ink-soft)]">
+        <span className="text-xs text-[color:var(--color-ink-soft)]">
           {miesiace.length} miesięcy · słupek = udział nieobecności w miesiącu
         </span>
       </div>
 
-      <div className="overflow-x-auto rounded border border-[color:var(--color-rule)] bg-[color:var(--color-surface,#fff)]/40 p-3">
+      <div className="overflow-x-auto rounded border border-[color:var(--color-rule)] bg-[color:var(--color-surface)] bg-[color:var(--color-surface,#fff)]/40 p-3">
         <svg
           viewBox={`0 0 ${W} ${H + 18}`}
           className="h-auto w-full min-w-[520px]"
@@ -140,7 +140,7 @@ export function AbsenceTimeline({
       <p className="mt-2 max-w-prose text-xs leading-relaxed text-[color:var(--color-ink-soft)]">{opis.opis}</p>
 
       {funkcje && (
-        <p className="mt-2 max-w-prose rounded border-l-2 border-[color:var(--color-rule)] bg-black/[0.02] py-2 pl-3 text-xs leading-relaxed dark:bg-white/[0.03]">
+        <p className="mt-2 max-w-prose rounded border-l-2 border-[color:var(--color-rule)] bg-[color:var(--color-surface)] py-2 pl-3 text-xs leading-relaxed">
           <strong className="font-semibold">Funkcje państwowe w tym okresie:</strong>{' '}
           {polskieDaty(funkcje)}
         </p>

@@ -135,7 +135,7 @@ export default async function StatusPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
-      <p className="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
+      <p className="text-xs font-medium uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
         dane
       </p>
       <h1 className="mt-3 text-4xl font-semibold tracking-tight">Skąd pochodzą dane</h1>
@@ -205,7 +205,7 @@ export default async function StatusPage() {
         )}
       </section>
 
-      <nav className="mt-6 flex gap-2 font-mono text-xs">
+      <nav className="mt-6 flex gap-2 text-xs">
         <a
           href="/poslowie"
           className="rounded border border-[color:var(--color-accent)] px-3 py-1.5 text-[color:var(--color-accent)]"
@@ -216,23 +216,23 @@ export default async function StatusPage() {
 
       {error ? (
         <div className="mt-10 rounded border border-[color:var(--color-accent)] bg-white/60 p-5 dark:bg-black/20">
-          <p className="font-mono text-xs uppercase tracking-widest text-[color:var(--color-accent)]">
+          <p className="text-xs font-medium uppercase tracking-widest text-[color:var(--color-accent)]">
             Brak połączenia
           </p>
           <p className="mt-2 text-sm">{error}</p>
         </div>
       ) : (
-        <div className="mt-10 overflow-x-auto rounded border border-[color:var(--color-rule)]">
+        <div className="mt-10 overflow-x-auto rounded border border-[color:var(--color-rule)] bg-[color:var(--color-surface)]">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[color:var(--color-rule)] bg-black/[0.03] dark:bg-white/[0.04]">
-                <th className="px-4 py-3 text-left font-mono text-xs font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
                   Tabela
                 </th>
-                <th className="px-4 py-3 text-right font-mono text-xs font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
+                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
                   Wierszy
                 </th>
-                <th className="px-4 py-3 text-left font-mono text-xs font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
                   Docelowo
                 </th>
               </tr>
@@ -258,7 +258,7 @@ export default async function StatusPage() {
         </div>
       )}
 
-      <p className="mt-8 font-mono text-xs leading-relaxed text-[color:var(--color-ink-soft)]">
+      <p className="mt-8 text-xs leading-relaxed text-[color:var(--color-ink-soft)]">
         Odczyt kluczem anon przez RLS. Jeśli liczby się wyświetliły, polityka „publiczny odczyt”
         działa; jeśli <code>npm run smoke</code> przechodzi, zapis jest zamknięty.
         <br />

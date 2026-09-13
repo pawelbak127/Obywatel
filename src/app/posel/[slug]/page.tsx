@@ -108,7 +108,7 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
     <main className="mx-auto max-w-6xl px-6 py-12">
       <Link
         href="/poslowie"
-        className="font-mono text-xs text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-accent)]"
+        className="text-xs text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-accent)]"
       >
         ← wszyscy posłowie
       </Link>
@@ -124,7 +124,7 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
         <Portret src={mp.photo_url} nazwa={mp.full_name} rozmiar="lg" />
 
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2 font-mono text-xs uppercase tracking-widest text-[color:var(--color-accent)]">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-widest text-[color:var(--color-accent)]">
             {/*
               Klub prowadzi do WLASNEJ STRONY klubu, nie do listy przefiltrowanej
               — uwaga Pawla z 13.09.2026: „wchodzimy w klub i jestesmy
@@ -173,7 +173,7 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
         w której poseł mandatu po prostu już nie sprawował.
       */}
       {mp.powod_zakonczenia && (
-        <p className="mt-6 max-w-prose rounded border-l-2 border-[color:var(--color-rule)] bg-black/[0.02] py-2.5 pl-3 text-sm leading-relaxed dark:bg-white/[0.03]">
+        <p className="mt-6 max-w-prose rounded border-l-2 border-[color:var(--color-rule)] bg-[color:var(--color-surface)] py-2.5 pl-3 text-sm leading-relaxed">
           {mp.powod_zakonczenia}{' '}
           <span className="text-[color:var(--color-ink-soft)]">
             Wszystkie liczby niżej dotyczą wyłącznie okresu sprawowania mandatu.
@@ -197,7 +197,7 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
         czego nie rozstrzyga --color-rule.
       */}
       {mp.funkcje_panstwowe && (
-        <p className="mt-6 max-w-prose rounded border-l-2 border-[color:var(--color-rule)] bg-black/[0.02] py-2.5 pl-3 text-sm leading-relaxed dark:bg-white/[0.03]">
+        <p className="mt-6 max-w-prose rounded border-l-2 border-[color:var(--color-rule)] bg-[color:var(--color-surface)] py-2.5 pl-3 text-sm leading-relaxed">
           <strong className="font-semibold">Funkcja państwowa w tym okresie:</strong>{' '}
           {polskieDaty(mp.funkcje_panstwowe)}
           <span className="block text-xs text-[color:var(--color-ink-soft)]">
@@ -227,20 +227,20 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
 
       <section className="mt-12">
         <h2 className="mb-3 text-lg font-semibold">Ostatnie głosowania</h2>
-        <div className="overflow-x-auto rounded border border-[color:var(--color-rule)]">
+        <div className="overflow-x-auto rounded border border-[color:var(--color-rule)] bg-[color:var(--color-surface)]">
           <table className="w-full min-w-[560px] text-sm">
             <thead>
               <tr className="border-b border-[color:var(--color-rule)] bg-black/[0.03] dark:bg-white/[0.04]">
-                <th className="px-3 py-2 text-left font-mono text-[11px] uppercase tracking-widest text-[color:var(--color-ink-soft)]">
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
                   Data
                 </th>
-                <th className="px-3 py-2 text-left font-mono text-[11px] uppercase tracking-widest text-[color:var(--color-ink-soft)]">
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
                   Głosowanie
                 </th>
-                <th className="px-3 py-2 text-left font-mono text-[11px] uppercase tracking-widest text-[color:var(--color-ink-soft)]">
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
                   Głos
                 </th>
-                <th className="px-3 py-2 text-left font-mono text-[11px] uppercase tracking-widest text-[color:var(--color-ink-soft)]">
+                <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-widest text-[color:var(--color-ink-soft)]">
                   Protokół
                 </th>
               </tr>

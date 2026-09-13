@@ -68,7 +68,7 @@ export default async function Zglos({
           Potwierdzenie ZASTEPUJE formularz, a nie stoi nad nim. Formularz
           zostawiony pod spodem zacheca do wyslania tego samego drugi raz.
         */
-        <div className="mt-6 rounded border-l-2 border-[color:var(--color-rule)] bg-black/[0.02] py-3 pl-3 text-sm leading-relaxed dark:bg-white/[0.03]">
+        <div className="mt-6 rounded border-l-2 border-[color:var(--color-rule)] bg-[color:var(--color-surface)] py-3 pl-3 text-sm leading-relaxed">
           <strong className="font-semibold">Zgłoszenie zapisane. Dziękujemy.</strong>
           <span className="mt-1 block text-[color:var(--color-ink-soft)]">
             Czyta je człowiek. Nie publikujemy zgłoszeń ani nie odpowiadamy automatycznie —
@@ -103,7 +103,7 @@ export default async function Zglos({
           {blad && (
             <p
               role="alert"
-              className="mt-6 max-w-prose rounded border-l-2 border-[color:var(--color-accent)] bg-black/[0.02] py-2.5 pl-3 text-sm leading-relaxed dark:bg-white/[0.03]"
+              className="mt-6 max-w-prose rounded border-l-2 border-[color:var(--color-accent)] bg-[color:var(--color-surface)] py-2.5 pl-3 text-sm leading-relaxed"
             >
               {blad}
               <span className="mt-1 block text-[color:var(--color-ink-soft)]">
@@ -219,7 +219,7 @@ export default async function Zglos({
 
             <button
               type="submit"
-              className="rounded border border-[color:var(--color-accent)] px-4 py-2 font-mono text-sm text-[color:var(--color-accent)] transition-colors hover:bg-[color:var(--color-accent)] hover:text-white"
+              className="rounded border border-[color:var(--color-accent)] px-4 py-2 text-sm font-medium text-[color:var(--color-accent)] transition-colors hover:bg-[color:var(--color-accent)] hover:text-white"
             >
               wyślij zgłoszenie →
             </button>

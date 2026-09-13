@@ -58,7 +58,7 @@ export default async function Okregi({
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
-      <p className="font-mono text-xs uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
+      <p className="text-xs font-medium uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
         Sejm X kadencji
       </p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">Okręgi wyborcze</h1>
@@ -77,7 +77,7 @@ export default async function Okregi({
               Wersaliki i odstep miedzy literami zostaja, bo to one odrozniaja
               nazwe wojewodztwa od nazwy okregu; rosnie sam rozmiar i kontrast.
             */}
-            <h2 className="font-mono text-sm uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
+            <h2 className="text-sm font-medium uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
               {wojewodztwo}
             </h2>
             <ul className="mt-2 grid gap-x-8 border-y border-[color:var(--color-rule)] sm:grid-cols-2 lg:grid-cols-3">

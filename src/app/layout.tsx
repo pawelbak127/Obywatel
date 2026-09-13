@@ -121,7 +121,7 @@ function Naglowek() {
           <Link
             key={adres}
             href={adres!}
-            className="rounded px-2 py-2.5 font-mono text-xs text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-accent)]"
+            className="rounded px-2 py-2.5 text-xs text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-accent)]"
           >
             {podpis}
           </Link>

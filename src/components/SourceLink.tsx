@@ -75,7 +75,7 @@ export function AiSummary({
   sourceLabel: string;
 }) {
   return (
-    <figure className="my-4 rounded border border-[color:var(--color-rule)] bg-black/[0.02] p-4 dark:bg-white/[0.03]">
+    <figure className="my-4 rounded border border-[color:var(--color-rule)] bg-[color:var(--color-surface)] p-4">
       <figcaption className="mb-2 flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-[color:var(--color-accent)]">
         <span className="rounded-sm border border-current px-1.5 py-0.5">Wygenerowane przez SI</span>
         <span className="text-[color:var(--color-ink-soft)] normal-case tracking-normal">{model}</span>
