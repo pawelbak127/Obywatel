@@ -52,12 +52,30 @@ function Naglowek() {
         <Link href="/" className="font-semibold tracking-tight hover:text-[color:var(--color-accent)]">
           Obywatel<span className="text-[color:var(--color-accent)]">&nbsp;2.0</span>
         </Link>
-        <Link
-          href="/poslowie"
-          className="font-mono text-xs text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-accent)]"
-        >
-          posłowie
-        </Link>
+        {/*
+          TRZY ODNOSNIKI, NIE JEDEN. Do 13.09.2026 nawigacja miala wylacznie
+          „poslowie" — serwis miał wtedy cztery trasy, wiec bylo to obronne.
+          Dzis ma osiem i dwie z nich (okregi, kluby) byly osiagalne WYLACZNIE
+          przez nazwisko posla: zeby dojsc do klubu, trzeba bylo znac kogos
+          z klubu.
+
+          Nie dokladamy tu `/status` ani `/zglos` — te nalezą do stopki
+          (uzasadnienie nizej) i doklejone tutaj konkurowalyby o miejsce
+          z trescia serwisu.
+        */}
+        {[
+          ['/poslowie', 'posłowie'],
+          ['/okreg', 'okręgi'],
+          ['/kluby', 'kluby'],
+        ].map(([adres, podpis]) => (
+          <Link
+            key={adres}
+            href={adres!}
+            className="font-mono text-xs text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-accent)]"
+          >
+            {podpis}
+          </Link>
+        ))}
       </nav>
     </header>
   );

@@ -428,6 +428,24 @@ export async function pobierzKlub(
   };
 }
 
+/**
+ * Spis klubow z liczebnoscia — dla `/kluby`.
+ *
+ * `members_count` bierzemy Z REJESTRU, nie liczymy sami. Zmierzone
+ * 13.09.2026: pokrywa sie co do jednego z liczba naszych aktywnych poslow
+ * dla kazdego z trzynastu klubow, wiec wlasne liczenie nie dodaloby nic
+ * poza kolejnym miejscem, w ktorym te dwie liczby moglyby sie rozjechac.
+ */
+export async function pobierzKluby(): Promise<Klub[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('clubs')
+    .select('id, name, members_count, email, fax, phone')
+    .order('members_count', { ascending: false, nullsFirst: false });
+  sprawdzBlad('clubs', error);
+  return (data ?? []) as Klub[];
+}
+
 /** Skroty wszystkich klubow — do `generateStaticParams` i do listy klubow. */
 export async function pobierzSkrotyKlubow(): Promise<string[]> {
   const supabase = await createClient();
