@@ -58,7 +58,8 @@ export function Portret({
   }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- świadomie, patrz komentarz u góry pliku
+    // (zwykly <img> zamiast next/image - decyzja kosztowa, wylaczona
+    // globalnie w eslint.config.mjs, patrz tez komentarz u gory pliku)
     <img
       src={src}
       alt=""

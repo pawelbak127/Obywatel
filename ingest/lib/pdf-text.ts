@@ -362,7 +362,12 @@ export function pdfDoTekstu(buf: Buffer): WynikPdf {
 
   let zMapa = 0;
   let bezMapy = 0;
-  for (const f of fnt.values()) (f.maMape ? zMapa++ : bezMapy++);
+  // Trojargumentowy operator uzyty jako wyrazenie-instrukcja wygladal jak
+  // literowka (@typescript-eslint/no-unused-expressions) - to samo zliczanie, bez tej watpliwosci.
+  for (const f of fnt.values()) {
+    if (f.maMape) zMapa++;
+    else bezMapy++;
+  }
 
   return { tekst, nieznanychKodow: licznik.nieznane, fontowZMapa: zMapa, fontowBezMapy: bezMapy };
 }
