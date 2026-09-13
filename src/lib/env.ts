@@ -41,6 +41,24 @@ export const publicEnv = {
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
 };
 
+/**
+ * Czy adres serwisu wyglada na lokalny, mimo ze budujemy produkcje.
+ *
+ * `siteUrl` spada po cichu na `http://localhost:3000`, gdy brakuje
+ * `NEXT_PUBLIC_SITE_URL`. Do 13.09.2026 nic z tego nie wynikalo, bo nikt
+ * tego adresu nie uzywal poza `metadataBase`. Od czasu, gdy powstala MAPA
+ * WITRYNY, wynika bardzo duzo: niepoprawna zmienna na Vercelu sprawi, ze
+ * zglosimy wyszukiwarce 559 adresow pod `localhost:3000` — czyli adresow,
+ * ktorych nie ma. To sie NIE OBJAWI bledem: build przejdzie, strona bedzie
+ * dzialac, a zepsute bedzie dokladnie to, po co mape robimy.
+ *
+ * Dlatego sprawdzenie jest osobna funkcja, a nie komentarzem w mapie.
+ */
+export function siteUrlWygladaNaLokalny(): boolean {
+  if (process.env.NODE_ENV !== 'production') return false;
+  return /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:|\/|$)/i.test(publicEnv.siteUrl);
+}
+
 /** Blad konfiguracji adresu — do pokazania na stronie statusu zamiast pustej tabeli. */
 export function urlConfigError(): string | null {
   try {
