@@ -1,6 +1,17 @@
 import 'server-only';
 
-import { createClient } from '@/lib/supabase/server';
+/*
+  KLIENT BEZ CIASTECZEK — pelne uzasadnienie w `supabase/public.ts`.
+
+  W skrocie: `server.ts` wola `cookies()`, a `cookies()` w renderze
+  statycznym rzuca `DYNAMIC_SERVER_USAGE`. Przez to wszystkie trasy
+  z parametrem (`/posel/[slug]`, `/okreg/[nr]`, `/klub/[skrot]`) zwracaly
+  na produkcji 500. Strony publiczne nie maja logowania, wiec ciasteczka
+  byly tu z szablonu, nie z potrzeby.
+
+  Zapis zgloszenia bledu (`/api/zglos`) NADAL idzie przez `server.ts`.
+*/
+import { createPublicClient } from '@/lib/supabase/public';
 
 /**
  * Warstwa dostepu do danych dla stron publicznych.
@@ -167,7 +178,7 @@ const KOLUMNY_KONTEKST =
   'inactive_cause, waiver_desc, powod_zakonczenia, w_rankingu';
 
 export async function pobierzPosla(slug: string): Promise<MpKontekst | null> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from('mp_obecnosc_kontekst')
     .select(KOLUMNY_KONTEKST)
@@ -206,7 +217,7 @@ export async function pobierzRanking(
   } = {},
 ) {
   const { kierunek = 'najgorsi', limit = 100, szukaj, okreg = null, klub = null, metryka = 'obecnosc' } = opts;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   // Sortowanie ZAWSZE po dolnej granicy przedziału. Dla niezgodności z klubem
   // to jest ten sam argument co dla obecności: poseł, który zagłosował inaczej
@@ -294,7 +305,7 @@ export async function pobierzPoslow(
   opts: { szukaj?: string; okreg?: number | null; klub?: string | null } = {},
 ): Promise<PoselNaLiscie[]> {
   const { szukaj, okreg = null, klub = null } = opts;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   let zapytanie = supabase.from('mp_obecnosc_kontekst').select(KOLUMNY_LISTY);
 
@@ -352,7 +363,7 @@ export async function pobierzOkreg(nr: number): Promise<{
   byli: PoselNaLiscie[];
   kluby: Array<{ klub: string; ilu: number }>;
 } | null> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data: o, error } = await supabase
     .from('okregi_wyborcze')
@@ -410,7 +421,7 @@ export type Klub = {
 export async function pobierzKlub(
   id: string,
 ): Promise<{ klub: Klub; obecni: PoselNaLiscie[]; byli: PoselNaLiscie[] } | null> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data: k, error: bladKlubu } = await supabase
     .from('clubs')
@@ -437,7 +448,7 @@ export async function pobierzKlub(
  * poza kolejnym miejscem, w ktorym te dwie liczby moglyby sie rozjechac.
  */
 export async function pobierzKluby(): Promise<Klub[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from('clubs')
     .select('id, name, members_count, email, fax, phone')
@@ -448,7 +459,7 @@ export async function pobierzKluby(): Promise<Klub[]> {
 
 /** Skroty wszystkich klubow — do `generateStaticParams` i do listy klubow. */
 export async function pobierzSkrotyKlubow(): Promise<string[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase.from('clubs').select('id').order('id');
   sprawdzBlad('clubs', error);
   return ((data ?? []) as Array<{ id: string }>).map((r) => r.id);
@@ -481,7 +492,7 @@ export type DaneOsobowe = {
  * Czytamy z `mps`, nie z widoku, wiec obowiazuje polityka „public read mps".
  */
 export async function pobierzDaneOsobowe(mpId: number): Promise<DaneOsobowe | null> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from('mps')
     .select('birth_date, birth_location, education_level, profession, number_of_votes, oath_date')
@@ -506,7 +517,7 @@ export type Okreg = {
  * dokładnie w chwili, w której przestaliby ją poprawiać.
  */
 export async function pobierzOkregi(): Promise<Okreg[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from('okregi_wyborcze')
     .select('district_num, district_name, voivodeship, poslow')
@@ -516,7 +527,7 @@ export async function pobierzOkregi(): Promise<Okreg[]> {
 }
 
 export async function pobierzNieobecnosciMiesieczne(mpId: number): Promise<MiesiacNieobecnosci[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from('mp_absence_monthly')
     .select('month, votings, present, absent, absent_pct')
@@ -528,7 +539,7 @@ export async function pobierzNieobecnosciMiesieczne(mpId: number): Promise<Miesi
 
 /** Wszystkie slugi — do generateStaticParams. */
 export async function pobierzSlugi(): Promise<string[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase.from('mps').select('slug');
   if (error) throw new Error(`pobierzSlugi: ${error.message}`);
   return (data ?? []).map((r: { slug: string }) => r.slug);
@@ -774,7 +785,7 @@ export type ProcesOstatni = {
  * nigdy nie jest renderowane jednym slowem „uchwalono".
  */
 export async function pobierzOstatnieProcesy(limit = 5): Promise<ProcesOstatni[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from('procesy_ostatnie')
     .select('print_number, tytul, closure_date, los, isap_url, eli_address')
@@ -816,7 +827,7 @@ export async function pobierzProcesyDlaGlosowan(votingIds: number[]): Promise<Ma
   const mapa = new Map<number, ProcesGlosowania[]>();
   if (!votingIds.length) return mapa;
 
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from('glosowanie_z_procesem')
     .select(
@@ -844,7 +855,7 @@ export async function pobierzProcesyDlaGlosowan(votingIds: number[]): Promise<Ma
 
 /** Ostatnie glosowania posla wraz z jego glosem. */
 export async function pobierzGlosyPosla(mpId: number, limit = 30) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from('votes')
     .select('value, votings!inner(id, sitting, voting_number, voted_at, title, topic, kind, pdf_url, print_numbers)')

@@ -33,13 +33,27 @@ const SEJM_KLUBY = 'https://api.sejm.gov.pl/sejm/term10/clubs';
  * odsylamy do dwoch zestawien, ktore juz maja ten aparat.
  */
 
+  /*
+    PUSTA LISTA TO AWARIA, NIE CISZA — i to jest lekcja z 13.09.2026.
+
+    Ten `catch` mial chronic build przed niedostepna baza. Zrobil natomiast
+    coś gorszego: polknal `DYNAMIC_SERVER_USAGE` rzucane przez `cookies()`
+    i zwracal pusta liste. Build konczyl sie SUKCESEM, pokazujac
+    „Generating static pages (8/8)" zamiast 553, a produkcja zwracala 500
+    na kazdej trasie z parametrem. Bledu nie bylo widac nigdzie — ani
+    w logu builda, ani w typecheck.
+
+    Dlatego teraz komunikat idzie na `stderr` z prefiksem `::error::`,
+    ktory GitHub Actions zaznacza na czerwono. Nadal NIE przerywamy builda
+    — brak bazy przy budowaniu jest dopuszczalny i strony wyrenderuja sie
+    na zadanie — ale cisza przestaje byc opcja.
+  */
 export async function generateStaticParams() {
   try {
     const skroty = await pobierzSkrotyKlubow();
     return skroty.map((skrot) => ({ skrot }));
-  } catch {
-    // Brak bazy przy buildzie nie ma prawa wywalic calego builda — trasa
-    // wyrenderuje sie na zadanie.
+  } catch (e) {
+    console.error(`::error::generateStaticParams w [skrot] nie zwrocilo ani jednej sciezki: ${(e as Error).message}`);
     return [];
   }
 }

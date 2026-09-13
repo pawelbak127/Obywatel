@@ -31,10 +31,26 @@ export const revalidate = 86400; // dane zmieniaja sie raz na dobe, po nocnym cr
  * (np. na swiezym klonie bez sekretow), zwracamy pusta liste — strony wygeneruja
  * sie na zadanie zamiast wywracac deploy.
  */
+  /*
+    PUSTA LISTA TO AWARIA, NIE CISZA — i to jest lekcja z 13.09.2026.
+
+    Ten `catch` mial chronic build przed niedostepna baza. Zrobil natomiast
+    coś gorszego: polknal `DYNAMIC_SERVER_USAGE` rzucane przez `cookies()`
+    i zwracal pusta liste. Build konczyl sie SUKCESEM, pokazujac
+    „Generating static pages (8/8)" zamiast 553, a produkcja zwracala 500
+    na kazdej trasie z parametrem. Bledu nie bylo widac nigdzie — ani
+    w logu builda, ani w typecheck.
+
+    Dlatego teraz komunikat idzie na `stderr` z prefiksem `::error::`,
+    ktory GitHub Actions zaznacza na czerwono. Nadal NIE przerywamy builda
+    — brak bazy przy budowaniu jest dopuszczalny i strony wyrenderuja sie
+    na zadanie — ale cisza przestaje byc opcja.
+  */
 export async function generateStaticParams() {
   try {
     return (await pobierzSlugi()).map((slug) => ({ slug }));
-  } catch {
+  } catch (e) {
+    console.error(`::error::generateStaticParams w [slug] nie zwrocilo ani jednej sciezki: ${(e as Error).message}`);
     return [];
   }
 }
