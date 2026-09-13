@@ -24,7 +24,7 @@
 
 import { db } from '../lib/db.js';
 import { assertSchema, WYMOGI_PROCESY } from '../lib/preflight.js';
-import { recordSource } from '../lib/source-recorder.js';
+import { recordSource, writeCursor } from '../lib/source-recorder.js';
 import { mapLimit } from '../lib/http.js';
 import { fetchProcessPage, fetchProcess, PROCESY_NA_STRONE, TERM } from '../lib/sejm-client.js';
 import {
@@ -213,9 +213,32 @@ async function main() {
     );
   }
   console.log('Kontrola sum: OK.');
+
+  /*
+    ZAPIS STANU IMPORTU — dopisany 13.09.2026, bo go tu NIGDY NIE BYLO.
+
+    `sync-mps` i `sync-votings` wolaly `writeCursor` od poczatku, ten job nie.
+    Skutek widac bylo dopiero na /status: wiersz „Procesy legislacyjne" nie
+    mial sie z czego wziac, wiec strona milczala o swiezosci najwiekszego
+    zbioru danych w serwisie. Migracja 0028 wypisala to wprost:
+    `processes | NIGDY NIE CHODZIL`.
+
+    Stoi na KONCU, po kontroli sum. Import, ktory wywrocil sie na niezgodnosci
+    liczby procesow, nie ma prawa zapisac sie jako udany — dlatego nie ma tu
+    `finally`, a blad laduje w `catch` nizej.
+
+    Ten job nie jest przyrostowy (czyta cala liste za kazdym razem), wiec
+    kursor jest bez znaczenia; zapisujemy sam znacznik czasu i brak bledu.
+  */
+  await writeCursor('processes', { cursorAt: new Date().toISOString(), error: null });
 }
 
-main().catch((e) => {
-  console.error(`\n${(e as Error).message}`);
+main().catch(async (e) => {
+  const msg = (e as Error).message;
+  console.error(`\n${msg}`);
+  // Blad TEZ trafia do sync_state. Inaczej /status pokazywalby date
+  // ostatniego UDANEGO przebiegu jako date ostatniego przebiegu w ogole —
+  // czyli milczalby o awarii dokladnie tam, gdzie ma o niej mowic.
+  await writeCursor('processes', { error: msg }).catch(() => {});
   process.exit(1);
 });

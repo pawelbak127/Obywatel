@@ -30,7 +30,7 @@ const TABLES: Array<{ label: string; table: string; note: string }> = [
  * To jest tez nasz wlasny czujnik: gdyby ta sekcja istniala wczesniej,
  * zauwazylibysmy od razu, ze nocny import przestal chodzic.
  */
-type Swiezosc = { job: string; etykieta: string; last_run: string | null; last_error: string | null };
+type Swiezosc = { job: string; etykieta: string; last_run: string | null; byl_blad: boolean };
 
 const JOBY: Record<string, string> = {
   mps: 'Posłowie, kluby i zdjęcia',
@@ -38,27 +38,61 @@ const JOBY: Record<string, string> = {
   processes: 'Procesy legislacyjne',
 };
 
-async function readFreshness(): Promise<Swiezosc[]> {
-  if (!hasPublicConfig || urlConfigError()) return [];
+/*
+  ODCZYT SWIEZOSCI — przepisany 13.09.2026 po bledzie zgloszonym przez Pawla.
+
+  Poprzednia wersja czytala wprost `sync_state` i przy bledzie robila
+  `return []`. `sync_state` ma RLS bez ani jednej polityki i `anon` nie ma
+  na niej prawa SELECT, wiec zapytanie wracalo z bledem ZAWSZE — a sekcja
+  znikala ze strony bez sladu. Nie wyrenderowala sie ani razu, od dnia,
+  w ktorym powstala jako „GLOWNY fakt tej strony".
+
+  Zmieniaja sie dwie rzeczy.
+
+  1. Czytamy widok `swiezosc_danych` (migracja 0028), a nie tabele. Widok
+     wystawia job, date i `byl_blad` jako boolean — bez tresci bledu, ktora
+     zawiera nazwy tabel i fragmenty odpowiedzi HTTP.
+
+  2. NIEPOWODZENIE NIE JEST JUZ CICHE. Zwracamy `null` zamiast pustej listy,
+     a strona pisze wtedy wprost, ze nie wie. Sekcja, ktora powstala jako
+     czujnik cichych awarii, nie ma prawa sama znikac po cichu — to byl
+     wlasciwy blad, nie brak uprawnienia.
+
+  Zwracamy WSZYSTKIE oczekiwane joby, takze te bez wiersza w bazie. Import,
+  ktory nigdy nie chodzil, to informacja — a wlasnie tak bylo z procesami.
+*/
+async function readFreshness(): Promise<Swiezosc[] | null> {
+  if (!hasPublicConfig || urlConfigError()) return null;
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase.from('sync_state').select('job, last_run, last_error');
-    if (error) return [];
-    return (data ?? [])
-      .filter((r: { job: string }) => r.job in JOBY)
-      .map((r: { job: string; last_run: string | null; last_error: string | null }) => ({
-        ...r,
-        etykieta: JOBY[r.job] ?? r.job,
-      }))
-      .sort((a: Swiezosc, b: Swiezosc) => a.etykieta.localeCompare(b.etykieta, 'pl'));
+    const { data, error } = await supabase.from('swiezosc_danych').select('job, last_run, byl_blad');
+    if (error) return null;
+
+    const wBazie = new Map(
+      (data ?? []).map((r: { job: string; last_run: string | null; byl_blad: boolean }) => [r.job, r]),
+    );
+
+    return Object.entries(JOBY).map(([job, etykieta]) => {
+      const r = wBazie.get(job);
+      return { job, etykieta, last_run: r?.last_run ?? null, byl_blad: r?.byl_blad ?? false };
+    });
   } catch {
-    return [];
+    return null;
   }
 }
 
-/** „3 dni temu" czyta sie lepiej niz znacznik czasu z sekundami. */
+/**
+ * „3 dni temu" czyta sie lepiej niz znacznik czasu z sekundami.
+ *
+ * BRAK DATY TO „BRAK ZAPISU", NIE „NIGDY". Roznica nie jest slowna.
+ * `sync-processes` importowal dane co noc i nigdy nie zapisywal swojego
+ * stanu (naprawione 13.09.2026) — wiersz mowil wiec „nigdy", co czytelnik
+ * mial pelne prawo zrozumiec jako „tych danych u nas nie ma". A jest ich
+ * 1665 procesow i sa aktualne. Nie wiemy, KIEDY je pobrano, i dokladnie
+ * to trzeba napisac.
+ */
 function ileTemu(iso: string | null): string {
-  if (!iso) return 'nigdy';
+  if (!iso) return 'brak zapisu';
   const dni = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
   if (dni <= 0) return 'dzisiaj';
   if (dni === 1) return 'wczoraj';
@@ -120,9 +154,23 @@ export default async function StatusPage() {
         poslow ta druga informacja wazy wiecej. Do 12.09.2026 strona podawala
         wylacznie pierwsza z nich.
       */}
-      {swiezosc.length > 0 && (
-        <section className="mt-10">
-          <h2 className="text-sm font-semibold">Kiedy ostatnio pobieraliśmy</h2>
+      <section className="mt-10">
+        <h2 className="text-sm font-semibold">Kiedy ostatnio pobieraliśmy</h2>
+        {swiezosc === null ? (
+          /*
+            Zdanie zamiast zniknietej sekcji. Strona obiecuje w akapicie wyzej,
+            ze powie, KIEDY pobralismy dane — wiec gdy nie umie, ma to
+            powiedziec, a nie udawac, ze nigdy nie obiecywala.
+          */
+          <p className="mt-3 max-w-prose text-sm text-[color:var(--color-ink-soft)]">
+            <strong className="text-[color:var(--color-accent)]">
+              Nie udało się odczytać dat ostatnich importów.
+            </strong>{' '}
+            Same dane w tabeli niżej są aktualne na moment ich pobrania — ale tego momentu w tej
+            chwili nie potrafimy podać. To usterka po naszej stronie, nie brak danych.
+          </p>
+        ) : (
+          <>
           <dl className="mt-3 divide-y divide-[color:var(--color-rule)] border-y border-[color:var(--color-rule)]">
             {swiezosc.map((z) => (
               <div key={z.job} className="flex flex-wrap items-baseline justify-between gap-x-4 py-3">
@@ -139,17 +187,23 @@ export default async function StatusPage() {
                     Serwis, ktory prosi o zaufanie do liczb, nie moze przemilczec,
                     ze ostatnia proba ich odswiezenia sie nie powiodla.
                   */}
-                  {z.last_error && (
+                  {!z.last_run && (
+                    <span className="block text-[11px] leading-snug text-[color:var(--color-ink-faint)]">
+                      dane są, nie zapisaliśmy daty pobrania
+                    </span>
+                  )}
+                  {z.byl_blad && (
                     <span className="block text-[11px] leading-snug text-[color:var(--color-accent)]">
                       ostatni import zgłosił błąd
                     </span>
                   )}
                 </dd>
               </div>
-            ))}
-          </dl>
-        </section>
-      )}
+              ))}
+            </dl>
+          </>
+        )}
+      </section>
 
       <nav className="mt-6 flex gap-2 font-mono text-xs">
         <a
