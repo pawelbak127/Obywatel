@@ -33,6 +33,7 @@
  */
 
 import { db } from '../lib/db.js';
+import { writeCursor } from '../lib/source-recorder.js';
 import { getJson, mapLimit } from '../lib/http.js';
 import { assertSchema, WYMOGI_DNI } from '../lib/preflight.js';
 
@@ -181,9 +182,34 @@ async function main() {
     console.log('');
     console.log(`W bazie lacznie dni posiedzen: ${count}`);
   }
+  /*
+    ZAPIS STANU IMPORTU. Bez tego /status nie ma skad wiedziec, czy ten krok
+    w ogole chodzil — dokladnie tak, jak przez wiele tygodni milczal o procesach
+    legislacyjnych (naprawione rano 13.09.2026, migracja 0028). Ten sam blad
+    powtorzyl sie w trzech zadaniach naraz, wiec zapisujemy stan w kazdym.
+
+    Stoi na KONCU, po kontroli koncowej: import, ktory sie wywrocil, nie ma
+    prawa zapisac sie jako udany.
+  */
+  /*
+    CALKOWITA AWARIA ZAPISUJE SIE JAKO AWARIA, nie jako sukces.
+    Pierwsza wersja tej linii stala PO bloku ustawiajacym `exitCode = 1`
+    i mimo to zapisywala `error: null` — /status pokazalby wtedy
+    swieza date przy imporcie, ktory nie pobral niczego. Dokladnie
+    ten rodzaj cichego klamstwa, ktory naprawiamy od rana.
+  */
+  await writeCursor('sitting_days', {
+    cursorAt: new Date().toISOString(),
+    error: process.exitCode === 1 ? 'import nie pobral ani jednej pozycji' : null,
+  });
+
 }
 
-main().catch((e) => {
-  console.error(`\n${(e as Error).message}`);
+main().catch(async (e) => {
+  const msg = (e as Error).message;
+  console.error(`\n${msg}`);
+  // Blad tez trafia do sync_state — inaczej /status pokazywalby date
+  // ostatniego UDANEGO przebiegu jako date ostatniego przebiegu w ogole.
+  await writeCursor('sitting_days', { error: msg }).catch(() => {});
   process.exit(1);
 });

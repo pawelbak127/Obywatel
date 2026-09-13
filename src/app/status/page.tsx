@@ -32,10 +32,24 @@ const TABLES: Array<{ label: string; table: string; note: string }> = [
  */
 type Swiezosc = { job: string; etykieta: string; last_run: string | null; byl_blad: boolean };
 
+/*
+  KAZDY KROK NOCNEGO CRONA MA TU SWOJ WIERSZ.
+
+  Do 13.09.2026 byly trzy wpisy, a zadan w cronie szesc — trzy z nich nie
+  zapisywaly nawet swojego stanu. Strona milczala wiec nie tylko o tym,
+  KIEDY chodzily, ale i o tym, ze w ogole istnieja. Etykieta przy `mps`
+  mowila dodatkowo „i zdjecia", choc zdjecia sa osobnym zadaniem.
+
+  Jesli dojdzie kolejny krok w `.github/workflows/ingest.yml`, MUSI trafic
+  takze tutaj — inaczej jego awaria bedzie niewidoczna.
+*/
 const JOBY: Record<string, string> = {
-  mps: 'Posłowie, kluby i zdjęcia',
+  mps: 'Posłowie i kluby',
   votings: 'Głosowania i głosy imienne',
   processes: 'Procesy legislacyjne',
+  sitting_days: 'Dni posiedzeń i usprawiedliwienia',
+  photos: 'Zdjęcia posłów',
+  logos: 'Znaki klubów',
 };
 
 /*
