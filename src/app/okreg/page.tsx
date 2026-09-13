@@ -71,7 +71,13 @@ export default async function Okregi({
       <div className="mt-10 space-y-8">
         {grupy.map(([wojewodztwo, lista]) => (
           <section key={wojewodztwo}>
-            <h2 className="font-mono text-[11px] uppercase tracking-[0.16em] text-[color:var(--color-ink-faint)]">
+            {/*
+              Naglowek wojewodztwa mial 11 px, czyli MNIEJ niz akapit nad nim
+              (14 px) — sekcja byla wizualnie drobniejsza od wlasnego opisu.
+              Wersaliki i odstep miedzy literami zostaja, bo to one odrozniaja
+              nazwe wojewodztwa od nazwy okregu; rosnie sam rozmiar i kontrast.
+            */}
+            <h2 className="font-mono text-sm uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
               {wojewodztwo}
             </h2>
             <ul className="mt-2 grid gap-x-8 border-y border-[color:var(--color-rule)] sm:grid-cols-2 lg:grid-cols-3">

@@ -27,8 +27,12 @@
      zielony/czerwony, która jest dla nich najgorsza z możliwych. */
   --color-vote-for: #1d4e89;
   --color-vote-against: #b35c00;
-  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  /* Zmienne pochodza z `next/font/google` w layout.tsx — patrz komentarz tam.
+     Do 13.09.2026 stala tu sama NAZWA kroju, ktorego nic nie wczytywalo,
+     wiec kazdy czytelnik widzial font zastepczy. Stos rezerwowy zostaje
+     na wypadek, gdyby plik sie nie pobral. */
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
 
 html {

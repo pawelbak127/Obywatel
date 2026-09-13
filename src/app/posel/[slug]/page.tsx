@@ -18,7 +18,7 @@ import {
   opisWeta,
 } from '@/lib/queries';
 import { BrakMigracji } from '@/components/BrakMigracji';
-import { polskieDaty, odmien } from '@/lib/format';
+import { polskieDaty, odmien, skrotKlubu } from '@/lib/format';
 import { SourceLink } from '@/components/SourceLink';
 import { Portret } from '@/components/Portret';
 import { StatystykiPosla, ZgodnoscZKlubem } from '@/components/StatBar';
@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: mp.full_name,
     description:
-      `${mp.full_name}${mp.klub ? ` (${mp.klub})` : ''} — obecność ` +
+      `${mp.full_name}${mp.klub ? ` (${skrotKlubu(mp.klub)})` : ''} — obecność ` +
       `${mp.attendance_pct?.toFixed(1).replace('.', ',') ?? '—'}% z ${mp.votes_total} głosowań. ` +
       'Dane z Sejm API, każda liczba z linkiem do źródła.',
   };
@@ -117,7 +117,7 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
                 href={`/klub/${encodeURIComponent(mp.klub)}`}
                 className="hover:underline"
               >
-                {mp.klub}
+                {skrotKlubu(mp.klub)}
               </Link>
             )}
             {!mp.active && <span className="text-[color:var(--color-ink-soft)]">mandat wygasł</span>}
@@ -204,7 +204,7 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
       <DaneZRejestru dane={dane} mpId={mp.id} />
 
       <section className="mt-12">
-        <h2 className="mb-3 text-sm font-semibold">Ostatnie głosowania</h2>
+        <h2 className="mb-3 text-lg font-semibold">Ostatnie głosowania</h2>
         <div className="overflow-x-auto rounded border border-[color:var(--color-rule)]">
           <table className="w-full min-w-[560px] text-sm">
             <thead>

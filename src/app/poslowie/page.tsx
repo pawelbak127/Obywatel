@@ -14,7 +14,7 @@ import {
 import { BrakMigracji } from '@/components/BrakMigracji';
 import { Portret } from '@/components/Portret';
 import { Wyjasnienie } from '@/components/Wyjasnienie';
-import { polskieDaty, procent, skalaDo, odmien } from '@/lib/format';
+import { polskieDaty, procent, skalaDo, odmien, skrotKlubu } from '@/lib/format';
 
 export const revalidate = 86400;
 
@@ -473,7 +473,7 @@ function WierszListy({ mp }: { mp: PoselNaLiscie }) {
               href={`/klub/${encodeURIComponent(mp.klub)}`}
               className="hover:text-[color:var(--color-accent)] hover:underline"
             >
-              {mp.klub}
+              {skrotKlubu(mp.klub)}
             </Link>
           )}
           {mp.district_name && (
@@ -588,7 +588,7 @@ function Wiersz({
                 href={`/klub/${encodeURIComponent(mp.klub)}`}
                 className="hover:text-[color:var(--color-accent)] hover:underline"
               >
-                {mp.klub}
+                {skrotKlubu(mp.klub)}
               </Link>
             )}
             {mp.district_name && (

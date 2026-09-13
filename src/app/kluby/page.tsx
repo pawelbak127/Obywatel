@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { pobierzKluby, BrakObiektuWBazie } from '@/lib/queries';
 import { BrakMigracji } from '@/components/BrakMigracji';
 import { SourceLink } from '@/components/SourceLink';
-import { odmien } from '@/lib/format';
+import { odmien, skrotKlubu } from '@/lib/format';
 
 export const revalidate = 86400;
 
@@ -57,10 +57,12 @@ export default async function Kluby() {
               href={`/klub/${encodeURIComponent(k.id)}`}
               className="w-36 shrink-0 font-medium hover:text-[color:var(--color-accent)] hover:underline"
             >
-              {k.id}
+              {skrotKlubu(k.id)}
             </Link>
 
-            <span className="min-w-0 flex-1 text-sm text-[color:var(--color-ink-soft)]">{k.name}</span>
+            <span className="min-w-0 flex-1 text-sm text-[color:var(--color-ink-soft)]">
+              {k.name !== k.id ? k.name : 'koło nieprowadzone już przez rejestr'}
+            </span>
 
             <span className="flex shrink-0 items-center gap-3">
               {/*
@@ -74,8 +76,11 @@ export default async function Kluby() {
                 />
               </span>
               <span className="w-24 text-right font-mono text-xs tabular-nums">
-                {k.members_count ?? '—'}{' '}
-                {k.members_count !== null && odmien(k.members_count, ['poseł', 'posłowie', 'posłów'])}
+                {k.members_count !== null ? (
+                  `${k.members_count} ${odmien(k.members_count, ['poseł', 'posłowie', 'posłów'])}`
+                ) : (
+                  <span className="text-[color:var(--color-ink-soft)]">brak w rejestrze</span>
+                )}
               </span>
             </span>
           </li>

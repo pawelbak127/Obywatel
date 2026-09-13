@@ -121,7 +121,7 @@ export default async function StronaOkregu({ params }: { params: Promise<{ nr: s
       */}
       {kluby.length > 0 && (
         <section className="mt-10">
-          <h2 className="text-sm font-semibold">Podział mandatów</h2>
+          <h2 className="text-lg font-semibold">Podział mandatów</h2>
           <ul className="mt-3 max-w-prose divide-y divide-[color:var(--color-rule)] border-y border-[color:var(--color-rule)]">
             {kluby.map(({ klub, ilu }) => (
               <li key={klub} className="flex items-center gap-3 py-2">
@@ -193,7 +193,7 @@ function Sklad({ tytul, ludzie, opis }: { tytul: string; ludzie: PoselNaLiscie[]
   if (!ludzie.length) return null;
   return (
     <section className="mt-12">
-      <h2 className="text-sm font-semibold">{tytul}</h2>
+      <h2 className="text-lg font-semibold">{tytul}</h2>
       {opis && (
         <p className="mt-1 max-w-prose text-xs leading-relaxed text-[color:var(--color-ink-soft)]">{opis}</p>
       )}

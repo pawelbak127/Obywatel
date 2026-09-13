@@ -9,7 +9,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { polskieDaty, inicjaly, procent, skalaDo, odmien } from './format.js';
+import { polskieDaty, inicjaly, procent, skalaDo, odmien, skrotKlubu } from './format.js';
 
 // --- daty ----------------------------------------------------------------
 
@@ -161,4 +161,22 @@ test('odmien: dziala na innym rzeczowniku niz posel', () => {
   assert.equal(odmien(1, W), 'wynik');
   assert.equal(odmien(3, W), 'wyniki');
   assert.equal(odmien(11, W), 'wyników');
+});
+
+// --- skrotKlubu ------------------------------------------------------------
+
+test('skrotKlubu zamienia podkreslenie na spacje, reszty nie rusza', () => {
+  assert.equal(skrotKlubu('Konfederacja_KP'), 'Konfederacja KP');
+  // Mysnik NIE jest podkresleniem — „PSL-TD" i „Polska2050-TD" maja zostac.
+  assert.equal(skrotKlubu('PSL-TD'), 'PSL-TD');
+  assert.equal(skrotKlubu('Polska2050-TD'), 'Polska2050-TD');
+  assert.equal(skrotKlubu('KO'), 'KO');
+  assert.equal(skrotKlubu('niez.'), 'niez.');
+});
+
+test('skrotKlubu nie zmienia klucza, ktory trafia do adresu', () => {
+  // Kontrola swiadomosci: funkcja jest WYLACZNIE prezentacyjna. Gdyby ktos
+  // uzyl jej wyniku do zbudowania /klub/..., adres przestalby dzialac.
+  const id = 'Konfederacja_KP';
+  assert.notEqual(skrotKlubu(id), id, 'jesli to przestanie sie roznic, sprawdz po co ta funkcja istnieje');
 });

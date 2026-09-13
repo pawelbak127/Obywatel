@@ -272,7 +272,7 @@ export default async function StronaGlowna() {
       --------------------------------------------------------------- */}
       {procesy.length > 0 && (
         <section className="mt-14 border-t border-[color:var(--color-rule)] pt-8">
-          <h2 className="text-sm font-semibold">Co ostatnio przeszło przez Sejm</h2>
+          <h2 className="text-lg font-semibold">Co ostatnio przeszło przez Sejm</h2>
 
           <ul className="mt-5 divide-y divide-[color:var(--color-rule)] border-y border-[color:var(--color-rule)]">
             {procesy.map((p) => {
@@ -312,7 +312,7 @@ export default async function StronaGlowna() {
           moze sprawdzic na dowolnej podstronie w piec sekund.
       --------------------------------------------------------------- */}
       <section className="mt-14 space-y-6 border-t border-[color:var(--color-rule)] pt-8">
-        <h2 className="text-sm font-semibold">Na czym to stoi</h2>
+        <h2 className="text-lg font-semibold">Na czym to stoi</h2>
 
         <div className="max-w-prose space-y-5 text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
           <p>

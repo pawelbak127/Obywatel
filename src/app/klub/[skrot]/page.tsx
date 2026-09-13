@@ -6,7 +6,7 @@ import { pobierzKlub, pobierzSkrotyKlubow, BrakObiektuWBazie, type PoselNaLiscie
 import { BrakMigracji } from '@/components/BrakMigracji';
 import { Portret } from '@/components/Portret';
 import { SourceLink } from '@/components/SourceLink';
-import { odmien } from '@/lib/format';
+import { odmien, skrotKlubu } from '@/lib/format';
 
 export const revalidate = 86400;
 
@@ -77,7 +77,7 @@ export default async function StronaKlubu({ params }: { params: Promise<{ skrot:
       <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
         Sejm X kadencji
       </p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight">{klub.id}</h1>
+      <h1 className="mt-2 text-3xl font-semibold tracking-tight">{skrotKlubu(klub.id)}</h1>
 
       {/*
         PELNA NAZWA JEST TRESCIA, NIE PODPISEM. „KO" to nasz skrot roboczy;
@@ -86,9 +86,24 @@ export default async function StronaKlubu({ params }: { params: Promise<{ skrot:
         wystepuje w rejestrze. Czytelnik ma prawo wiedziec, co kryje skrot,
         ktorego uzywamy w kazdym wierszu listy.
       */}
-      <p className="mt-3 max-w-prose text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
-        {klub.name}
-      </p>
+      {/*
+        PELNA NAZWA TYLKO WTEDY, GDY REJESTR JA MA.
+
+        Przy klubach spoza slownika (D5) `name` jest rowne `id` — rejestr nie
+        zna ich pelnej nazwy, bo juz ich nie prowadzi. Wypisanie tego samego
+        ciagu dwa razy pod soba wygladalo jak usterka. Zamiast tego mowimy
+        wprost, co sie stalo.
+      */}
+      {klub.name !== klub.id ? (
+        <p className="mt-3 max-w-prose text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
+          {klub.name}
+        </p>
+      ) : (
+        <p className="mt-3 max-w-prose text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
+          Rejestr Sejmu nie prowadzi już tego koła — nie podaje ani jego pełnej nazwy, ani
+          liczebności. Kod zachowujemy, bo posłowie byli z nim związani.
+        </p>
+      )}
 
       <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-6 border-t border-[color:var(--color-rule)] pt-6 sm:grid-cols-4">
         <div>
@@ -155,7 +170,7 @@ export default async function StronaKlubu({ params }: { params: Promise<{ skrot:
 
       {(klub.email || klub.fax || klub.phone) && (
         <section className="mt-12 border-t border-[color:var(--color-rule)] pt-6">
-          <h2 className="text-sm font-semibold">Kontakt z rejestru</h2>
+          <h2 className="text-lg font-semibold">Kontakt z rejestru</h2>
           <dl className="mt-3 max-w-prose divide-y divide-[color:var(--color-rule)] border-y border-[color:var(--color-rule)]">
             {klub.email && <Kontakt etykieta="E-mail" wartosc={klub.email} />}
             {klub.phone && <Kontakt etykieta="Telefon" wartosc={klub.phone} />}
@@ -207,7 +222,7 @@ function Sklad({
   if (!ludzie.length) return null;
   return (
     <section className="mt-12">
-      <h2 className="text-sm font-semibold">{tytul}</h2>
+      <h2 className="text-lg font-semibold">{tytul}</h2>
       {opis && (
         <p className="mt-1 max-w-prose text-xs leading-relaxed text-[color:var(--color-ink-soft)]">{opis}</p>
       )}

@@ -155,7 +155,7 @@ export default async function StatusPage() {
         wylacznie pierwsza z nich.
       */}
       <section className="mt-10">
-        <h2 className="text-sm font-semibold">Kiedy ostatnio pobieraliśmy</h2>
+        <h2 className="text-lg font-semibold">Kiedy ostatnio pobieraliśmy</h2>
         {swiezosc === null ? (
           /*
             Zdanie zamiast zniknietej sekcji. Strona obiecuje w akapicie wyzej,

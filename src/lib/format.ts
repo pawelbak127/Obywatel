@@ -108,3 +108,16 @@ export function odmien(n: number, formy: readonly [string, string, string]): str
   const jednosci = abs % 10;
   return jednosci >= 2 && jednosci <= 4 ? formy[1] : formy[2];
 }
+
+/**
+ * Skrot klubu do WYSWIETLENIA. W bazie `clubs.id` jest kluczem i zostaje
+ * nietkniety — tu zamieniamy tylko podkreslenie na spacje.
+ *
+ * Rejestr Sejmu zapisuje kod Kola Poselskiego Konfederacji Korony Polskiej
+ * jako `Konfederacja_KP`. Podkreslenie jest znakiem technicznym: w naglowku
+ * strony klubu i w kazdym wierszu listy czytalo sie jak niedokonczony import,
+ * a nie jak nazwa. Klucz musi zostac, bo stoi w adresach i w `mps.club_seq`.
+ */
+export function skrotKlubu(id: string): string {
+  return id.replace(/_/g, ' ');
+}

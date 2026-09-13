@@ -1,7 +1,51 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google';
 import { publicEnv } from '@/lib/env';
 import './globals.css';
+
+/*
+  FONT, KTORY SERWIS DEKLAROWAL I KTOREGO NIKT NIGDY NIE ZOBACZYL.
+
+  `globals.css` od poczatku ustawialo `--font-sans: "IBM Plex Sans", …`,
+  ale nic tego kroju nie wczytywalo: zero `@font-face` w skompilowanym CSS,
+  zero `next/font`, zero `<link>` do jakiegokolwiek serwisu z fontami
+  (zmierzone 13.09.2026). IBM Plex nie jest fontem systemowym na Windows,
+  macOS, iOS ani Androidzie, wiec kazdy czytelnik widzial pierwszy krok
+  rezerwowy — `system-ui`, czyli Segoe UI, i Consolas dla monospace.
+
+  Cala tozsamosc typograficzna projektu niosl wiec domyslny font systemu,
+  ktorego nikt nie wybral. To byla pojedyncza najwieksza przyczyna wrazenia,
+  ze serwis wyglada staro.
+
+  DLACZEGO `next/font/google`, A NIE `<link>` DO GOOGLE FONTS:
+    - plik pobiera sie NA BUILDZIE i jest serwowany z naszej domeny, wiec
+      przegladarka czytelnika nie wysyla ani jednego zadania do Google —
+      znika zarowno opoznienie, jak i pytanie o dane osobowe;
+    - Next sam dokleja `preload` i `font-display: swap`;
+    - zero JavaScriptu po stronie klienta (§2);
+    - `next` jest juz zaleznoscia, wiec nie dokladamy ani jednej nowej.
+
+  `latin-ext` JEST OBOWIAZKOWY. Podzbior `latin` nie zawiera ą, ć, ę, ł, ń,
+  ó, ś, ź, ż — bez niego polskie znaki spadalyby na font zastepczy i kazde
+  nazwisko lamaloby sie wizualnie w polowie.
+
+  Grubosci ograniczone do tych, ktorych kod naprawde uzywa (400/500/600 dla
+  tekstu, 400/500 dla monospace) — kazda dodatkowa to osobny plik do pobrania.
+*/
+const plexSans = IBM_Plex_Sans({
+  subsets: ['latin', 'latin-ext'],
+  weight: ['400', '500', '600'],
+  display: 'swap',
+  variable: '--font-plex-sans',
+});
+
+const plexMono = IBM_Plex_Mono({
+  subsets: ['latin', 'latin-ext'],
+  weight: ['400', '500'],
+  display: 'swap',
+  variable: '--font-plex-mono',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicEnv.siteUrl),
@@ -128,7 +172,7 @@ function Stopka() {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pl">
+    <html lang="pl" className={`${plexSans.variable} ${plexMono.variable}`}>
       <body className="flex min-h-screen flex-col antialiased">
         <Naglowek />
         <div className="flex-1">{children}</div>
