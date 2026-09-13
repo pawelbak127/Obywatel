@@ -79,3 +79,32 @@ export function skalaDo(wartosci: readonly (number | null)[], minimum = 10): num
   const max = wartosci.reduce<number>((a, v) => (v !== null && v > a ? v : a), 0);
   return Math.max(minimum, Math.ceil(max / 10) * 10);
 }
+
+/**
+ * Odmiana rzeczownika po liczbie — polska, czyli trzyformowa.
+ *
+ * POWSTALO Z BLEDU. Pierwsza wersja licznika na /poslowie miala warunek
+ * `n < 5 ? 'poslow' : 'poslow'` i pisala „2 poslow" zamiast „2 poslowie".
+ * Reguly nie da sie zalatwic progiem, bo zalezy ona od OSTATNIEJ CYFRY,
+ * z wyjatkiem nastolatek:
+ *
+ *   1                      -> posel
+ *   2, 3, 4, 22, 23, 104   -> poslowie
+ *   0, 5..21, 25, 112..114 -> poslow
+ *
+ * Pulapka siedzi w 12, 13, 14: koncza sie na 2, 3, 4, a biora forme trzecia.
+ * Dlatego wyjatek na reszte z dzielenia przez 100.
+ *
+ * Serwis, ktory prosi czytelnika o zaufanie do liczb, nie moze sie przy
+ * liczbach myslic w gramatyce — to pierwsza rzecz, ktora widac golym okiem.
+ */
+export function odmien(n: number, formy: readonly [string, string, string]): string {
+  const abs = Math.abs(Math.trunc(n));
+  if (abs === 1) return formy[0];
+
+  const dziesiatki = abs % 100;
+  if (dziesiatki >= 12 && dziesiatki <= 14) return formy[2];
+
+  const jednosci = abs % 10;
+  return jednosci >= 2 && jednosci <= 4 ? formy[1] : formy[2];
+}

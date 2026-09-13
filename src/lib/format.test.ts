@@ -9,7 +9,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { polskieDaty, inicjaly, procent, skalaDo } from './format.js';
+import { polskieDaty, inicjaly, procent, skalaDo, odmien } from './format.js';
 
 // --- daty ----------------------------------------------------------------
 
@@ -119,4 +119,46 @@ test('wartosc dokladnie na dziesiatce nie przeskakuje wyzej', () => {
   // 30 ma dac 30, nie 40 — inaczej pasek najwyzszej wartosci nigdy nie dobija
   // do konca skali i wykres wyglada na uciety.
   assert.equal(skalaDo([30]), 30);
+});
+
+// --- odmien ----------------------------------------------------------------
+
+test('odmien: jedynka bierze forme pojedyncza, zero i piatka - dopelniacz', () => {
+  const P = ['poseł', 'posłowie', 'posłów'] as const;
+  assert.equal(odmien(1, P), 'poseł');
+  assert.equal(odmien(0, P), 'posłów');
+  assert.equal(odmien(5, P), 'posłów');
+  assert.equal(odmien(499, P), 'posłów');
+});
+
+test('odmien: 2, 3, 4 i ich wielokrotnosci biora mianownik liczby mnogiej', () => {
+  const P = ['poseł', 'posłowie', 'posłów'] as const;
+  // To jest przypadek, ktory pierwsza wersja licznika na /poslowie mylila.
+  assert.equal(odmien(2, P), 'posłowie');
+  assert.equal(odmien(3, P), 'posłowie');
+  assert.equal(odmien(4, P), 'posłowie');
+  assert.equal(odmien(22, P), 'posłowie');
+  assert.equal(odmien(23, P), 'posłowie');
+  assert.equal(odmien(104, P), 'posłowie');
+});
+
+test('odmien: nastolatki 12-14 sa wyjatkiem mimo koncowki 2, 3, 4', () => {
+  // Ta trojka jest calym powodem, dla ktorego regula nie miesci sie w progu.
+  const P = ['poseł', 'posłowie', 'posłów'] as const;
+  assert.equal(odmien(12, P), 'posłów');
+  assert.equal(odmien(13, P), 'posłów');
+  assert.equal(odmien(14, P), 'posłów');
+  // ...ale 112-114 tez, bo liczy sie reszta z dzielenia przez 100.
+  assert.equal(odmien(112, P), 'posłów');
+  assert.equal(odmien(113, P), 'posłów');
+  // Kontrola odwrotna: 212 to nadal nastolatka w setce.
+  assert.equal(odmien(212, P), 'posłów');
+  assert.equal(odmien(222, P), 'posłowie');
+});
+
+test('odmien: dziala na innym rzeczowniku niz posel', () => {
+  const W = ['wynik', 'wyniki', 'wyników'] as const;
+  assert.equal(odmien(1, W), 'wynik');
+  assert.equal(odmien(3, W), 'wyniki');
+  assert.equal(odmien(11, W), 'wyników');
 });

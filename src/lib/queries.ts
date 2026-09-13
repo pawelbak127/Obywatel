@@ -251,6 +251,87 @@ export async function pobierzRanking(
   return (data ?? []) as MpKontekst[];
 }
 
+/** Waski zestaw kolumn dla zwyklej listy — bez liczb, wiec bez ich kosztu. */
+const KOLUMNY_LISTY =
+  'id, full_name, slug, klub, active, photo_url, district_num, district_name, ' +
+  'zakres_mandatu, powod_zakonczenia, w_rankingu';
+
+export type PoselNaLiscie = {
+  id: number;
+  full_name: string;
+  slug: string;
+  klub: string | null;
+  active: boolean;
+  photo_url: string | null;
+  district_num: number | null;
+  district_name: string | null;
+  zakres_mandatu: string;
+  powod_zakonczenia: string | null;
+  w_rankingu: boolean;
+};
+
+/**
+ * ZWYKLA LISTA POSLOW — bez rankingu, bez procentow, bez oceny.
+ *
+ * Powstala 13.09.2026 na uwage Pawla: wejscie w swoj okreg pokazywalo od razu
+ * „Kto najczesciej opuszcza glosowania?". Czytelnik pytal „kto mnie
+ * reprezentuje", a dostawal odpowiedz na pytanie, ktorego nie zadal — i to
+ * w formie zestawienia od najgorszego.
+ *
+ * DWIE ROZNICE WOBEC `pobierzRanking`, obie zamierzone.
+ *
+ * 1. BRAK FILTRA `w_rankingu`. Ranking slusznie pomija posla z dwutygodniowym
+ *    mandatem, bo procent z pieciu glosowan nie znaczy nic. Ale na liscie
+ *    „kto reprezentuje moj okreg" ten posel ma stac, bo reprezentowal.
+ *    Zmierzone: troje poslow, wszyscy z zakonczonym mandatem. Pominiecie ich
+ *    tutaj lamaloby zasade „nikogo nie ukrywamy" (HANDOFF §1.2).
+ *
+ * 2. BRAK `limit`. Lista ma byc kompletna: caly okreg albo caly Sejm.
+ *    Gorna granica 500 jest bezpiecznikiem na wypadek, gdyby import kiedys
+ *    zdublowal wiersze — nie jest stronicowaniem.
+ */
+export async function pobierzPoslow(
+  opts: { szukaj?: string; okreg?: number | null; klub?: string | null } = {},
+): Promise<PoselNaLiscie[]> {
+  const { szukaj, okreg = null, klub = null } = opts;
+  const supabase = await createClient();
+
+  let zapytanie = supabase.from('mp_obecnosc_kontekst').select(KOLUMNY_LISTY);
+
+  // Ta sama sanityzacja co w `pobierzRanking` — przecinki i nawiasy sa
+  // skladnia filtra PostgREST-a, wiec wpisane w pole tekstowe rozsypalyby
+  // zapytanie.
+  const fraza = (szukaj ?? '').trim().replace(/[^\p{L}\p{N}\s-]/gu, '').slice(0, 60);
+  if (fraza) zapytanie = zapytanie.or(`full_name.ilike.%${fraza}%,klub.ilike.%${fraza}%`);
+  if (Number.isInteger(okreg) && okreg !== null && okreg > 0) {
+    zapytanie = zapytanie.eq('district_num', okreg);
+  }
+  if (klub) zapytanie = zapytanie.eq('klub', klub.trim().slice(0, 60));
+
+  const { data, error } = await zapytanie.limit(500);
+  sprawdzBlad('mp_obecnosc_kontekst', error);
+
+  /*
+    SORTOWANIE PO NAZWISKU ROBIMY TUTAJ, NIE W SQL-u, i to jest wyjatek
+    wymagajacy uzasadnienia — w tym projekcie liczby i kolejnosc zwykle
+    wyprowadza widok.
+
+    Widok nie ma kolumny `last_name` (jest w tabeli `mps`, nie w widoku),
+    a `order by full_name` sortowaloby po IMIENIU. Dolozenie kolumny znaczy
+    przepisanie calego widoku `mp_obecnosc_kontekst` — najwazniejszego
+    w serwisie — po to, zeby zmienic kolejnosc wyswietlania.
+
+    Wolno tak zrobic WYLACZNIE dlatego, ze pobieramy KOMPLET pasujacych
+    wierszy, a nie pierwsza strone. Gdyby bylo tu prawdziwe stronicowanie,
+    sortowanie po stronie aplikacji ukladaloby tylko biezaca strone i lista
+    bylaby bledna — to jest ta pulapka, przed ktora broni tamta zasada.
+  */
+  const nazwisko = (pelne: string) => pelne.trim().split(/\s+/).at(-1) ?? pelne;
+  return ((data ?? []) as PoselNaLiscie[]).sort((a, b) =>
+    nazwisko(a.full_name).localeCompare(nazwisko(b.full_name), 'pl'),
+  );
+}
+
 export type Okreg = {
   district_num: number;
   district_name: string;

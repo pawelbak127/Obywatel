@@ -3,24 +3,26 @@ import type { Metadata } from 'next';
 
 import {
   pobierzRanking,
+  pobierzPoslow,
   pobierzOkregi,
   BrakObiektuWBazie,
   type MpKontekst,
+  type PoselNaLiscie,
   type Metryka,
   type Okreg,
 } from '@/lib/queries';
 import { BrakMigracji } from '@/components/BrakMigracji';
 import { Portret } from '@/components/Portret';
 import { Wyjasnienie } from '@/components/Wyjasnienie';
-import { polskieDaty, procent, skalaDo } from '@/lib/format';
+import { polskieDaty, procent, skalaDo, odmien } from '@/lib/format';
 
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: 'Posłowie',
   description:
-    'Kto najczęściej opuszcza głosowania i kto najczęściej głosuje inaczej niż jego klub. ' +
-    'Sejm X kadencji — z liczbą głosowań, marginesem błędu i kontekstem. Dane z Sejm API.',
+    'Posłowie Sejmu X kadencji — pełna lista z okręgiem i klubem, a obok zestawienia ' +
+    'obecności i zgodności z klubem. Z liczbą głosowań, marginesem błędu i kontekstem.',
 };
 
 /* =====================================================================
@@ -41,6 +43,25 @@ export const metadata: Metadata = {
    Liczby są te same — zmieniło się tylko to, kto rozumie pierwsze zdanie.
    ===================================================================== */
 
+/*
+  TRZY TRYBY, A NIE DWA — zmiana z 13.09.2026 na uwage Pawla.
+
+  „Przechodzimy na jakis okreg wyborczy i od razu pokazuje nam sie lista
+  obecnosci. Moze zacznijmy od listy poslow, a obok opcje przelaczenia."
+
+  Mial racje i to nie jest drobiazg. Czytelnik, ktory wybral swoj okreg na
+  stronie glownej, pyta „kto mnie reprezentuje". Dostawal odpowiedz na
+  pytanie, ktorego nie zadal — „kto najczesciej opuszcza glosowania" —
+  i to w formie zestawienia uszeregowanego od najgorszego. Serwis, ktory
+  w trzech akapitach obiecuje, ze nie ocenia, otwieral kazde wejscie w okreg
+  ocena.
+
+  Zwykla lista jest teraz trybem DOMYSLNYM; oba zestawienia stoja obok jako
+  zakladki i nie znikaja. Zaden adres nie przestaje dzialac: `?widok=klub`
+  znaczy to samo co wczoraj, doszlo `?widok=obecnosc`.
+*/
+type Tryb = 'lista' | Metryka;
+
 type Widok = {
   /** Etykieta zakładki. */
   zakladka: string;
@@ -55,12 +76,19 @@ type Widok = {
    * wprowadzeniu i pada raz; to, co w ramce było ponad nie — konkretne
    * przykłady — ląduje tutaj i chowa się pod „?" obok wprowadzenia.
    */
-  szczegoly: { tytul: string; tresc: string };
-  /** Podpisy przełącznika kierunku, w kolejności [„najgorsi", „najlepsi"]. */
-  kierunki: readonly [string, string];
+  szczegoly?: { tytul: string; tresc: string };
+  /** Podpisy przełącznika kierunku, w kolejności [„najgorsi", „najlepsi"]. Lista ich nie ma. */
+  kierunki?: readonly [string, string];
 };
 
-const WIDOKI: Record<Metryka, Widok> = {
+const WIDOKI: Record<Tryb, Widok> = {
+  lista: {
+    zakladka: 'wszyscy posłowie',
+    naglowek: 'Posłowie Sejmu X kadencji',
+    wprowadzenie:
+      'Pełna lista z klubem i okręgiem, ułożona alfabetycznie po nazwisku. ' +
+      'Zestawienia obecności i zgodności z klubem są obok, w zakładkach.',
+  },
   obecnosc: {
     zakladka: 'obecność',
     naglowek: 'Kto najczęściej opuszcza głosowania?',
@@ -106,7 +134,10 @@ export default async function Poslowie({
 }) {
   const sp = await searchParams;
   const najlepsi = sp.kierunek === 'najlepsi';
-  const metryka: Metryka = sp.widok === 'klub' ? 'niezgodnosc' : 'obecnosc';
+  // Brak `widok` znaczy zwykla lista. `klub` zostaje nazwa historyczna —
+  // adresy z niej rozeslane wczoraj maja dzialac dalej.
+  const tryb: Tryb = sp.widok === 'klub' ? 'niezgodnosc' : sp.widok === 'obecnosc' ? 'obecnosc' : 'lista';
+  const metryka: Metryka = tryb === 'niezgodnosc' ? 'niezgodnosc' : 'obecnosc';
   const fraza = (sp.q ?? '').trim().slice(0, 60);
   // Skrot klubu przychodzi z NASZEGO odnosnika, nie z pola tekstowego, wiec
   // dopasowanie jest dokladne (patrz komentarz przy `klub` w queries.ts).
@@ -118,18 +149,22 @@ export default async function Poslowie({
   const okregRaw = Number.parseInt(sp.okreg ?? '', 10);
   const okreg = Number.isInteger(okregRaw) && okregRaw > 0 ? okregRaw : null;
 
-  let lista: MpKontekst[];
+  let lista: MpKontekst[] = [];
+  let prosci: PoselNaLiscie[] = [];
   let okregi: Okreg[];
   try {
-    [lista, okregi] = await Promise.all([
-      pobierzRanking({
-        kierunek: najlepsi ? 'najlepsi' : 'najgorsi',
-        limit: LIMIT,
-        szukaj: fraza,
-        okreg,
-        klub,
-        metryka,
-      }),
+    [prosci, lista, okregi] = await Promise.all([
+      tryb === 'lista' ? pobierzPoslow({ szukaj: fraza, okreg, klub }) : Promise.resolve([]),
+      tryb === 'lista'
+        ? Promise.resolve([])
+        : pobierzRanking({
+            kierunek: najlepsi ? 'najlepsi' : 'najgorsi',
+            limit: LIMIT,
+            szukaj: fraza,
+            okreg,
+            klub,
+            metryka,
+          }),
       pobierzOkregi(),
     ]);
   } catch (e) {
@@ -137,7 +172,22 @@ export default async function Poslowie({
     throw e;
   }
 
-  const w = WIDOKI[metryka];
+  const w = WIDOKI[tryb];
+  const ile = tryb === 'lista' ? prosci.length : lista.length;
+
+  /*
+    NAGLOWEK LISTY ODPOWIADA NA PYTANIE, Z KTORYM CZYTELNIK PRZYSZEDL.
+    Z okregiem w adresie „Poslowie Sejmu X kadencji" bylby prawdziwy
+    i bezuzyteczny — pytanie brzmialo „kto reprezentuje moj okreg".
+  */
+  const naglowek =
+    tryb !== 'lista'
+      ? w.naglowek
+      : okreg !== null
+        ? `Posłowie z okręgu nr ${okreg}`
+        : klub
+          ? `Posłowie klubu ${klub}`
+          : w.naglowek;
   const filtrowane = Boolean(fraza) || okreg !== null || klub !== null;
 
   // Skala paska. Dla obecności zakres jest naturalnie pełny (0–100%), dla
@@ -158,7 +208,14 @@ export default async function Poslowie({
   ) => {
     const p = new URLSearchParams();
     const kier = 'kierunek' in zmiana ? zmiana.kierunek : najlepsi ? 'najlepsi' : null;
-    const wid = 'widok' in zmiana ? zmiana.widok : metryka === 'niezgodnosc' ? 'klub' : null;
+    const wid =
+      'widok' in zmiana
+        ? zmiana.widok
+        : tryb === 'niezgodnosc'
+          ? 'klub'
+          : tryb === 'obecnosc'
+            ? 'obecnosc'
+            : null;
     const okr = 'okreg' in zmiana ? zmiana.okreg : okreg !== null ? String(okreg) : null;
     const q = 'q' in zmiana ? zmiana.q : fraza;
     const kl = 'klub' in zmiana ? zmiana.klub : klub;
@@ -176,7 +233,7 @@ export default async function Poslowie({
       <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
         Sejm X kadencji
       </p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight">{w.naglowek}</h1>
+      <h1 className="mt-2 text-3xl font-semibold tracking-tight">{naglowek}</h1>
       {/*
         `<div>`, NIE `<p>`. `<Wyjasnienie>` renderuje `<details>` — element
         blokowy — a wstawienie go do akapitu przeglądarka rozjeżdża z
@@ -186,7 +243,7 @@ export default async function Poslowie({
       */}
       <div className="mt-4 max-w-prose text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
         {w.wprowadzenie}
-        <Wyjasnienie tytul={w.szczegoly.tytul}>{w.szczegoly.tresc}</Wyjasnienie>
+        {w.szczegoly && <Wyjasnienie tytul={w.szczegoly.tytul}>{w.szczegoly.tresc}</Wyjasnienie>}
       </div>
 
       {/* ---------------------------------------------------------------
@@ -195,12 +252,15 @@ export default async function Poslowie({
           kolumny w jednej tabeli. Czytelnik za każdym razem wie, na co patrzy.
       --------------------------------------------------------------- */}
       <nav className="mt-7 flex gap-4 border-b border-[color:var(--color-rule)] text-sm" aria-label="Rodzaj zestawienia">
-        {(Object.keys(WIDOKI) as Metryka[]).map((klucz) => {
-          const aktywna = klucz === metryka;
+        {(Object.keys(WIDOKI) as Tryb[]).map((klucz) => {
+          const aktywna = klucz === tryb;
           return (
             <Link
               key={klucz}
-              href={adres({ widok: klucz === 'niezgodnosc' ? 'klub' : null, kierunek: null })}
+              href={adres({
+                widok: klucz === 'niezgodnosc' ? 'klub' : klucz === 'obecnosc' ? 'obecnosc' : null,
+                kierunek: null,
+              })}
               aria-current={aktywna ? 'page' : undefined}
               className={`-mb-px border-b-2 px-0.5 pb-2 ${
                 aktywna
@@ -273,6 +333,13 @@ export default async function Poslowie({
         )}
       </form>
 
+      {/*
+        PASEK SORTOWANIA DOTYCZY WYLACZNIE ZESTAWIEN. Na zwyklej liscie nie ma
+        czego uszeregowac „od najgorszego" — jest alfabet — a zostawiony tu
+        przelacznik sugerowalby, ze lista jest rankingiem tylko chwilowo
+        nieuporzadkowanym.
+      */}
+      {w.kierunki && (
       <nav className="mt-4 flex flex-wrap items-center gap-2 font-mono text-xs">
         <Link
           href={adres({ kierunek: null })}
@@ -299,25 +366,35 @@ export default async function Poslowie({
           </Wyjasnienie>
         </span>
       </nav>
+      )}
 
-      {filtrowane && (
+      {(filtrowane || tryb === 'lista') && (
         <p className="mt-5 text-sm text-[color:var(--color-ink-soft)]">
-          {lista.length === 0 ? (
+          {ile === 0 ? (
             <>Nic nie pasuje do tych filtrów. Szukamy po nazwisku i skrócie klubu — spróbuj samego nazwiska.</>
           ) : (
             <>
-              <strong className="text-[color:var(--color-ink)]">{lista.length}</strong>
-              {lista.length === 1 ? ' wynik' : lista.length < 5 ? ' wyniki' : ' wyników'}
+              <strong className="text-[color:var(--color-ink)]">{ile}</strong>
+              {` ${odmien(ile, ['poseł', 'posłowie', 'posłów'])}`}
               {klub && ` z klubu ${klub}`}
               {okreg !== null && ` z okręgu nr ${okreg}`}
-              {fraza && ` dla „${fraza}"`}. To wycinek listy, więc numery pozycji nie mają tu
-              sensu — nie pokazujemy ich.
+              {fraza && ` dla „${fraza}"`}.
+              {tryb !== 'lista' &&
+                ' To wycinek listy, więc numery pozycji nie mają tu sensu — nie pokazujemy ich.'}
             </>
           )}
         </p>
       )}
 
-      {lista.length > 0 && (
+      {tryb === 'lista' && prosci.length > 0 && (
+        <ul className="mt-6 divide-y divide-[color:var(--color-rule)] border-y border-[color:var(--color-rule)]">
+          {prosci.map((mp) => (
+            <WierszListy key={mp.id} mp={mp} />
+          ))}
+        </ul>
+      )}
+
+      {tryb !== 'lista' && lista.length > 0 && (
         <ol className="mt-6 divide-y divide-[color:var(--color-rule)] border-y border-[color:var(--color-rule)]">
           {lista.map((mp, i) => (
             /*
@@ -337,13 +414,15 @@ export default async function Poslowie({
         </ol>
       )}
 
+      {tryb !== 'lista' && (
       <p className="mt-4 font-mono text-[11px] text-[color:var(--color-ink-faint)]">
         {metryka === 'niezgodnosc'
           ? `Pasek w skali 0–${skala}%. Zakres dopasowany do danych — najwyższa niezgodność w Sejmie tej kadencji nie sięga jednej trzeciej.`
           : 'Pasek w skali 0–100%. Jaśniejsze pole to margines błędu, kreska to zmierzony wynik.'}
       </p>
+      )}
 
-      {lista.length >= LIMIT && !filtrowane && (
+      {tryb !== 'lista' && lista.length >= LIMIT && !filtrowane && (
         <p className="mt-3 text-xs text-[color:var(--color-ink-soft)]">
           Pokazujemy {LIMIT} skrajnych wyników z 499 posłów. Żeby znaleźć konkretną osobę,
           użyj okręgu albo nazwiska — nie ukrywamy nikogo, po prostu nie zmieścimy wszystkich naraz.
@@ -355,6 +434,75 @@ export default async function Poslowie({
         głosowania. Jeśli widzisz błąd, zgłoś go — poprawimy i opiszemy poprawkę.
       </p>
     </main>
+  );
+}
+
+/**
+ * Wiersz ZWYKLEJ LISTY — bez procentu, bez paska, bez pozycji.
+ *
+ * Nie jest to `Wiersz` z wygaszonymi liczbami, tylko inny wiersz. Pozycja
+ * („1.", „2.") znaczy „miejsce w zestawieniu" i na liscie ulozonej alfabetem
+ * byla juz raz zrodlem nieporozumienia (komentarz przy `pozycja` nizej).
+ * Alfabet nie ma miejsc.
+ *
+ * Klub i okreg sa odnosnikami — tak samo jak w zestawieniach — bo „kto
+ * jeszcze" jest tu najczestszym kolejnym pytaniem.
+ */
+function WierszListy({ mp }: { mp: PoselNaLiscie }) {
+  return (
+    <li className="flex items-start gap-3 py-3">
+      <Portret src={mp.photo_url} nazwa={mp.full_name} rozmiar="sm" />
+
+      <div className="min-w-0 flex-1">
+        <Link
+          href={`/posel/${mp.slug}`}
+          className="font-medium hover:text-[color:var(--color-accent)] hover:underline"
+        >
+          {mp.full_name}
+        </Link>
+
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] text-[color:var(--color-ink-soft)]">
+          {mp.klub && (
+            <Link
+              href={`/poslowie?klub=${encodeURIComponent(mp.klub)}`}
+              className="hover:text-[color:var(--color-accent)] hover:underline"
+            >
+              {mp.klub}
+            </Link>
+          )}
+          {mp.district_name && (
+            <>
+              <span aria-hidden="true">·</span>
+              <Link
+                href={`/poslowie?okreg=${mp.district_num}`}
+                className="hover:text-[color:var(--color-accent)] hover:underline"
+              >
+                okręg {mp.district_num}, {mp.district_name}
+              </Link>
+            </>
+          )}
+          {mp.zakres_mandatu !== 'pelna kadencja' && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span className="text-[color:var(--color-warn)]">{mp.zakres_mandatu}</span>
+            </>
+          )}
+        </div>
+
+        {/*
+          POWOD ZAKONCZENIA MANDATU STOI TU, NA LISCIE, a nie dopiero na
+          profilu. Ci poslowie nie wystepuja w zestawieniach (`w_rankingu`
+          = false) i bez tego zdania czytelnik widzialby nazwisko, ktorego
+          nie umie znalezc nigdzie indziej, bez wyjasnienia dlaczego.
+          Zmierzone 13.09.2026: troje takich poslow.
+        */}
+        {mp.powod_zakonczenia && (
+          <p className="mt-1 max-w-prose text-[11px] leading-snug text-[color:var(--color-ink-soft)]">
+            {mp.powod_zakonczenia}
+          </p>
+        )}
+      </div>
+    </li>
   );
 }
 
