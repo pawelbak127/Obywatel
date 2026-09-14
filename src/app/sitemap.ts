@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 import { publicEnv, siteUrlWygladaNaLokalny } from '@/lib/env';
-import { pobierzOkregi, pobierzSkrotyKlubow, pobierzSlugi } from '@/lib/queries';
+import { pobierzKodyKomisji, pobierzOkregi, pobierzSkrotyKlubow, pobierzSlugi } from '@/lib/queries';
 
 // Bez koncowego "/" - trasy nizej zaczynaja sie wlasnym "/", wiec podwojny
 // znak dawalby np. "https://example.com//posel/jan-kowalski".
@@ -14,7 +14,7 @@ if (siteUrlWygladaNaLokalny()) {
   console.error(`::error::mapa witryny zglasza adresy pod ${BASE} — ustaw NEXT_PUBLIC_SITE_URL na domene produkcyjna.`);
 }
 
-const TRASY_STATYCZNE = ['/', '/poslowie', '/kluby', '/okreg', '/status', '/zglos'];
+const TRASY_STATYCZNE = ['/', '/poslowie', '/kluby', '/komisje', '/okreg', '/status', '/zglos'];
 
 /**
  * MAPA WITRYNY — wbudowany mechanizm Next (`MetadataRoute.Sitemap`), nie
@@ -57,10 +57,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     dwie trzecie tras dynamicznych z jednym brakujacym zrodlem.
   */
   try {
-    const [slugi, okregi, skroty] = await Promise.all([
+    const [slugi, okregi, skroty, kodyKomisji] = await Promise.all([
       pobierzSlugi(),
       pobierzOkregi(),
       pobierzSkrotyKlubow(),
+      pobierzKodyKomisji(),
     ]);
 
     for (const slug of slugi) {
@@ -75,6 +76,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       // w src/app/kluby/page.tsx, zeby adres w mapie byl tym samym adresem,
       // pod ktorym strona faktycznie odpowiada.
       wpisy.push({ url: `${BASE}/klub/${encodeURIComponent(skrot)}`, lastModified });
+    }
+    for (const kod of kodyKomisji) {
+      wpisy.push({ url: `${BASE}/komisja/${encodeURIComponent(kod)}`, lastModified });
     }
   } catch (e) {
     console.error(`::error::sitemap nie pobralo tras dynamicznych z bazy: ${(e as Error).message}`);

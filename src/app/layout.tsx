@@ -117,6 +117,7 @@ function Naglowek() {
           ['/poslowie', 'posłowie'],
           ['/okreg', 'okręgi'],
           ['/kluby', 'kluby'],
+          ['/komisje', 'komisje'],
         ].map(([adres, podpis]) => (
           <Link
             key={adres}

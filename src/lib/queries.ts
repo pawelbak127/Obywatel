@@ -563,6 +563,150 @@ export async function pobierzSkrotyKlubow(): Promise<string[]> {
   return ((data ?? []) as Array<{ id: string }>).map((r) => r.id);
 }
 
+export type TypKomisji = 'STANDING' | 'EXTRAORDINARY' | 'INVESTIGATIVE';
+
+export type KomisjaNaSpisie = {
+  code: string;
+  name: string;
+  type: TypKomisji;
+  czlonkow: number;
+};
+
+export type Komisja = {
+  code: string;
+  name: string;
+  name_genitive: string | null;
+  type: TypKomisji;
+  scope: string | null;
+  phone: string | null;
+  appointment_date: string | null;
+  sub_committees: string[];
+};
+
+export type CzlonekKomisji = {
+  mp_id: number;
+  full_name: string;
+  slug: string;
+  klub: string | null;
+  photo_url: string | null;
+  active: boolean;
+  function: string | null;
+  join_date: string | null;
+};
+
+/**
+ * Spis komisji z liczba czlonkow.
+ *
+ * Liczbe bierzemy ZAGNIEZDZONYM ZLICZENIEM PostgREST-a
+ * (`committee_members(count)`), a nie osobnym widokiem. Widok bylby
+ * poprawniejszy wedlug zasady „liczby wyprowadzamy w SQL-u", ale wymagalby
+ * migracji dla jednej liczby, ktora i tak liczy sie po stronie bazy —
+ * zagniezdzone zliczenie robi dokladnie to samo, tylko bez nowego obiektu
+ * do utrzymania.
+ */
+export async function pobierzKomisje(): Promise<KomisjaNaSpisie[]> {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from('committees')
+    .select('code, name, type, committee_members(count)')
+    .order('name');
+  sprawdzBlad('committees', error);
+
+  type Wiersz = { code: string; name: string; type: TypKomisji; committee_members: Array<{ count: number }> };
+  return ((data ?? []) as unknown as Wiersz[]).map((k) => ({
+    code: k.code,
+    name: k.name,
+    type: k.type,
+    czlonkow: k.committee_members?.[0]?.count ?? 0,
+  }));
+}
+
+/** Skroty komisji — do `generateStaticParams` i mapy witryny. */
+export async function pobierzKodyKomisji(): Promise<string[]> {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase.from('committees').select('code').order('code');
+  sprawdzBlad('committees', error);
+  return ((data ?? []) as Array<{ code: string }>).map((r) => r.code);
+}
+
+/**
+ * Jedna komisja z pelnym skladem.
+ *
+ * SKLAD SORTUJEMY PO STRONIE APLIKACJI, bo kryterium „ma funkcje" nie jest
+ * kolumna, tylko `function is not null`. Wolno tak, bo pobieramy KOMPLET
+ * czlonkow jednej komisji (najwieksza ma 50) — ta sama zasada co przy
+ * `pobierzPoslow`: sortowanie w JS jest dopuszczalne wylacznie wtedy, gdy
+ * nic nie zostalo uciete przed sortowaniem.
+ */
+export async function pobierzKomisje1(
+  kod: string,
+): Promise<{ komisja: Komisja; sklad: CzlonekKomisji[] } | null> {
+  const supabase = createPublicClient();
+
+  const { data: k, error: bladK } = await supabase
+    .from('committees')
+    .select('code, name, name_genitive, type, scope, phone, appointment_date, sub_committees')
+    .eq('code', kod)
+    .maybeSingle();
+  sprawdzBlad('committees', bladK);
+  if (!k) return null;
+
+  const { data: m, error: bladM } = await supabase
+    .from('committee_members')
+    /*
+      `photo_stored_url` I `photo_exists`, NIE SAM `photo_url`.
+
+      `mps.photo_url` to surowy adres api.sejm.gov.pl — zmierzone 11.09.2026:
+      czas do pierwszego bajtu od 11 do 59 sekund i ZERO naglowkow cache.
+      Uzycie go wprost cofneloby cala naprawe P0-1. Powtarzamy tu dokladnie
+      to, co robi widok `mp_obecnosc_kontekst` (migracja 0023): wlasna kopia,
+      z surowym adresem jako zapasem, i nic, gdy HEAD nie potwierdzil zdjecia.
+    */
+    .select(
+      'mp_id, function, join_date, ' +
+        'mps(full_name, slug, active, photo_exists, photo_stored_url, photo_url, clubs(id))',
+    )
+    .eq('code', kod);
+  sprawdzBlad('committee_members', bladM);
+
+  type WierszM = {
+    mp_id: number;
+    function: string | null;
+    join_date: string | null;
+    mps: {
+      full_name: string;
+      slug: string;
+      active: boolean;
+      photo_exists: boolean | null;
+      photo_stored_url: string | null;
+      photo_url: string | null;
+      clubs: { id: string } | null;
+    } | null;
+  };
+
+  const nazwisko = (pelne: string) => pelne.trim().split(/\s+/).at(-1) ?? pelne;
+
+  const sklad: CzlonekKomisji[] = ((m ?? []) as unknown as WierszM[])
+    .filter((r) => r.mps)
+    .map((r) => ({
+      mp_id: r.mp_id,
+      full_name: r.mps!.full_name,
+      slug: r.mps!.slug,
+      klub: r.mps!.clubs?.id ?? null,
+      // Ta sama reguła co w widoku 0023 — patrz komentarz przy zapytaniu.
+      photo_url: r.mps!.photo_exists ? (r.mps!.photo_stored_url ?? r.mps!.photo_url) : null,
+      active: r.mps!.active,
+      function: r.function,
+      join_date: r.join_date,
+    }))
+    .sort((a, b) => {
+      const funkcyjny = Number(Boolean(b.function)) - Number(Boolean(a.function));
+      return funkcyjny !== 0 ? funkcyjny : nazwisko(a.full_name).localeCompare(nazwisko(b.full_name), 'pl');
+    });
+
+  return { komisja: k as Komisja, sklad };
+}
+
 export type KomisjaPosla = {
   code: string;
   name: string;
