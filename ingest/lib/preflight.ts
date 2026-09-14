@@ -80,6 +80,11 @@ export const WYMOGI_DNI: Wymog[] = [
   { tabela: 'mp_sitting_days', kolumna: 'sitting', migracja: '0030_dni_posiedzen.sql', po_co: 'czlon klucza — jedna data miewa dwa posiedzenia' },
 ];
 
+export const WYMOGI_KOMISJE: Wymog[] = [
+  { tabela: 'committees', kolumna: 'type', migracja: '0033_komisje.sql', po_co: 'stala, nadzwyczajna czy sledcza' },
+  { tabela: 'committee_members', kolumna: 'function', migracja: '0033_komisje.sql', po_co: 'funkcja slowami rejestru (D20)' },
+];
+
 export async function assertSchema(dodatkowe: Wymog[] = []): Promise<void> {
   const braki: Wymog[] = [];
 

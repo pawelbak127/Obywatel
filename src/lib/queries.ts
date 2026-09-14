@@ -563,6 +563,57 @@ export async function pobierzSkrotyKlubow(): Promise<string[]> {
   return ((data ?? []) as Array<{ id: string }>).map((r) => r.id);
 }
 
+export type KomisjaPosla = {
+  code: string;
+  name: string;
+  type: 'STANDING' | 'EXTRAORDINARY' | 'INVESTIGATIVE';
+  function: string | null;
+  join_date: string | null;
+};
+
+/**
+ * Komisje, w ktorych zasiada posel — odpowiedz na „czym on sie wlasciwie
+ * zajmuje", z rejestru, bez ani jednego domyslu.
+ *
+ * FUNKCJE PRZYCHODZA SLOWAMI REJESTRU I TAK MAJA BYC POKAZANE (D20).
+ * Rejestr rozroznia „przewodniczacy" i „przewodniczaca", „zastepca
+ * przewodniczacej" i „zastepczyni przewodniczacej". Sprowadzenie tego do
+ * dwoch kodow zmienialoby to, co rejestr napisal o konkretnej osobie.
+ *
+ * `function = null` znaczy zwykly czlonek — 860 z 1 076 wpisow (zmierzone
+ * 13.09.2026). To poprawny stan, nie brak danych.
+ */
+export async function pobierzKomisjePosla(mpId: number): Promise<KomisjaPosla[]> {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from('mp_komisje')
+    .select('code, name, type, function, join_date')
+    .eq('mp_id', mpId);
+
+  // Brak widoku to brakujaca migracja, nie awaria profilu — sekcja po prostu
+  // nie powstanie, tak samo jak przed importem.
+  if (error) {
+    if (error.code === 'PGRST205' || error.code === '42P01' || /does not exist|schema cache/i.test(error.message)) {
+      return [];
+    }
+    throw new Error(`mp_komisje: ${error.message}`);
+  }
+
+  /*
+    FUNKCYJNI PIERWSI, POTEM ALFABETYCZNIE PO NAZWIE KOMISJI.
+
+    Sortujemy tutaj, a nie w SQL-u, bo kryterium „ma funkcje" nie jest
+    kolumna, tylko `function is not null` — a posel ma najwyzej kilka
+    czlonkostw, wiec pobieramy komplet i nic sie nie urywa. To ta sama
+    zasada co przy `pobierzPoslow`: sortowanie po stronie aplikacji jest
+    dopuszczalne WYLACZNIE wtedy, gdy mamy caly zbior.
+  */
+  return ((data ?? []) as KomisjaPosla[]).sort((a, b) => {
+    const funkcyjny = Number(Boolean(b.function)) - Number(Boolean(a.function));
+    return funkcyjny !== 0 ? funkcyjny : a.name.localeCompare(b.name, 'pl');
+  });
+}
+
 export type Interpelacje = {
   interpelacji: number;
   zapytan: number;

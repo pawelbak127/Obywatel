@@ -10,6 +10,7 @@ import {
   pobierzDaneOsobowe,
   pobierzDniObecnosci,
   pobierzInterpelacje,
+  pobierzKomisjePosla,
   pobierzProcesyDlaGlosowan,
   BrakObiektuWBazie,
   BrakPolaczeniaZBaza,
@@ -17,6 +18,7 @@ import {
   type DaneOsobowe,
   type DniObecnosci,
   type Interpelacje,
+  type KomisjaPosla,
   adresAktu,
   type ProcesGlosowania,
   LOS_OPIS,
@@ -74,6 +76,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
+const SEJM_KOMISJE = 'https://api.sejm.gov.pl/sejm/term10/committees';
 const SEJM_MP = (id: number) => `https://api.sejm.gov.pl/sejm/term10/MP/${id}`;
 
 export default async function ProfilPosla({ params }: { params: Promise<{ slug: string }> }) {
@@ -85,15 +88,17 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
   let dane: DaneOsobowe | null;
   let dni: DniObecnosci | null;
   let pytania: Interpelacje | null;
+  let komisje: KomisjaPosla[];
   try {
     mp = await pobierzPosla(slug);
     if (!mp) notFound();
-    [miesiace, glosy, dane, dni, pytania] = await Promise.all([
+    [miesiace, glosy, dane, dni, pytania, komisje] = await Promise.all([
       pobierzNieobecnosciMiesieczne(mp.id),
       pobierzGlosyPosla(mp.id, 25),
       pobierzDaneOsobowe(mp.id),
       pobierzDniObecnosci(mp.id),
       pobierzInterpelacje(mp.id),
+      pobierzKomisjePosla(mp.id),
     ]);
   } catch (e) {
     if (e instanceof BrakObiektuWBazie) return <BrakMigracji error={e} />;
@@ -230,6 +235,8 @@ export default async function ProfilPosla({ params }: { params: Promise<{ slug: 
       </div>
 
       <Usprawiedliwienia dni={dni} mpId={mp.id} />
+
+      <Komisje lista={komisje} />
 
       <Pytania dane={pytania} />
 
@@ -527,6 +534,66 @@ function Pytania({ dane }: { dane: Interpelacje | null }) {
         <strong className="text-[color:var(--color-ink)]">Liczba pytań nie jest miarą jakości posła.</strong>{' '}
         Rejestr podaje, ile ich złożył — nie podaje, czy były potrzebne. Nie budujemy z tego
         zestawienia i nie porównujemy posłów między sobą.
+      </p>
+    </section>
+  );
+}
+
+/** Slownik zamkniety, pilnowany ograniczeniem w bazie (migracja 0033). */
+const TYP_KOMISJI: Record<KomisjaPosla['type'], string> = {
+  STANDING: 'stała',
+  EXTRAORDINARY: 'nadzwyczajna',
+  INVESTIGATIVE: 'śledcza',
+};
+
+/**
+ * KOMISJE — odpowiedz na „czym ten posel sie wlasciwie zajmuje".
+ *
+ * STOI PRZED INTERPELACJAMI, bo mowi o roli, a nie o aktywnosci. Czytelnik,
+ * ktory widzi „Komisja Finansow Publicznych", inaczej czyta wszystko, co
+ * jest nizej.
+ *
+ * FUNKCJE WYPISUJEMY SLOWAMI REJESTRU, TAKZE W FORMIE ZENSKIEJ (D20).
+ * Rejestr pisze „przewodniczaca" i „zastepczyni przewodniczacej" — kuszace
+ * bylo sprowadzic to do jednej formy meskiej dla „spojnosci", ale to
+ * zmienialoby to, co rejestr napisal o konkretnej osobie. Kody grupuja,
+ * slowa mowia.
+ *
+ * BRAK FUNKCJI NIE JEST BRAKIEM DANYCH. 860 z 1 076 czlonkostw to zwykli
+ * czlonkowie — nie dopisujemy tam nic, bo „czlonek" i tak wynika z tego,
+ * ze nazwa komisji stoi na liscie.
+ */
+function Komisje({ lista }: { lista: KomisjaPosla[] }) {
+  if (!lista.length) return null;
+
+  return (
+    <section className="mt-10">
+      <h2 className="text-lg font-semibold">Komisje sejmowe</h2>
+
+      <ul className="mt-3 max-w-prose divide-y divide-[color:var(--color-rule)] border-y border-[color:var(--color-rule)]">
+        {lista.map((k) => (
+          <li key={k.code} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2.5">
+            <span className="min-w-0 flex-1 text-sm">
+              {k.name}
+              {k.type !== 'STANDING' && (
+                <span className="ml-2 text-xs text-[color:var(--color-ink-soft)]">
+                  ({TYP_KOMISJI[k.type]})
+                </span>
+              )}
+            </span>
+            {k.function && (
+              <span className="shrink-0 text-xs font-medium text-[color:var(--color-ink)]">
+                {k.function}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <p className="mt-2 max-w-prose text-xs leading-relaxed text-[color:var(--color-ink-soft)]">
+        {`Skład komisji pochodzi z rejestru Kancelarii Sejmu. Funkcje podajemy dokładnie tak, ` +
+          `jak zapisał je rejestr. Brak funkcji przy nazwie znaczy „zwykły członek".`}{' '}
+        <SourceLink href={SEJM_KOMISJE} label="Rejestr komisji sejmowych w Sejm API" />
       </p>
     </section>
   );

@@ -52,6 +52,7 @@ const JOBY: Record<string, string> = {
   photos: 'Zdjęcia posłów',
   logos: 'Znaki klubów',
   interpellations: 'Interpelacje i zapytania poselskie',
+  committees: 'Komisje sejmowe',
 };
 
 /*

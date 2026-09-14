@@ -35,7 +35,8 @@
     "ingest:zdjecia": "tsx ingest/jobs/sync-mp-photos.ts",
     "ingest:loga": "tsx ingest/jobs/sync-club-logos.ts",
     "ingest:dni": "tsx ingest/jobs/sync-sitting-days.ts",
-    "ingest:interpelacje": "tsx ingest/jobs/sync-interpellations.ts"
+    "ingest:interpelacje": "tsx ingest/jobs/sync-interpellations.ts",
+    "ingest:komisje": "tsx ingest/jobs/sync-committees.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

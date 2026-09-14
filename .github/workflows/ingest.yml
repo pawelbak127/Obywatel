@@ -102,6 +102,12 @@ jobs:
         if: ${{ inputs.job == 'sync-days' || inputs.job == 'all' || github.event_name == 'schedule' }}
         run: npx tsx ingest/jobs/sync-sitting-days.ts
 
+      # KOMISJE — jedno zadanie i 40 rekordow. Musi isc PO sync-mps, bo
+      # `committee_members` ma klucz obcy do `mps`.
+      - name: Komisje sejmowe
+        if: ${{ inputs.job == 'committees' || inputs.job == 'all' || github.event_name == 'schedule' }}
+        run: npx tsx ingest/jobs/sync-committees.ts
+
       # ZNAKI KLUBOW — trzynascie plikow, wiec caly zbior miesci sie w jednym
       # przebiegu. Musi isc PO sync-mps, ktory tworzy wiersze w `clubs`.
       # Zapis do Storage nastepuje wylacznie przy realnej roznicy sumy.
