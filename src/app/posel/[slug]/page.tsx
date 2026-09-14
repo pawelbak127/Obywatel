@@ -422,6 +422,33 @@ function DaneZRejestru({ dane, mpId }: { dane: DaneOsobowe | null; mpId: number 
             <dd className="text-right text-sm">{wartosc}</dd>
           </div>
         ))}
+
+        {/*
+          ADRES SLUZBOWY, NIE PRYWATNY — i to musi byc napisane.
+
+          Wszystkie 499 adresow sa w domenie `sejm.pl` i pochodza z rejestru
+          Kancelarii Sejmu (migracja 0034). Nie zbieramy ich skadkolwiek,
+          nie zgadujemy i nie publikujemy niczego, czego rejestr sam nie
+          udostepnia — to ta sama zasada, dla ktorej odrzucilismy zbieranie
+          kont w mediach spolecznosciowych.
+
+          Stoi jako ODNOSNIK `mailto:`, bo napisanie do wlasnego posla jest
+          dokladnie tym dzialaniem, do ktorego ten serwis ma prowadzic.
+          Adres bez odnosnika wymagalby przepisywania go recznie.
+        */}
+        {dane.email && (
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 py-2">
+            <dt className="text-sm text-[color:var(--color-ink-soft)]">Adres służbowy</dt>
+            <dd className="text-right text-sm">
+              <a
+                href={`mailto:${dane.email}`}
+                className="font-mono text-[13px] underline decoration-dotted underline-offset-2 hover:text-[color:var(--color-accent)]"
+              >
+                {dane.email}
+              </a>
+            </dd>
+          </div>
+        )}
       </dl>
 
       {/*

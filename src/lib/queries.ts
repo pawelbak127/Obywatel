@@ -864,6 +864,8 @@ export type DaneOsobowe = {
   profession: string | null;
   number_of_votes: number | null;
   oath_date: string | null;
+  /** Sluzbowy adres z rejestru (migracja 0034). 499/499 w domenie sejm.pl. */
+  email: string | null;
 };
 
 /**
@@ -887,7 +889,7 @@ export async function pobierzDaneOsobowe(mpId: number): Promise<DaneOsobowe | nu
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from('mps')
-    .select('birth_date, birth_location, education_level, profession, number_of_votes, oath_date')
+    .select('birth_date, birth_location, education_level, profession, number_of_votes, oath_date, email')
     .eq('id', mpId)
     .maybeSingle();
   sprawdzBlad('mps', error);

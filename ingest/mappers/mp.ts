@@ -35,6 +35,8 @@ export type MpRow = {
   education_level: string | null;
   birth_date: string | null;
   birth_location: string | null;
+  /** Sluzbowy adres z rejestru (migracja 0034). Nie zbieramy adresow prywatnych. */
+  email: string | null;
   number_of_votes: number | null;
   oath_date: string | null;
   mandate_expiry_date: string | null;
@@ -114,6 +116,9 @@ export function mapMP(
     education_level: nz(mp.educationLevel),
     birth_date: asDate(mp.birthDate),
     birth_location: nz(mp.birthLocation),
+    // Adres byl w odpowiedzi API od poczatku — mapper KLUBU go bral, mapper
+    // POSLA pomijal. Zmierzone: 499/499 poslow, wszystkie w domenie sejm.pl.
+    email: nz(mp.email),
     number_of_votes: Number.isFinite(mp.numberOfVotes) ? mp.numberOfVotes : null,
     oath_date: asDate(mp.oathDate),
     mandate_expiry_date: asDate(mp.mandateExpiryDate),

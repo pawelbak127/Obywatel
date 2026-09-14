@@ -19,7 +19,7 @@ import { recordSource, writeCursor } from '../lib/source-recorder.js';
 import { assignSlugs } from '../lib/slug.js';
 import { mapClub, mapInferredClub, mapMP, assertPlausible } from '../mappers/mp.js';
 import { db } from '../lib/db.js';
-import { assertSchema } from '../lib/preflight.js';
+import { assertSchema, WYMOGI_EMAIL } from '../lib/preflight.js';
 import { headExists, mapLimit } from '../lib/http.js';
 
 const FORCE = process.argv.includes('--force');
@@ -256,7 +256,10 @@ async function main() {
     // Zanim cokolwiek pobierzemy i zapiszemy: czy baza ma komplet migracji.
     // Lepiej stanac na starcie z konkretna instrukcja niz w polowie zapisu
     // z komunikatem PostgREST-a o "schema cache".
-    await assertSchema();
+    // WYMOGI_EMAIL dolozone przy migracji 0034: bez tej kolumny upsert
+    // wywalilby sie na wszystkich 499 wierszach z surowym bledem PostgREST-a
+    // zamiast powiedziec, ktora migracje uruchomic.
+    await assertSchema(WYMOGI_EMAIL);
 
     const clubSeq = await syncClubs();
     await syncMPs(clubSeq);

@@ -58,6 +58,10 @@ export const WYMOGI_PROCESY: Wymog[] = [
 ];
 
 /** Wymogi kopiowania zdjec do Storage. */
+export const WYMOGI_EMAIL: Wymog[] = [
+  { tabela: 'mps', kolumna: 'email', migracja: '0034_email_posla.sql', po_co: 'sluzbowy adres posla z rejestru' },
+];
+
 export const WYMOGI_ZDJECIA: Wymog[] = [
   { tabela: 'mps', kolumna: 'photo_stored_url', migracja: '0023_zdjecia_u_siebie.sql', po_co: 'adres naszej kopii zdjecia' },
   { tabela: 'mps', kolumna: 'photo_stored_at', migracja: '0023_zdjecia_u_siebie.sql', po_co: 'kiedy skopiowalismy' },
